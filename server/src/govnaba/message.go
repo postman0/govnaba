@@ -38,14 +38,14 @@ func (msg *ChatMessage) ToClient() string {
 
 func (msg *ChatMessage) FromClient(cl *Client, msgString string) {
 	var m map[string]interface{}
-	_ = json.Unmarshal([]byte(msgString), m)
-	msg.MessageType, _ = m["MessageType"].(byte)
+	_ = json.Unmarshal([]byte(msgString), &m)
+	msg.MessageType = byte(m["MessageType"].(float64))
 	msg.From = cl.Id
 	msg.Contents, _ = m["Contents"].(string)
 }
 
 func (msg *ChatMessage) Process() []GovnabaMessage {
-	log.Println("%v", msg)
+	log.Printf("%v", msg)
 	return []GovnabaMessage{msg}
 }
 

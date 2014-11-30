@@ -44,7 +44,9 @@ func AcceptNewClients() {
 func BroadcastMessages() {
 	for msg := range globalChannel {
 		for _, client := range clients {
+			log.Printf("Sending message %v of type %T", msg, msg)
 			client.WriteChannel <- msg
+			log.Printf("Sent.")
 		}
 	}
 }

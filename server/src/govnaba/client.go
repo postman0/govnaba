@@ -18,14 +18,14 @@ func (cl *Client) receiveLoop() {
 	for {
 		_, buf, err := cl.conn.ReadMessage()
 		if err != nil {
-			log.Println("%v", err)
+			log.Printf("%v", err)
 		}
 		var m map[string]interface{}
-		err = json.Unmarshal(buf, m)
+		err = json.Unmarshal(buf, &m)
 		if err != nil {
-			log.Println("%v, err")
+			log.Printf("%v", err)
 		}
-		message := MessageConstructors[m["MessageType"].(byte)]()
+		message := MessageConstructors[byte(m["MessageType"].(float64))]()
 		message.FromClient(cl, string(buf))
 		go func() {
 			for _, msg := range message.Process() {
@@ -36,8 +36,10 @@ func (cl *Client) receiveLoop() {
 }
 
 func (cl *Client) writeLoop() {
-	message := <-cl.WriteChannel
-	cl.conn.WriteMessage(websocket.TextMessage, []byte(message.ToClient()))
+	for message := range cl.WriteChannel {
+		log.Printf("Writing message %v", []byte(message.ToClient()))
+		cl.conn.WriteMessage(websocket.TextMessage, []byte(message.ToClient()))
+	}
 }
 
 func NewClient(conn *websocket.Conn, uuid uuid.UUID, broadcastChannel chan GovnabaMessage) *Client {
