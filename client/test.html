@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
         <script>
             var messageSocket = new WebSocket("ws://localhost:8080/connect");
             
@@ -28,9 +29,12 @@
         </script>
         <style>
             .form,#kolchok {
-                text-align: center;
                 width: 800px;
                 margin: auto;
+            }
+            
+            .form > div {
+                margin-left: 200px;
             }
             
             #kolchok {
@@ -58,11 +62,11 @@
     </head>
     <body>
         <div class="form">
-            <form>
-                <input id="messageBox" type="textarea"></input>
+            <div>
+                <textarea id="messageBox"></textarea>
                 <br>
                 <button id="sendBtn"><label>Прррр</label></button>
-            </form>
+            </div>
         </div>
         <div id="kolchok">
         </div>
