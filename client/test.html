@@ -1,6 +1,70 @@
-<script>
-	var messageSocket = new WebSocket("ws://localhost:8080/connect");
-	messageSocket.onopen = function () {
-		console.log("hhhh");
-	}
-</script>
+<!DOCTYPE html>
+<html>
+    <head>
+        <script>
+            var messageSocket = new WebSocket("ws://localhost:8080/connect");
+            
+            messageSocket.onerror = function(e) {
+                console.log(e);
+            }
+            
+            messageSocket.onopen = function() {
+                console.log("Soedineniye ustanovleno......");
+                messageSocket.onmessage = function(e) {
+                    renderMessage(e.data);
+                }
+                
+                window.sendBtn.onclick = function() {
+                    messageSocket.send(window.messageBox.value);
+                }
+                
+                function renderMessage(text) {
+                    var message = document.createElement('div');
+                    message.className = 'message';
+                    message.textContent = text;
+                    window.kolchok.appendChild(message);
+                }
+            }
+        </script>
+        <style>
+            .form,#kolchok {
+                text-align: center;
+                width: 800px;
+                margin: auto;
+            }
+            
+            #kolchok {
+                margin-top: 10px;
+                background: #ccc;
+            }
+            
+            .message {
+                width: 785px;
+                border: 1px solid #000;
+                border-radius: 3px;
+                margin-top: 3px;
+                text-align: left;
+                background: #fff;
+                padding: 3px;
+                min-height: 100px;
+                margin-left: 3px;
+            }
+            
+            #messageBox {
+                height: 150px;
+                width: 400px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="form">
+            <form>
+                <input id="messageBox" type="textarea"></input>
+                <br>
+                <button id="sendBtn"><label>Прррр</label></button>
+            </form>
+        </div>
+        <div id="kolchok">
+        </div>
+    </body>
+</html>
