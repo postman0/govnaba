@@ -29,9 +29,12 @@
         </script>
         <style>
             .form,#kolchok {
-                text-align: center;
                 width: 800px;
                 margin: auto;
+            }
+            
+            .form > div {
+                margin-left: 200px;
             }
             
             #kolchok {
@@ -59,11 +62,11 @@
     </head>
     <body>
         <div class="form">
-            <form>
-                <input id="messageBox" type="textarea"></input>
+            <div>
+                <textarea id="messageBox"></textarea>
                 <br>
-            </form>
-            <button id="sendBtn"><label>Прррр</label></button>
+                <button id="sendBtn"><label>Прррр</label></button>
+            </div>
         </div>
         <div id="kolchok">
         </div>
