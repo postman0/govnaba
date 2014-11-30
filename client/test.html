@@ -17,6 +17,7 @@
                 
                 window.sendBtn.onclick = function() {
                     messageSocket.send(window.messageBox.value);
+                    return false;
                 }
                 
                 function renderMessage(text) {

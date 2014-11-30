@@ -37,7 +37,6 @@ func (cl *Client) receiveLoop() {
 
 func (cl *Client) writeLoop() {
 	for message := range cl.WriteChannel {
-		log.Printf("Writing message %v", []byte(message.ToClient()))
 		cl.conn.WriteMessage(websocket.TextMessage, []byte(message.ToClient()))
 	}
 }
