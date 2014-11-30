@@ -13,6 +13,9 @@ import (
 
 var cookieHashKey = []byte("sjnfi3wrv9	2j0edhwe7fhaerhgtewjfqhc3t0ewfsodc x nwhtrhyew9hw98fo")
 var secureCookie *securecookie.SecureCookie
+var globalChannel chan govnaba.GovnabaMessage
+var newClientsChannel chan govnaba.Client
+var clients []govnaba.Client
 
 func getUUID(req *http.Request) (uuid.UUID, error) {
 	cookie, err := req.Cookie("userid")
@@ -31,6 +34,20 @@ func getUUID(req *http.Request) (uuid.UUID, error) {
 	return uuid, nil
 }
 
+func AcceptNewClients() {
+	i := 0
+	for cl := range newClientsChannel {
+		clients[i] = cl
+	}
+}
+
+func BroadcastMessages() {
+	for msg := range globalChannel {
+		for _, client := range clients {
+			client.WriteChannel <- msg
+		}
+	}
+}
 
 func main() {
 	server := http.Server{
@@ -45,6 +62,11 @@ func main() {
 		func (r *http.Request) bool { return true },
 	}
 	secureCookie = securecookie.New(cookieHashKey, nil)
+	globalChannel = make(chan govnaba.GovnabaMessage, 10)
+	newClientsChannel = make(chan govnaba.Client, 10)
+	clients = make([]govnaba.Client, 20)
+	go AcceptNewClients()
+	go BroadcastMessages()
 	http.DefaultServeMux.HandleFunc("/connect", func (rw http.ResponseWriter, req *http.Request) {
 		log.Printf("New client from %s", req.RemoteAddr)
 		uuid_cl, err := getUUID(req)
@@ -66,7 +88,7 @@ func main() {
 		} else {
 			log.Printf("Client connected.")
 		}
-		_ = govnaba.NewClient(conn, uuid_cl)
+		_ = govnaba.NewClient(conn, uuid_cl, globalChannel)
 	})		
 	log.Println("Starting server...")
 	server.ListenAndServe()
