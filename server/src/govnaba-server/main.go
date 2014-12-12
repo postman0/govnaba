@@ -34,20 +34,22 @@ func getUUID(req *http.Request) (uuid.UUID, error) {
 	return uuid, nil
 }
 
-func AcceptNewClients() {
+// Handle broadcasts and new clients
+func HandleClients() {
 	i := 0
-	for cl := range newClientsChannel {
-		clients[i] = cl
-		i += 1
-	}
-}
-
-func BroadcastMessages() {
-	for msg := range globalChannel {
-		for _, client := range clients {
-			if client != nil {
-				log.Printf("Sending message %v of type %T to client %v", msg, msg, *client)
-				client.WriteChannel <- msg
+	for {
+		select {
+			case cl := <- newClientsChannel: {
+				clients[i] = cl
+				i += 1
+			}
+			case msg := <- globalChannel: {
+				for _, client := range clients {
+					if client != nil {
+						log.Printf("Sending message %v of type %T to client %v", msg, msg, *client)
+						client.WriteChannel <- msg
+					}
+				}
 			}
 		}
 	}
@@ -69,8 +71,7 @@ func main() {
 	globalChannel = make(chan govnaba.Message, 10)
 	newClientsChannel = make(chan *govnaba.Client, 10)
 	clients = make([]*govnaba.Client, 20)
-	go AcceptNewClients()
-	go BroadcastMessages()
+	go HandleClients()
 	http.DefaultServeMux.HandleFunc("/connect", func (rw http.ResponseWriter, req *http.Request) {
 		log.Printf("New client from %s", req.RemoteAddr)
 		uuid_cl, err := getUUID(req)
