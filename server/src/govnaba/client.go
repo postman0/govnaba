@@ -8,8 +8,8 @@ import (
 )
 
 type Client struct {
-	WriteChannel chan GovnabaMessage
-	broadcastChannel chan GovnabaMessage
+	WriteChannel chan Message
+	broadcastChannel chan Message
 	Id uuid.UUID
 	conn *websocket.Conn
 }
@@ -41,8 +41,8 @@ func (cl *Client) writeLoop() {
 	}
 }
 
-func NewClient(conn *websocket.Conn, uuid uuid.UUID, broadcastChannel chan GovnabaMessage) *Client {
-	c := Client{make(chan GovnabaMessage, 5), broadcastChannel, uuid, conn}
+func NewClient(conn *websocket.Conn, uuid uuid.UUID, broadcastChannel chan Message) *Client {
+	c := Client{make(chan Message, 5), broadcastChannel, uuid, conn}
 	go c.writeLoop()
 	go c.receiveLoop()
 	return &c

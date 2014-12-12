@@ -13,7 +13,7 @@ import (
 
 var cookieHashKey = []byte("sjnfi3wrv9	2j0edhwe7fhaerhgtewjfqhc3t0ewfsodc x nwhtrhyew9hw98fo")
 var secureCookie *securecookie.SecureCookie
-var globalChannel chan govnaba.GovnabaMessage
+var globalChannel chan govnaba.Message
 var newClientsChannel chan *govnaba.Client
 var clients []*govnaba.Client
 
@@ -66,7 +66,7 @@ func main() {
 		func (r *http.Request) bool { return true },
 	}
 	secureCookie = securecookie.New(cookieHashKey, nil)
-	globalChannel = make(chan govnaba.GovnabaMessage, 10)
+	globalChannel = make(chan govnaba.Message, 10)
 	newClientsChannel = make(chan *govnaba.Client, 10)
 	clients = make([]*govnaba.Client, 20)
 	go AcceptNewClients()

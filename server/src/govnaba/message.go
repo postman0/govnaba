@@ -11,15 +11,15 @@ const (
 )
 
 
-type MessageConstructor func() GovnabaMessage
+type MessageConstructor func() Message
 var MessageConstructors = [...](MessageConstructor){
-	func() GovnabaMessage { return NewChatMessage() },
+	func() Message { return NewChatMessage() },
 }
 
-type GovnabaMessage interface {
+type Message interface {
 	ToClient() string
 	FromClient(*Client, string)
-	Process() []GovnabaMessage
+	Process() []Message
 }
 
 type ChatMessage struct {
@@ -44,8 +44,8 @@ func (msg *ChatMessage) FromClient(cl *Client, msgString string) {
 	msg.Contents, _ = m["Contents"].(string)
 }
 
-func (msg *ChatMessage) Process() []GovnabaMessage {
+func (msg *ChatMessage) Process() []Message {
 	log.Printf("%v", msg)
-	return []GovnabaMessage{msg}
+	return []Message{msg}
 }
 
