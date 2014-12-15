@@ -4,16 +4,31 @@ import (
 	"net/http"
 	"time"
 	"errors"
+	"fmt"
 	"log"
+	"flag"
 	"github.com/gorilla/websocket"
 	"github.com/gorilla/securecookie"
+	_ "github.com/lib/pq"
+	"database/sql"
 	"code.google.com/p/go-uuid/uuid"
 	"govnaba"
 )
 
-var cookieHashKey = []byte("sjnfi3wrv9	2j0edhwe7fhaerhgtewjfqhc3t0ewfsodc x nwhtrhyew9hw98fo")
+var bindAddress = flag.String("address", "0.0.0.0:8080", "address and port for the server to listen on")
+var cookieHashKey = flag.String("secret", "sjnfi3wrv9	2j0edhwe7fhaerhgtewjfqhc3t0ewfsodc x nwhtrhyew9hw98fo", "secret key used for secure cookies")
+var dbHost = flag.String("dbhost", "localhost", "postgresql server address")
+var dbPort = flag.String("dbport", "5432", "postgresql server port")
+var dbName = flag.String("dbname", "govnaba", "postgresql database name")
+var dbUser = flag.String("dbuser", "postgres", "postgresql username")
+var dbPassword = flag.String("dbpassword", "postgres", "postgresql user password")
+
 var secureCookie *securecookie.SecureCookie
+
 var globalChannel chan govnaba.Message
+
+var db *sql.DB
+
 var newClientsChannel chan *govnaba.Client
 var clients []*govnaba.Client
 
@@ -56,8 +71,10 @@ func HandleClients() {
 }
 
 func main() {
+	flag.Parse()
+
 	server := http.Server{
-		Addr: "0.0.0.0:8080",
+		Addr: *bindAddress,
 		ReadTimeout: 5 * time.Second,
 		WriteTimeout: 5 * time.Second,
 	}
@@ -67,11 +84,19 @@ func main() {
 		nil, nil,
 		func (r *http.Request) bool { return true },
 	}
-	secureCookie = securecookie.New(cookieHashKey, nil)
+
+	secureCookie = securecookie.New([]byte(*cookieHashKey), nil)
 	globalChannel = make(chan govnaba.Message, 10)
 	newClientsChannel = make(chan *govnaba.Client, 10)
 	clients = make([]*govnaba.Client, 20)
+	db, err := sql.Open("postgres", fmt.Sprintf("user=%s password=%s dbname=%s host=%s port=%s connect_timeout=5", 
+												*dbUser, *dbPassword, *dbName, *dbHost, *dbPort))
+	if err != nil {
+		log.Fatalln("Couldn't connect to the database")
+	}
+	db.Ping()
 	go HandleClients()
+	
 	http.DefaultServeMux.HandleFunc("/connect", func (rw http.ResponseWriter, req *http.Request) {
 		log.Printf("New client from %s", req.RemoteAddr)
 		uuid_cl, err := getUUID(req)
