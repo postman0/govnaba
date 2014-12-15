@@ -9,8 +9,8 @@ import (
 	"flag"
 	"github.com/gorilla/websocket"
 	"github.com/gorilla/securecookie"
+	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
-	"database/sql"
 	"code.google.com/p/go-uuid/uuid"
 	"govnaba"
 )
@@ -27,7 +27,7 @@ var secureCookie *securecookie.SecureCookie
 
 var globalChannel chan govnaba.Message
 
-var db *sql.DB
+var db *sqlx.DB
 
 var newClientsChannel chan *govnaba.Client
 var clients []*govnaba.Client
@@ -89,7 +89,7 @@ func main() {
 	globalChannel = make(chan govnaba.Message, 10)
 	newClientsChannel = make(chan *govnaba.Client, 10)
 	clients = make([]*govnaba.Client, 20)
-	db, err := sql.Open("postgres", fmt.Sprintf("user=%s password=%s dbname=%s host=%s port=%s connect_timeout=5", 
+	db, err := sqlx.Connect("postgres", fmt.Sprintf("user=%s password=%s dbname=%s host=%s port=%s connect_timeout=5", 
 												*dbUser, *dbPassword, *dbName, *dbHost, *dbPort))
 	if err != nil {
 		log.Fatalln("Couldn't connect to the database")
@@ -118,7 +118,7 @@ func main() {
 		} else {
 			log.Printf("Client connected.")
 		}
-		newClientsChannel <- govnaba.NewClient(conn, uuid_cl, globalChannel)
+		newClientsChannel <- govnaba.NewClient(conn, uuid_cl, globalChannel, db)
 	})		
 	log.Println("Starting server...")
 	server.ListenAndServe()

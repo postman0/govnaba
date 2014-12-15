@@ -5,6 +5,7 @@ import (
 	"log"
 	"code.google.com/p/go-uuid/uuid"
 	"github.com/gorilla/websocket"
+	"github.com/jmoiron/sqlx"
 )
 
 type Client struct {
@@ -12,6 +13,7 @@ type Client struct {
 	broadcastChannel chan Message
 	Id uuid.UUID
 	conn *websocket.Conn
+	db *sqlx.DB
 }
 
 func (cl *Client) receiveLoop() {
@@ -28,7 +30,7 @@ func (cl *Client) receiveLoop() {
 		message := MessageConstructors[byte(m["MessageType"].(float64))]()
 		message.FromClient(cl, string(buf))
 		go func() {
-			for _, msg := range message.Process() {
+			for _, msg := range message.Process(cl.db) {
 				cl.broadcastChannel <- msg
 			}
 		}()
@@ -41,8 +43,8 @@ func (cl *Client) writeLoop() {
 	}
 }
 
-func NewClient(conn *websocket.Conn, uuid uuid.UUID, broadcastChannel chan Message) *Client {
-	c := Client{make(chan Message, 5), broadcastChannel, uuid, conn}
+func NewClient(conn *websocket.Conn, uuid uuid.UUID, broadcastChannel chan Message, db *sqlx.DB) *Client {
+	c := Client{make(chan Message, 5), broadcastChannel, uuid, conn, db}
 	go c.writeLoop()
 	go c.receiveLoop()
 	return &c

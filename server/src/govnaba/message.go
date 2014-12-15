@@ -3,6 +3,7 @@ package govnaba
 import (
 	"encoding/json"
 	"log"
+	"github.com/jmoiron/sqlx"
 	"code.google.com/p/go-uuid/uuid"
 )
 
@@ -19,7 +20,7 @@ var MessageConstructors = [...](MessageConstructor){
 type Message interface {
 	ToClient() string
 	FromClient(*Client, string)
-	Process() []Message
+	Process(*sqlx.DB) []Message
 }
 
 type ChatMessage struct {
@@ -44,7 +45,7 @@ func (msg *ChatMessage) FromClient(cl *Client, msgString string) {
 	msg.Contents, _ = m["Contents"].(string)
 }
 
-func (msg *ChatMessage) Process() []Message {
+func (msg *ChatMessage) Process(db *sqlx.DB) []Message {
 	log.Printf("%v", msg)
 	return []Message{msg}
 }
