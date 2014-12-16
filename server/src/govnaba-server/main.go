@@ -30,7 +30,8 @@ var globalChannel chan govnaba.Message
 var db *sqlx.DB
 
 var newClientsChannel chan *govnaba.Client
-var clients []*govnaba.Client
+var clients map[string]*govnaba.Client
+var boardsClientsMap map[string]map[string]*govnaba.Client
 
 func getUUID(req *http.Request) (uuid.UUID, error) {
 	cookie, err := req.Cookie("userid")
@@ -51,19 +52,29 @@ func getUUID(req *http.Request) (uuid.UUID, error) {
 
 // Handle broadcasts and new clients
 func HandleClients() {
-	i := 0
 	for {
 		select {
 			case cl := <- newClientsChannel: {
-				clients[i] = cl
-				i += 1
+				clients[cl.Id.String()] = cl
 			}
 			case msg := <- globalChannel: {
-				for _, client := range clients {
-					if client != nil {
-						log.Printf("Sending message %v of type %T to client %v", msg, msg, *client)
-						client.WriteChannel <- msg
+				switch m := msg.(type) {
+					case *govnaba.ClientDisconnectMessage: {
+						delete(clients, m.Id.String())
+						for _, boardClients := range boardsClientsMap {
+							delete(boardClients, m.Id.String())
+						}
 					}
+					default:
+						dest := msg.GetDestination()
+						if dest.DestinationType == govnaba.ClientDestination {
+							clients[dest.Id.String()].WriteChannel <- msg
+						} else if dest.DestinationType == govnaba.BoardDestination {
+							for _, client := range boardsClientsMap[dest.Board] {
+								log.Printf("Sending message %v of type %T to client %v", msg, msg, *client)
+								client.WriteChannel <- msg
+							}
+						}
 				}
 			}
 		}
@@ -88,7 +99,8 @@ func main() {
 	secureCookie = securecookie.New([]byte(*cookieHashKey), nil)
 	globalChannel = make(chan govnaba.Message, 10)
 	newClientsChannel = make(chan *govnaba.Client, 10)
-	clients = make([]*govnaba.Client, 20)
+	clients = make(map[string]*govnaba.Client)
+	boardsClientsMap = make(map[string]map[string]*govnaba.Client)
 	db, err := sqlx.Connect("postgres", fmt.Sprintf("user=%s password=%s dbname=%s host=%s port=%s connect_timeout=5", 
 												*dbUser, *dbPassword, *dbName, *dbHost, *dbPort))
 	if err != nil {

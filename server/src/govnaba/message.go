@@ -1,29 +1,42 @@
 package govnaba
 
 import (
-	"encoding/json"
-	"log"
 	"github.com/jmoiron/sqlx"
 	"code.google.com/p/go-uuid/uuid"
 )
 
 const (
-	ChatMessageType = iota
+	ProtocolErrorMessageType = iota
+	ClientDisconnectMessageType
 )
 
 
 type MessageConstructor func() Message
 var MessageConstructors = [...](MessageConstructor){
-	func() Message { return NewChatMessage() },
+	//func() Message { return nil },
+	nil,
+	nil,
 }
 
 type Message interface {
-	ToClient() string
-	FromClient(*Client, string)
+	ToClient() []byte
+	FromClient(*Client, []byte) error
 	Process(*sqlx.DB) []Message
+	GetDestination() Destination
 }
 
-type ChatMessage struct {
+const (
+	ClientDestination = iota
+	BoardDestination
+)
+
+type Destination struct {
+	DestinationType byte
+	Board string
+	Id uuid.UUID
+}
+
+/*type ChatMessage struct {
 	MessageType byte
 	From uuid.UUID
 	Contents string
@@ -49,4 +62,4 @@ func (msg *ChatMessage) Process(db *sqlx.DB) []Message {
 	log.Printf("%v", msg)
 	return []Message{msg}
 }
-
+*/
