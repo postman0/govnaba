@@ -111,6 +111,7 @@ func main() {
 				Expires: time.Now().AddDate(1, 0, 0),
 			}
 			header.Add("Set-Cookie", cookie.String())
+			db.MustExec(`INSERT INTO users (client_id) VALUES ($1);`, uuid_cl.String())
 		}
 		conn, err := upgrader.Upgrade(rw, req, header)
 		if err != nil {
