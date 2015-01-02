@@ -12,11 +12,11 @@
             messageSocket.onopen = function() {
                 console.log("Soedineniye ustanovleno......");
                 messageSocket.onmessage = function(e) {
-                    renderMessage(JSON.parse(e.data).Contents);
+                    renderMessage(e.data);
                 }
                 
                 window.sendBtn.onclick = function() {
-                    messageSocket.send('{"MessageType": 0, "Contents": "'+window.messageBox.value+'"}');
+                    messageSocket.send(window.messageBox.value);
                     return false;
                 }
                 
