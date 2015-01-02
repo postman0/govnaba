@@ -1,7 +1,7 @@
 package govnaba
 
 import (
-	_ "log"
+	"log"
 	"encoding/json"
 	"github.com/jmoiron/sqlx"
 	"code.google.com/p/go-uuid/uuid"
@@ -34,17 +34,26 @@ func (msg *CreateThreadMessage) Process(db *sqlx.DB) []Message {
 	var boardExists bool
 	row.Scan(&boardExists)
 	if !boardExists {
+		log.Printf("Tried to post into invalid board /%s/", msg.Board)
+		return nil
 		// return error
 	}
 	tx := db.MustBegin()
 	row = tx.QueryRowx(`INSERT INTO threads (board_id) VALUES ((SELECT id FROM boards WHERE name = $1)) RETURNING id;`, msg.Board)
 	var thread_id int
 	err := row.Scan(&thread_id)
-	row = tx.QueryRowx(`INSERT INTO posts (user_id, thread_id, board_local_id, topic, contents) VALUES (NULL, $1, nextval($2 || '_board_id_seq'), 'hui', 'pssssssss') RETURNING board_local_id;`, thread_id, msg.Board)
+	if err != nil {
+		log.Println(err)
+	}
+	row = tx.QueryRowx(`INSERT INTO posts (user_id, thread_id, board_local_id, topic, contents) 
+		VALUES (NULL, $1, nextval($2 || '_board_id_seq'), $3, $4) RETURNING board_local_id;`,
+		thread_id, msg.Board, msg.Topic, msg.Contents)
 	var post_id int
 	err = row.Scan(&post_id)
 	tx.Commit()
 	if err != nil {
+		log.Println(err)
+		return nil
 		// return error
 	}
 	msg.LocalId = post_id
@@ -52,7 +61,10 @@ func (msg *CreateThreadMessage) Process(db *sqlx.DB) []Message {
 }
 
 func (msg *CreateThreadMessage) ToClient() []byte {
-	bytes, _ := json.Marshal(msg)
+	bytes, err := json.Marshal(msg)
+	if err != nil {
+		log.Println(err)
+	}
 	return bytes
 }
 

@@ -9,6 +9,7 @@ const (
 	ProtocolErrorMessageType = iota
 	ClientDisconnectMessageType
 	CreateThreadMessageType
+	ChangeLocationMessageType
 )
 
 
@@ -18,6 +19,7 @@ var MessageConstructors = [...](MessageConstructor){
 	nil,
 	nil,
 	func() Message { return NewCreateThreadMessage() },
+	func() Message { return NewChangeLocationMessage() },
 }
 
 type Message interface {

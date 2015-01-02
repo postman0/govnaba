@@ -50,6 +50,20 @@ func getUUID(req *http.Request) (uuid.UUID, error) {
 	return uuid, nil
 }
 
+
+func sendMessage(msg govnaba.Message) {
+	log.Printf("%v", msg)
+	dest := msg.GetDestination()
+	if dest.DestinationType == govnaba.ClientDestination {
+		clients[dest.Id.String()].WriteChannel <- msg
+	} else if dest.DestinationType == govnaba.BoardDestination {
+		for _, client := range boardsClientsMap[dest.Board] {
+			log.Printf("Sending message %v of type %T to client %v", msg, msg, *client)
+			client.WriteChannel <- msg
+		}
+	}
+}
+
 // Handle broadcasts and new clients
 func HandleClients() {
 	for {
@@ -65,16 +79,19 @@ func HandleClients() {
 							delete(boardClients, m.Id.String())
 						}
 					}
-					default:
-						dest := msg.GetDestination()
-						if dest.DestinationType == govnaba.ClientDestination {
-							clients[dest.Id.String()].WriteChannel <- msg
-						} else if dest.DestinationType == govnaba.BoardDestination {
-							for _, client := range boardsClientsMap[dest.Board] {
-								log.Printf("Sending message %v of type %T to client %v", msg, msg, *client)
-								client.WriteChannel <- msg
-							}
+					case *govnaba.ChangeLocationMessage: {
+						log.Println(msg)
+						for _, boardClients := range boardsClientsMap {
+							delete(boardClients, m.Id.String())
 						}
+						if m.LocationType == govnaba.Board {
+							boardClients := boardsClientsMap[m.NewLocation]
+							boardClients[m.Id.String()] = clients[m.Id.String()]
+						}
+						log.Printf("%v", boardsClientsMap)
+					}
+					default:
+						sendMessage(msg)
 				}
 			}
 		}
@@ -107,6 +124,14 @@ func main() {
 		log.Fatalln("Couldn't connect to the database")
 	}
 	db.Ping()
+
+	rows, _ := db.Queryx(`SELECT name FROM boards;`)
+	for rows.Next() {
+		var boardName string
+		rows.Scan(&boardName)
+		boardsClientsMap[boardName] = make(map[string]*govnaba.Client)
+	}
+	log.Printf("%v", boardsClientsMap)
 	go HandleClients()
 	
 	http.DefaultServeMux.HandleFunc("/connect", func (rw http.ResponseWriter, req *http.Request) {

@@ -66,3 +66,44 @@ func (msg *ProtocolErrorMessage) Process(db *sqlx.DB) []Message {
 func (msg *ProtocolErrorMessage) GetDestination() Destination {
 	return Destination{ClientDestination, "", msg.Id}
 }
+
+const (
+	MainPage = iota
+	Board
+	Thread
+)
+
+type ChangeLocationMessage struct {
+	MessageType byte
+	Id uuid.UUID `json:"-"`
+	LocationType byte
+	NewLocation string
+}
+
+func NewChangeLocationMessage() *ChangeLocationMessage {
+	return &ChangeLocationMessage{MessageType: ChangeLocationMessageType,}
+}
+
+func (msg *ChangeLocationMessage) ToClient() []byte {
+	return nil
+}
+
+func (msg *ChangeLocationMessage) FromClient(cl *Client, msgBytes []byte) error {
+	err := json.Unmarshal(msgBytes, msg)
+	if err != nil {
+		return err
+	}
+	msg.Id = cl.Id
+	return nil
+}
+
+func (msg *ChangeLocationMessage) Process(db *sqlx.DB) []Message {
+	return []Message{msg}
+	// todo: split into leave and enter notifications for other clients
+	// todo: return thread posts if needed
+	// todo: return board threads if needed
+}
+
+func (msg *ChangeLocationMessage) GetDestination() Destination {
+	return Destination{} // garbage value
+}
