@@ -1,8 +1,8 @@
 package govnaba
 
 import (
-	"github.com/jmoiron/sqlx"
 	"code.google.com/p/go-uuid/uuid"
+	"github.com/jmoiron/sqlx"
 )
 
 const (
@@ -10,16 +10,18 @@ const (
 	ClientDisconnectMessageType
 	CreateThreadMessageType
 	ChangeLocationMessageType
+	AddPostMessageType
 )
 
-
 type MessageConstructor func() Message
+
 var MessageConstructors = [...](MessageConstructor){
 	//func() Message { return nil },
 	nil,
 	nil,
 	func() Message { return NewCreateThreadMessage() },
 	func() Message { return NewChangeLocationMessage() },
+	func() Message { return NewAddPostMessage() },
 }
 
 type Message interface {
@@ -36,6 +38,6 @@ const (
 
 type Destination struct {
 	DestinationType byte
-	Board string
-	Id uuid.UUID
+	Board           string
+	Id              uuid.UUID
 }
