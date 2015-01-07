@@ -34,6 +34,7 @@ type Message interface {
 const (
 	ClientDestination = iota
 	BoardDestination
+	MainPageDestination
 )
 
 type Destination struct {
