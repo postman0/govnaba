@@ -11,6 +11,8 @@ const (
 	CreateThreadMessageType
 	ChangeLocationMessageType
 	AddPostMessageType
+	GetBoardsMessageType
+	BoardListMessageType
 )
 
 type MessageConstructor func() Message
@@ -22,6 +24,8 @@ var MessageConstructors = [...](MessageConstructor){
 	func() Message { return NewCreateThreadMessage() },
 	func() Message { return NewChangeLocationMessage() },
 	func() Message { return NewAddPostMessage() },
+	func() Message { return NewGetBoardsMessage() },
+	nil,
 }
 
 type Message interface {
