@@ -1,19 +1,19 @@
 package govnaba
 
 import (
-	"encoding/json"
-	"log"
 	"code.google.com/p/go-uuid/uuid"
+	"encoding/json"
 	"github.com/gorilla/websocket"
 	"github.com/jmoiron/sqlx"
+	"log"
 )
 
 type Client struct {
-	WriteChannel chan Message
-	broadcastChannel chan Message
-	Id uuid.UUID
-	conn *websocket.Conn
-	db *sqlx.DB
+	WriteChannel     chan OutMessage
+	broadcastChannel chan OutMessage
+	Id               uuid.UUID
+	conn             *websocket.Conn
+	db               *sqlx.DB
 }
 
 func (cl *Client) receiveLoop() {
@@ -31,20 +31,15 @@ func (cl *Client) receiveLoop() {
 			cl.WriteChannel <- NewProtocolErrorMessage(cl.Id)
 			continue
 		}
-		constructorIndex, success := m["MessageType"].(float64)
+		messageType, success := m["MessageType"].(float64)
 		if !success {
 			log.Printf("Couldn't find message type in JSON")
 			cl.WriteChannel <- NewProtocolErrorMessage(cl.Id)
 			continue
 		}
-		if int(constructorIndex) >= len(MessageConstructors) {
-			log.Printf("Unknown message type")
-			cl.WriteChannel <- NewProtocolErrorMessage(cl.Id)
-			continue
-		}
-		messageConstructor := MessageConstructors[byte(constructorIndex)]
+		messageConstructor := MessageConstructors[byte(messageType)]
 		if messageConstructor == nil {
-			log.Printf("Tried to receive internal message from client")
+			log.Printf("Invalid message type")
 			cl.WriteChannel <- NewProtocolErrorMessage(cl.Id)
 			continue
 		}
@@ -69,8 +64,8 @@ func (cl *Client) writeLoop() {
 	}
 }
 
-func NewClient(conn *websocket.Conn, uuid uuid.UUID, broadcastChannel chan Message, db *sqlx.DB) *Client {
-	c := Client{make(chan Message, 5), broadcastChannel, uuid, conn, db}
+func NewClient(conn *websocket.Conn, uuid uuid.UUID, broadcastChannel chan OutMessage, db *sqlx.DB) *Client {
+	c := Client{make(chan OutMessage, 5), broadcastChannel, uuid, conn, db}
 	go c.writeLoop()
 	go c.receiveLoop()
 	return &c

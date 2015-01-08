@@ -16,10 +16,6 @@ type CreateThreadMessage struct {
 	LocalId     int
 }
 
-func NewCreateThreadMessage() *CreateThreadMessage {
-	return &CreateThreadMessage{MessageType: CreateThreadMessageType}
-}
-
 func (msg *CreateThreadMessage) FromClient(cl *Client, msgBytes []byte) error {
 	err := json.Unmarshal(msgBytes, msg)
 	if err != nil {
@@ -29,7 +25,7 @@ func (msg *CreateThreadMessage) FromClient(cl *Client, msgBytes []byte) error {
 	return nil
 }
 
-func (msg *CreateThreadMessage) Process(db *sqlx.DB) []Message {
+func (msg *CreateThreadMessage) Process(db *sqlx.DB) []OutMessage {
 	row := db.QueryRowx(`SELECT EXISTS(SELECT 1 FROM boards WHERE name = $1);`, msg.Board)
 	var boardExists bool
 	row.Scan(&boardExists)
@@ -57,7 +53,7 @@ func (msg *CreateThreadMessage) Process(db *sqlx.DB) []Message {
 		// todo: return error
 	}
 	msg.LocalId = post_id
-	return []Message{msg}
+	return []OutMessage{msg}
 }
 
 func (msg *CreateThreadMessage) ToClient() []byte {
@@ -82,10 +78,6 @@ type AddPostMessage struct {
 	AnswerId    int
 }
 
-func NewAddPostMessage() *AddPostMessage {
-	return &AddPostMessage{MessageType: AddPostMessageType}
-}
-
 func (msg *AddPostMessage) FromClient(cl *Client, msgBytes []byte) error {
 	err := json.Unmarshal(msgBytes, msg)
 	if err != nil {
@@ -95,7 +87,7 @@ func (msg *AddPostMessage) FromClient(cl *Client, msgBytes []byte) error {
 	return nil
 }
 
-func (msg *AddPostMessage) Process(db *sqlx.DB) []Message {
+func (msg *AddPostMessage) Process(db *sqlx.DB) []OutMessage {
 
 	const insertPostQuery = `INSERT INTO posts (user_id, thread_id, topic, contents, board_local_id) VALUES 
 		((SELECT users.id FROM users WHERE client_id = $1),
@@ -113,7 +105,7 @@ func (msg *AddPostMessage) Process(db *sqlx.DB) []Message {
 		return nil
 	}
 	msg.AnswerId = answerId
-	return []Message{msg}
+	return []OutMessage{msg}
 }
 
 func (msg *AddPostMessage) ToClient() []byte {

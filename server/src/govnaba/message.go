@@ -15,24 +15,23 @@ const (
 	BoardListMessageType
 )
 
-type MessageConstructor func() Message
+type MessageConstructor func() InMessage
 
-var MessageConstructors = [...](MessageConstructor){
-	//func() Message { return nil },
-	nil,
-	nil,
-	func() Message { return NewCreateThreadMessage() },
-	func() Message { return NewChangeLocationMessage() },
-	func() Message { return NewAddPostMessage() },
-	func() Message { return NewGetBoardsMessage() },
-	nil,
+var MessageConstructors = map[byte]MessageConstructor{
+	CreateThreadMessageType:   func() InMessage { return &CreateThreadMessage{MessageType: CreateThreadMessageType} },
+	ChangeLocationMessageType: func() InMessage { return &ChangeLocationMessage{MessageType: ChangeLocationMessageType} },
+	AddPostMessageType:        func() InMessage { return &AddPostMessage{MessageType: AddPostMessageType} },
+	GetBoardsMessageType:      func() InMessage { return &GetBoardsMessage{MessageType: GetBoardsMessageType} },
 }
 
-type Message interface {
-	ToClient() []byte
+type InMessage interface {
 	FromClient(*Client, []byte) error
-	Process(*sqlx.DB) []Message
+	Process(*sqlx.DB) []OutMessage
+}
+
+type OutMessage interface {
 	GetDestination() Destination
+	ToClient() []byte
 }
 
 const (

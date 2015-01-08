@@ -1,18 +1,18 @@
 package main
 
 import (
-	"net/http"
-	"time"
+	"code.google.com/p/go-uuid/uuid"
 	"errors"
-	"fmt"
-	"log"
 	"flag"
-	"github.com/gorilla/websocket"
+	"fmt"
 	"github.com/gorilla/securecookie"
+	"github.com/gorilla/websocket"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
-	"code.google.com/p/go-uuid/uuid"
 	"govnaba"
+	"log"
+	"net/http"
+	"time"
 )
 
 var bindAddress = flag.String("address", "0.0.0.0:8080", "address and port for the server to listen on")
@@ -25,7 +25,7 @@ var dbPassword = flag.String("dbpassword", "postgres", "postgresql user password
 
 var secureCookie *securecookie.SecureCookie
 
-var globalChannel chan govnaba.Message
+var globalChannel chan govnaba.OutMessage
 
 var db *sqlx.DB
 
@@ -50,8 +50,7 @@ func getUUID(req *http.Request) (uuid.UUID, error) {
 	return uuid, nil
 }
 
-
-func sendMessage(msg govnaba.Message) {
+func sendMessage(msg govnaba.OutMessage) {
 	log.Printf("%v", msg)
 	dest := msg.GetDestination()
 	if dest.DestinationType == govnaba.ClientDestination {
@@ -68,18 +67,22 @@ func sendMessage(msg govnaba.Message) {
 func HandleClients() {
 	for {
 		select {
-			case cl := <- newClientsChannel: {
+		case cl := <-newClientsChannel:
+			{
 				clients[cl.Id.String()] = cl
 			}
-			case msg := <- globalChannel: {
+		case msg := <-globalChannel:
+			{
 				switch m := msg.(type) {
-					case *govnaba.ClientDisconnectMessage: {
+				case *govnaba.ClientDisconnectMessage:
+					{
 						delete(clients, m.Id.String())
 						for _, boardClients := range boardsClientsMap {
 							delete(boardClients, m.Id.String())
 						}
 					}
-					case *govnaba.ChangeLocationMessage: {
+				case *govnaba.ChangeLocationMessage:
+					{
 						log.Println(msg)
 						for _, boardClients := range boardsClientsMap {
 							delete(boardClients, m.Id.String())
@@ -90,8 +93,8 @@ func HandleClients() {
 						}
 						log.Printf("%v", boardsClientsMap)
 					}
-					default:
-						sendMessage(msg)
+				default:
+					sendMessage(msg)
 				}
 			}
 		}
@@ -102,24 +105,24 @@ func main() {
 	flag.Parse()
 
 	server := http.Server{
-		Addr: *bindAddress,
-		ReadTimeout: 5 * time.Second,
+		Addr:         *bindAddress,
+		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 5 * time.Second,
 	}
 	upgrader := websocket.Upgrader{
 		5 * time.Second,
 		0, 0,
 		nil, nil,
-		func (r *http.Request) bool { return true },
+		func(r *http.Request) bool { return true },
 	}
 
 	secureCookie = securecookie.New([]byte(*cookieHashKey), nil)
-	globalChannel = make(chan govnaba.Message, 10)
+	globalChannel = make(chan govnaba.OutMessage, 10)
 	newClientsChannel = make(chan *govnaba.Client, 10)
 	clients = make(map[string]*govnaba.Client)
 	boardsClientsMap = make(map[string]map[string]*govnaba.Client)
-	db, err := sqlx.Connect("postgres", fmt.Sprintf("user=%s password=%s dbname=%s host=%s port=%s connect_timeout=5", 
-												*dbUser, *dbPassword, *dbName, *dbHost, *dbPort))
+	db, err := sqlx.Connect("postgres", fmt.Sprintf("user=%s password=%s dbname=%s host=%s port=%s connect_timeout=5",
+		*dbUser, *dbPassword, *dbName, *dbHost, *dbPort))
 	if err != nil {
 		log.Fatalln("Couldn't connect to the database")
 	}
@@ -131,10 +134,9 @@ func main() {
 		rows.Scan(&boardName)
 		boardsClientsMap[boardName] = make(map[string]*govnaba.Client)
 	}
-	log.Printf("%v", boardsClientsMap)
 	go HandleClients()
-	
-	http.DefaultServeMux.HandleFunc("/connect", func (rw http.ResponseWriter, req *http.Request) {
+
+	http.DefaultServeMux.HandleFunc("/connect", func(rw http.ResponseWriter, req *http.Request) {
 		log.Printf("New client from %s", req.RemoteAddr)
 		uuid_cl, err := getUUID(req)
 		var header http.Header = nil
@@ -143,8 +145,8 @@ func main() {
 			header = make(map[string][]string)
 			encoded_uuid, _ := secureCookie.Encode("userid", uuid_cl.String())
 			cookie := http.Cookie{
-				Name: "userid",
-				Value: encoded_uuid,
+				Name:    "userid",
+				Value:   encoded_uuid,
 				Expires: time.Now().AddDate(1, 0, 0),
 			}
 			header.Add("Set-Cookie", cookie.String())
@@ -157,7 +159,7 @@ func main() {
 			log.Printf("Client connected.")
 		}
 		newClientsChannel <- govnaba.NewClient(conn, uuid_cl, globalChannel, db)
-	})		
+	})
 	log.Println("Starting server...")
 	server.ListenAndServe()
 }

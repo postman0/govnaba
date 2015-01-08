@@ -1,16 +1,16 @@
 package govnaba
 
 import (
-	"log"
-	"errors"
-	"encoding/json"
-	"github.com/jmoiron/sqlx"
 	"code.google.com/p/go-uuid/uuid"
+	"encoding/json"
+	_ "errors"
+	"github.com/jmoiron/sqlx"
+	"log"
 )
 
 type ClientDisconnectMessage struct {
 	MessageType byte
-	Id uuid.UUID
+	Id          uuid.UUID
 }
 
 func NewClientDisconnectMessage(id uuid.UUID) *ClientDisconnectMessage {
@@ -22,15 +22,6 @@ func (msg *ClientDisconnectMessage) ToClient() []byte {
 	return nil
 }
 
-func (msg *ClientDisconnectMessage) FromClient(_ *Client, _ []byte) error {
-	return errors.New("")
-}
-
-func (msg *ClientDisconnectMessage) Process(db *sqlx.DB) []Message {
-	log.Fatalln("Tried to call Process on a disconnection message")
-	return nil
-}
-
 func (msg *ClientDisconnectMessage) GetDestination() Destination {
 	log.Fatalln("Tried to call GetDestination on a disconnection message")
 	return Destination{}
@@ -38,7 +29,7 @@ func (msg *ClientDisconnectMessage) GetDestination() Destination {
 
 type ProtocolErrorMessage struct {
 	MessageType byte
-	Id uuid.UUID
+	Id          uuid.UUID `json:"-"`
 }
 
 func NewProtocolErrorMessage(id uuid.UUID) *ProtocolErrorMessage {
@@ -46,21 +37,11 @@ func NewProtocolErrorMessage(id uuid.UUID) *ProtocolErrorMessage {
 }
 
 func (msg *ProtocolErrorMessage) ToClient() []byte {
-	msgMap := map[string]interface{}{
-		"error": true,
-		"errorMessage": "Couldn't understand your message",
+	bytes, err := json.Marshal(msg)
+	if err != nil {
+		log.Println(err)
 	}
-	str, _ := json.Marshal(msgMap)
-	return str
-}
-
-func (msg *ProtocolErrorMessage) FromClient(_ *Client, _ []byte) error {
-	return errors.New("")
-}
-
-func (msg *ProtocolErrorMessage) Process(db *sqlx.DB) []Message {
-	log.Fatalln("Tried to call Process on a protocol error message")
-	return nil
+	return bytes
 }
 
 func (msg *ProtocolErrorMessage) GetDestination() Destination {
@@ -74,14 +55,14 @@ const (
 )
 
 type ChangeLocationMessage struct {
-	MessageType byte
-	Id uuid.UUID `json:"-"`
+	MessageType  byte
+	Id           uuid.UUID `json:"-"`
 	LocationType byte
-	NewLocation string
+	NewLocation  string
 }
 
 func NewChangeLocationMessage() *ChangeLocationMessage {
-	return &ChangeLocationMessage{MessageType: ChangeLocationMessageType,}
+	return &ChangeLocationMessage{MessageType: ChangeLocationMessageType}
 }
 
 func (msg *ChangeLocationMessage) ToClient() []byte {
@@ -97,11 +78,9 @@ func (msg *ChangeLocationMessage) FromClient(cl *Client, msgBytes []byte) error 
 	return nil
 }
 
-func (msg *ChangeLocationMessage) Process(db *sqlx.DB) []Message {
-	return []Message{msg}
+func (msg *ChangeLocationMessage) Process(db *sqlx.DB) []OutMessage {
+	return []OutMessage{msg}
 	// todo: split into leave and enter notifications for other clients
-	// todo: return thread posts if needed
-	// todo: return board threads if needed
 }
 
 func (msg *ChangeLocationMessage) GetDestination() Destination {
