@@ -13,6 +13,7 @@ type CreateThreadMessage struct {
 	Board       string
 	Topic       string
 	Contents    string
+	ThreadId    int
 	LocalId     int
 }
 
@@ -53,6 +54,7 @@ func (msg *CreateThreadMessage) Process(db *sqlx.DB) []OutMessage {
 		// todo: return error
 	}
 	msg.LocalId = post_id
+	msg.ThreadId = thread_id
 	return []OutMessage{msg}
 }
 
@@ -69,13 +71,13 @@ func (msg *CreateThreadMessage) GetDestination() Destination {
 }
 
 type AddPostMessage struct {
-	MessageType byte
-	ClientId    uuid.UUID `json:"-"`
-	Board       string
-	Topic       string
-	Contents    string
-	PostId      int
-	AnswerId    int
+	MessageType   byte
+	ClientId      uuid.UUID `json:"-"`
+	Board         string
+	Topic         string
+	Contents      string
+	ThreadLocalId int
+	AnswerLocalId int
 }
 
 func (msg *AddPostMessage) FromClient(cl *Client, msgBytes []byte) error {
@@ -96,15 +98,20 @@ func (msg *AddPostMessage) Process(db *sqlx.DB) []OutMessage {
 		$5,
 		nextval($2 || '_board_id_seq')
 		) RETURNING posts.board_local_id;`
-	row := db.QueryRowx(insertPostQuery, msg.ClientId.String(), msg.Board, msg.PostId, msg.Topic, msg.Contents)
+
+	tx := db.MustBegin()
+	row := tx.QueryRowx(insertPostQuery, msg.ClientId.String(), msg.Board, msg.ThreadLocalId, msg.Topic, msg.Contents)
 	var answerId int
 	err := row.Scan(&answerId)
 	if err != nil {
+		tx.Rollback()
 		log.Println(err)
 		// todo: return error
 		return nil
 	}
-	msg.AnswerId = answerId
+	tx.Exec(`UPDATE threads SET last_bump_date = DEFAULT WHERE id = (SELECT thread_id FROM posts WHERE board_local_id = $1);`, msg.ThreadLocalId)
+	tx.Commit()
+	msg.AnswerLocalId = answerId
 	return []OutMessage{msg}
 }
 
