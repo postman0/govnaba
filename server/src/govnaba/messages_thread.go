@@ -42,8 +42,8 @@ func (msg *CreateThreadMessage) Process(db *sqlx.DB) []OutMessage {
 	if err != nil {
 		log.Println(err)
 	}
-	row = tx.QueryRowx(`INSERT INTO posts (user_id, thread_id, board_local_id, topic, contents) 
-		VALUES (NULL, $1, nextval($2 || '_board_id_seq'), $3, $4) RETURNING board_local_id;`,
+	row = tx.QueryRowx(`INSERT INTO posts (user_id, thread_id, board_local_id, topic, contents, is_op) 
+		VALUES (NULL, $1, nextval($2 || '_board_id_seq'), $3, $4, TRUE) RETURNING board_local_id;`,
 		thread_id, msg.Board, msg.Topic, msg.Contents)
 	var post_id int
 	err = row.Scan(&post_id)
