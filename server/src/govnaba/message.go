@@ -15,6 +15,8 @@ const (
 	BoardListMessageType
 	GetBoardThreadsMessageType
 	BoardThreadListMessageType
+	GetThreadMessageType
+	ThreadPostsMessageType
 )
 
 type MessageConstructor func() InMessage
@@ -25,6 +27,7 @@ var MessageConstructors = map[byte]MessageConstructor{
 	AddPostMessageType:         func() InMessage { return &AddPostMessage{MessageType: AddPostMessageType} },
 	GetBoardsMessageType:       func() InMessage { return &GetBoardsMessage{MessageType: GetBoardsMessageType} },
 	GetBoardThreadsMessageType: func() InMessage { return &GetBoardThreadsMessage{MessageType: GetBoardThreadsMessageType} },
+	GetThreadMessageType:       func() InMessage { return &GetThreadMessage{MessageType: GetThreadMessageType} },
 }
 
 type InMessage interface {

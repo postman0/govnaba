@@ -126,3 +126,59 @@ func (msg *AddPostMessage) ToClient() []byte {
 func (msg *AddPostMessage) GetDestination() Destination {
 	return Destination{DestinationType: BoardDestination, Board: msg.Board}
 }
+
+type GetThreadMessage struct {
+	MessageType byte
+	ClientId    uuid.UUID `json:"-"`
+	Board       string
+	LocalId     int
+}
+
+type ThreadPostsMessage struct {
+	MessageType byte
+	ClientId    uuid.UUID `json:"-"`
+	Board       string
+	Posts       []Post
+}
+
+func (msg *GetThreadMessage) FromClient(cl *Client, msgBytes []byte) error {
+	err := json.Unmarshal(msgBytes, msg)
+	if err != nil {
+		return err
+	}
+	msg.ClientId = cl.Id
+	return nil
+}
+
+func (msg *GetThreadMessage) Process(db *sqlx.DB) []OutMessage {
+	const query = `
+	SELECT board_local_id AS localid, created_date AS date, topic, contents, attrs  FROM posts
+	WHERE thread_id =
+		(SELECT thread_id FROM posts, threads, boards WHERE board_local_id = $1 AND thread_id = threads.id AND board_id = boards.id AND boards.name = $2)
+	ORDER BY board_local_id ASC;
+	`
+	answer := ThreadPostsMessage{
+		MessageType: ThreadPostsMessageType,
+		ClientId:    msg.ClientId,
+		Board:       msg.Board,
+		Posts:       []Post{},
+	}
+	err := db.Select(&answer.Posts, query, msg.LocalId, msg.Board)
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+	return []OutMessage{&answer}
+}
+
+func (msg *ThreadPostsMessage) ToClient() []byte {
+	bytes, err := json.Marshal(msg)
+	if err != nil {
+		log.Println(err)
+	}
+	return bytes
+}
+
+func (msg *ThreadPostsMessage) GetDestination() Destination {
+	return Destination{DestinationType: ClientDestination, Id: msg.ClientId}
+}

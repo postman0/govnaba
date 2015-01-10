@@ -64,7 +64,7 @@ type Post struct {
 	Topic    string
 	Contents string
 	Date     time.Time
-	Attrs    hstore.Hstore `json:"-"`
+	Attrs    hstore.Hstore
 }
 
 type BoardThreadListMessage struct {
