@@ -2,74 +2,12 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-        <script>
-            var messageSocket = new WebSocket("ws://localhost:8080/connect");
-            
-            messageSocket.onerror = function(e) {
-                console.log(e);
-            }
-            
-            messageSocket.onopen = function() {
-                console.log("Soedineniye ustanovleno......");
-                messageSocket.onmessage = function(e) {
-                    renderMessage(e.data);
-                }
-                
-                window.sendBtn.onclick = function() {
-                    messageSocket.send(window.messageBox.value);
-                    return false;
-                }
-                
-                function renderMessage(text) {
-                    var message = document.createElement('div');
-                    message.className = 'message';
-                    message.textContent = text;
-                    window.kolchok.appendChild(message);
-                }
-            }
-        </script>
-        <style>
-            .form,#kolchok {
-                width: 800px;
-                margin: auto;
-            }
-            
-            .form > div {
-                margin-left: 200px;
-            }
-            
-            #kolchok {
-                margin-top: 10px;
-                background: #ccc;
-            }
-            
-            .message {
-                width: 785px;
-                border: 1px solid #000;
-                border-radius: 3px;
-                margin-top: 3px;
-                text-align: left;
-                background: #fff;
-                padding: 3px;
-                min-height: 100px;
-                margin-left: 3px;
-            }
-            
-            #messageBox {
-                height: 150px;
-                width: 400px;
-            }
-        </style>
+        <script type="text/javascript" src='/static/react.js'></script>
+        <script src="https://cdn.rawgit.com/visionmedia/page.js/master/page.js"></script>
+        <script type="text/javascript" src='/static/govnaba_views.js'></script>
+        <script type="text/javascript" src='/static/govnaba.js'></script>
+        <link rel="stylesheet" type="text/css" href="/static/style.css"></link>
     </head>
     <body>
-        <div class="form">
-            <div>
-                <textarea id="messageBox"></textarea>
-                <br>
-                <button id="sendBtn"><label>Прррр</label></button>
-            </div>
-        </div>
-        <div id="kolchok">
-        </div>
     </body>
 </html>

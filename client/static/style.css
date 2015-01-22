@@ -1,0 +1,30 @@
+.form,#kolchok {
+    width: 800px;
+    margin: auto;
+}
+
+.form > div {
+    margin-left: 200px;
+}
+
+#kolchok {
+    margin-top: 10px;
+    background: #ccc;
+}
+
+.message {
+    width: 785px;
+    border: 1px solid #000;
+    border-radius: 3px;
+    margin-top: 3px;
+    text-align: left;
+    background: #fff;
+    padding: 3px;
+    min-height: 100px;
+    margin-left: 3px;
+}
+
+#messageBox {
+    height: 150px;
+    width: 400px;
+}
