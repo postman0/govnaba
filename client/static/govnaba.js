@@ -4,10 +4,18 @@ var GovnabaMessager = function(socket) {
     this.socket = socket;
     
     this.index = function(ctx) {
-        console.log(this);
         this.socket.send(JSON.stringify(
         {
            MessageType: 5 
+        }));
+    }
+
+    this.requestBoardPage = function(ctx) {
+        this.socket.send(JSON.stringify({
+            MessageType: 7,
+            Board: ctx.params.board,
+            Count: 10,
+            SkipBatches: 0
         }));
     }
 }
@@ -21,6 +29,7 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log("Connected.");
         var msgr = new GovnabaMessager(socket);
         page('/', msgr.index.bind(msgr));
+        page('/:board/', msgr.requestBoardPage.bind(msgr));
         page();
     }
 
@@ -30,11 +39,14 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     socket.onmessage = function(e) {
-        console.log(e.data);
         msg = JSON.parse(e.data);
         switch(msg.MessageType) {
             case 6: {
                 views.index(msg.Boards.filter(function (name) { return name.length > 0 }));
+                break;
+            }
+            case 8: {
+                views.showBoardPage(msg);
             }
         }
     }
