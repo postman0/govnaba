@@ -3,11 +3,11 @@ var MainPage = React.createClass({
 	render: function() {
 		var boards = this.props.boards.map(function(board) {
 			return (
-				<li><a href={"/"+board+"/"}>/{board}/</a></li>
+				<li className="list-group-item"><a href={"/"+board+"/"}>/{board}/</a></li>
 			);
 		});
 		return (
-			<ul>
+			<ul className="list-group">
 				{boards}
 			</ul>
 		)
@@ -31,12 +31,14 @@ var Board = React.createClass({
 var Thread = React.createClass({
 	render: function() {
 		return (
-			<div className="thread">
+			<div className="panel panel-default">
+				<div className="panel-body">
 				{this.props.posts.map(function(val) {
 					return (
 						<Post postData={val} />
 					)
 				})}
+				</div>
 			</div>
 		)
 	}
@@ -45,12 +47,20 @@ var Thread = React.createClass({
 var Post = React.createClass({
 	render: function() {
 		return (
-			<div className="post">
-				<div className="post-header">
-				<span className="post-header-id">{this.props.postData.LocalId}</span>
-				<span className="post-header-date">{new Date(this.props.postData.Date).toLocaleString()}</span>
+			<div className="panel panel-default">
+				<div className="panel-heading">
+				<span className="post-header-id">{this.props.postData.LocalId} </span>
+				<span className="post-header-date">
+					{new Date(this.props.postData.Date).toLocaleString({}, {
+						hour12: false,
+						weekday: "narrow",
+						year: "numeric",
+						month: "long",
+						day: "numeric"
+					})}
+				</span>
 				</div>
-				<div className="post-contents">
+				<div className="panel-body">
 					{this.props.postData.Contents}
 				</div>
 			</div>
@@ -61,11 +71,11 @@ var Post = React.createClass({
 
 var GovnabaViews = function() {
 	this.index = function(boards) {
-		React.render(<MainPage boards={boards} />, document.getElementsByTagName('body')[0]);
+		React.render(<MainPage boards={boards} />, document.getElementById("board-list"));
 	}
 
 	this.showBoardPage = function(msg) {
-		React.render(<Board threads={msg.Threads} />, document.getElementsByTagName('body')[0]);
+		React.render(<Board threads={msg.Threads} />, document.getElementById("content-board"));
 	}
 
 }
