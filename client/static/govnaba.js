@@ -1,53 +1,81 @@
 
-var GovnabaMessager = function(socket) {
+var GovnabaMessager = function(gvnb) {
 
-    this.socket = socket;
+    this.gvnb = gvnb;
+    this.hostname = "localhost:8080"
+    this.socket = new WebSocket("ws://" + this.hostname + "/connect");
+
+    this.socket.onopen = function() {
+        console.log("Connected.");
+        gvnb.initialize();
+    }
+
+    this.socket.onerror = function(e) {
+        console.log(e);
+        //TODO handle
+    }
+
+    this.socket.onmessage = function(e) {
+        msg = JSON.parse(e.data);
+        switch(msg.MessageType) {
+            case 6: {
+                gvnb.onBoardListMessage(msg);
+                break;
+            }
+            case 8: {
+                gvnb.onBoardThreadsMessage(msg);
+            }
+        }
+    }
     
-    this.index = function(ctx) {
+    this.getBoards = function() {
         this.socket.send(JSON.stringify(
         {
            MessageType: 5 
         }));
     }
 
-    this.requestBoardPage = function(ctx) {
+    this.getBoardPage = function(board, page) {
         this.socket.send(JSON.stringify({
             MessageType: 7,
-            Board: ctx.params.board,
+            Board: board,
             Count: 10,
-            SkipBatches: 0
+            SkipBatches: page
         }));
     }
 }
 
-document.addEventListener("DOMContentLoaded", function () {
-    var hostname = "localhost:8080"
-    var socket = new WebSocket("ws://" + hostname + "/connect");
-    var views = new GovnabaViews();
 
-    socket.onopen = function() {
-        console.log("Connected.");
-        var msgr = new GovnabaMessager(socket);
-        page('/', msgr.index.bind(msgr));
-        page('/:board/', msgr.requestBoardPage.bind(msgr));
+Govnaba = function() {
+
+    this.msgr = new GovnabaMessager(this)
+    this.views = new GovnabaViews();
+    
+    this.initialize = function() {
+        page('/', this.navMainPage.bind(this));
+        page('/:board/', this.navBoardPage.bind(this));
         page();
+        this.views.showBase();
+        this.msgr.getBoards();
     }
 
-    socket.onerror = function(e) {
-        console.log(e);
-        //TODO handle
+    this.navMainPage = function(ctx) {
     }
 
-    socket.onmessage = function(e) {
-        msg = JSON.parse(e.data);
-        switch(msg.MessageType) {
-            case 6: {
-                views.index(msg.Boards.filter(function (name) { return name.length > 0 }));
-                break;
-            }
-            case 8: {
-                views.showBoardPage(msg);
-            }
-        }
+    this.navBoardPage = function(ctx) {
+        this.msgr.getBoardPage(ctx.params.board, 0);
     }
+
+    this.onBoardThreadsMessage = function(msg) {
+        this.views.showBoardPage(msg);
+    }
+
+    this.onBoardListMessage = function(msg) {
+        this.views.showBoardList(msg.Boards.filter(function (name) { return name.length > 0 }));
+    }
+}
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    gvnb = new Govnaba();
 });

@@ -1,5 +1,32 @@
 
-var MainPage = React.createClass({displayName: "MainPage",
+var Base = React.createClass({displayName: "Base",
+	render: function() {
+		return (
+		React.createElement("div", {id: "content-main", className: "container-fluid"}, 
+			React.createElement(NavBar, null), 
+            React.createElement("div", {id: "board-list", className: "col-md-2"}
+            ), 
+            React.createElement("div", {id: "content-board", className: "col-md-8"}
+            )
+        )
+		);
+	}
+})
+
+var NavBar = React.createClass({displayName: "NavBar",
+	render: function() {
+		return (
+			React.createElement("nav", {className: "navbar navbar-default navbar-static-top"}, 
+				React.createElement("div", {className: "navbar-header"}, 
+					React.createElement("a", {className: "navbar-brand", href: "/"}, "Govnaba")
+				)
+			)
+		)
+	}
+})
+
+
+var BoardList = React.createClass({displayName: "BoardList",
 	render: function() {
 		var boards = this.props.boards.map(function(board) {
 			return (
@@ -70,12 +97,15 @@ var Post = React.createClass({displayName: "Post",
 
 
 var GovnabaViews = function() {
-	this.index = function(boards) {
-		React.render(React.createElement(MainPage, {boards: boards}), document.getElementById("board-list"));
+	this.showBoardList = function(boards) {
+		React.render(React.createElement(BoardList, {boards: boards}), document.getElementById("board-list"));
 	}
 
 	this.showBoardPage = function(msg) {
 		React.render(React.createElement(Board, {threads: msg.Threads}), document.getElementById("content-board"));
 	}
 
+	this.showBase = function() {
+		React.render(React.createElement(Base, null), document.getElementsByTagName("body")[0]);
+	}
 }

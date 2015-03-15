@@ -1,5 +1,32 @@
 
-var MainPage = React.createClass({
+var Base = React.createClass({
+	render: function() {
+		return (
+		<div id="content-main" className="container-fluid">
+			<NavBar />
+            <div id="board-list" className="col-md-2">
+            </div>
+            <div id="content-board" className="col-md-8">
+            </div>
+        </div>
+		);
+	}
+})
+
+var NavBar = React.createClass({
+	render: function() {
+		return (
+			<nav className="navbar navbar-default navbar-static-top">
+				<div className="navbar-header">
+					<a className="navbar-brand" href="/">Govnaba</a>
+				</div>
+			</nav>
+		)
+	}
+})
+
+
+var BoardList = React.createClass({
 	render: function() {
 		var boards = this.props.boards.map(function(board) {
 			return (
@@ -70,12 +97,15 @@ var Post = React.createClass({
 
 
 var GovnabaViews = function() {
-	this.index = function(boards) {
-		React.render(<MainPage boards={boards} />, document.getElementById("board-list"));
+	this.showBoardList = function(boards) {
+		React.render(<BoardList boards={boards} />, document.getElementById("board-list"));
 	}
 
 	this.showBoardPage = function(msg) {
 		React.render(<Board threads={msg.Threads} />, document.getElementById("content-board"));
 	}
 
+	this.showBase = function() {
+		React.render(<Base />, document.getElementsByTagName("body")[0]);
+	}
 }
