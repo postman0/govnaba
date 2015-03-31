@@ -46,7 +46,7 @@ func (cl *Client) receiveLoop() {
 		message := messageConstructor()
 		err = message.FromClient(cl, buf)
 		if err != nil {
-			log.Printf("Couldn't decode message")
+			log.Printf("Couldn't decode message: %s", err)
 			cl.WriteChannel <- NewProtocolErrorMessage(cl.Id)
 			continue
 		}

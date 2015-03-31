@@ -1,0 +1,17 @@
+
+.post-container {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.thread-container {
+	margin-bottom: 3em;
+}
+
+.post-header-id {
+	margin-right: 0.5em;
+}
+
+.post-header-date {
+	float: right;
+}

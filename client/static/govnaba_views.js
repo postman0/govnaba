@@ -30,7 +30,7 @@ var BoardList = React.createClass({displayName: "BoardList",
 	render: function() {
 		var boards = this.props.boards.map(function(board) {
 			return (
-				React.createElement("li", {className: "list-group-item"}, React.createElement("a", {href: "/"+board+"/"}, "/", board, "/"))
+				React.createElement("li", {className: "list-group-item", key: board}, React.createElement("a", {href: "/"+board+"/"}, "/", board, "/"))
 			);
 		});
 		return (
@@ -47,7 +47,7 @@ var Board = React.createClass({displayName: "Board",
 			React.createElement("div", {className: "board"}, 
 				this.props.threads.map(function(val) {
 					return (
-						React.createElement(Thread, {posts: val})
+						React.createElement(Thread, {posts: val, key: val[0].LocalId})
 					)
 				})
 			)
@@ -57,15 +57,14 @@ var Board = React.createClass({displayName: "Board",
 
 var Thread = React.createClass({displayName: "Thread",
 	render: function() {
+		var opId = this.props.posts[0].LocalId;
 		return (
-			React.createElement("div", {className: "panel panel-default"}, 
-				React.createElement("div", {className: "panel-body"}, 
+			React.createElement("div", {className: "thread-container"}, 
 				this.props.posts.map(function(val) {
 					return (
-						React.createElement(Post, {postData: val})
+						React.createElement(Post, {postData: val, opPostId: opId, key: val.LocalId})
 					)
 				})
-				)
 			)
 		)
 	}
@@ -73,19 +72,21 @@ var Thread = React.createClass({displayName: "Thread",
 
 var Post = React.createClass({displayName: "Post",
 	render: function() {
+		var datestr = new Date(this.props.postData.Date).toLocaleString({}, {
+			hour12: false,
+			weekday: "long",
+			year: "numeric",
+			month: "long",
+			day: "numeric",
+			hour: "numeric",
+			minute: "numeric",
+			second: "numeric"});
+		datestr = datestr.charAt(0).toUpperCase() + datestr.slice(1);
 		return (
-			React.createElement("div", {className: "panel panel-default"}, 
+			React.createElement("div", {className: "panel panel-default post-container"}, 
 				React.createElement("div", {className: "panel-heading"}, 
-				React.createElement("span", {className: "post-header-id"}, this.props.postData.LocalId, " "), 
-				React.createElement("span", {className: "post-header-date"}, 
-					new Date(this.props.postData.Date).toLocaleString({}, {
-						hour12: false,
-						weekday: "narrow",
-						year: "numeric",
-						month: "long",
-						day: "numeric"
-					})
-				)
+				React.createElement("a", {href: gvnb.getThreadLink(this.props.opPostId, this.props.postData.LocalId), className: "post-header-id"}, "#", this.props.postData.LocalId), 
+				React.createElement("span", {className: "post-header-date"}, datestr)
 				), 
 				React.createElement("div", {className: "panel-body"}, 
 					this.props.postData.Contents
@@ -107,5 +108,8 @@ var GovnabaViews = function() {
 
 	this.showBase = function() {
 		React.render(React.createElement(Base, null), document.getElementsByTagName("body")[0]);
+	}
+	this.showThread = function(posts) {
+		React.render(React.createElement(Thread, {posts: posts}), document.getElementById("content-board"));
 	}
 }

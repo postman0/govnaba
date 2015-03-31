@@ -24,6 +24,11 @@ var GovnabaMessager = function(gvnb) {
             }
             case 8: {
                 gvnb.onBoardThreadsMessage(msg);
+                break;
+            }
+            case 10: {
+                gvnb.onThreadMessage(msg);
+                break;
             }
         }
     }
@@ -43,6 +48,14 @@ var GovnabaMessager = function(gvnb) {
             SkipBatches: page
         }));
     }
+
+    this.getThread = function(board, thread) {
+        this.socket.send(JSON.stringify({
+            MessageType: 9,
+            Board: board,
+            LocalId: thread
+        }))
+    }
 }
 
 
@@ -50,13 +63,19 @@ Govnaba = function() {
 
     this.msgr = new GovnabaMessager(this)
     this.views = new GovnabaViews();
+    this.state = {};
     
     this.initialize = function() {
         page('/', this.navMainPage.bind(this));
         page('/:board/', this.navBoardPage.bind(this));
+        page("/:board/:localid", this.navThreadPage.bind(this));
         page();
         this.views.showBase();
         this.msgr.getBoards();
+    }
+
+    this.getThreadLink = function(opLocalId, postLocalId) {
+        return '/' + this.state.board + '/' + opLocalId.toString() + "#" + postLocalId.toString();
     }
 
     this.navMainPage = function(ctx) {
@@ -64,6 +83,13 @@ Govnaba = function() {
 
     this.navBoardPage = function(ctx) {
         this.msgr.getBoardPage(ctx.params.board, 0);
+        this.state.board = ctx.params.board;
+    }
+
+    this.navThreadPage = function(ctx) {
+        this.msgr.getThread(ctx.params.board, parseInt(ctx.params.localid));
+        this.state.board = ctx.params.board;
+        this.state.thread = ctx.params.thread;
     }
 
     this.onBoardThreadsMessage = function(msg) {
@@ -72,6 +98,10 @@ Govnaba = function() {
 
     this.onBoardListMessage = function(msg) {
         this.views.showBoardList(msg.Boards.filter(function (name) { return name.length > 0 }));
+    }
+
+    this.onThreadMessage = function(msg) {
+        this.views.showThread(msg.Posts)
     }
 }
 

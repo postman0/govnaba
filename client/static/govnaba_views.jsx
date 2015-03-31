@@ -30,7 +30,7 @@ var BoardList = React.createClass({
 	render: function() {
 		var boards = this.props.boards.map(function(board) {
 			return (
-				<li className="list-group-item"><a href={"/"+board+"/"}>/{board}/</a></li>
+				<li className="list-group-item" key={board}><a href={"/"+board+"/"}>/{board}/</a></li>
 			);
 		});
 		return (
@@ -47,7 +47,7 @@ var Board = React.createClass({
 			<div className="board">
 				{this.props.threads.map(function(val) {
 					return (
-						<Thread posts={val} />
+						<Thread posts={val} key={val[0].LocalId}/>
 					)
 				})}
 			</div>
@@ -57,15 +57,14 @@ var Board = React.createClass({
 
 var Thread = React.createClass({
 	render: function() {
+		var opId = this.props.posts[0].LocalId;
 		return (
-			<div className="panel panel-default">
-				<div className="panel-body">
+			<div className="thread-container">
 				{this.props.posts.map(function(val) {
 					return (
-						<Post postData={val} />
+						<Post postData={val} opPostId={opId} key={val.LocalId}/>
 					)
 				})}
-				</div>
 			</div>
 		)
 	}
@@ -73,19 +72,21 @@ var Thread = React.createClass({
 
 var Post = React.createClass({
 	render: function() {
+		var datestr = new Date(this.props.postData.Date).toLocaleString({}, {
+			hour12: false,
+			weekday: "long",
+			year: "numeric",
+			month: "long",
+			day: "numeric",
+			hour: "numeric",
+			minute: "numeric",
+			second: "numeric"});
+		datestr = datestr.charAt(0).toUpperCase() + datestr.slice(1);
 		return (
-			<div className="panel panel-default">
+			<div className="panel panel-default post-container">
 				<div className="panel-heading">
-				<span className="post-header-id">{this.props.postData.LocalId} </span>
-				<span className="post-header-date">
-					{new Date(this.props.postData.Date).toLocaleString({}, {
-						hour12: false,
-						weekday: "narrow",
-						year: "numeric",
-						month: "long",
-						day: "numeric"
-					})}
-				</span>
+				<a href={gvnb.getThreadLink(this.props.opPostId, this.props.postData.LocalId)} className="post-header-id">#{this.props.postData.LocalId}</a>
+				<span className="post-header-date">{datestr}</span>
 				</div>
 				<div className="panel-body">
 					{this.props.postData.Contents}
@@ -107,5 +108,8 @@ var GovnabaViews = function() {
 
 	this.showBase = function() {
 		React.render(<Base />, document.getElementsByTagName("body")[0]);
+	}
+	this.showThread = function(posts) {
+		React.render(<Thread posts={posts} />, document.getElementById("content-board"));
 	}
 }
