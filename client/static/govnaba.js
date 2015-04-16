@@ -17,6 +17,7 @@ var GovnabaMessager = function(gvnb) {
 
     this.socket.onmessage = function(e) {
         msg = JSON.parse(e.data);
+        console.log(msg);
         switch(msg.MessageType) {
             case 6: {
                 gvnb.onBoardListMessage(msg);
@@ -28,6 +29,14 @@ var GovnabaMessager = function(gvnb) {
             }
             case 10: {
                 gvnb.onThreadMessage(msg);
+                break;
+            }
+            case 2: {
+                gvnb.onNewThreadMessage(msg);
+                break;
+            }
+            case 4: {
+                gvnb.onNewPostMessage(msg);
                 break;
             }
         }
@@ -56,6 +65,25 @@ var GovnabaMessager = function(gvnb) {
             LocalId: thread
         }))
     }
+
+    this.createThread = function(board, topic, contents) {
+        this.socket.send(JSON.stringify({
+            MessageType: 2,
+            Board: board,
+            Topic: topic,
+            Contents: contents
+        }));
+    }
+
+    this.addPost = function(board, topic, contents, thread) {
+        this.socket.send(JSON.stringify({
+            MessageType: 4,
+            Board: board,
+            Topic: topic,
+            Contents: contents,
+            ThreadLocalId: thread
+        }));
+    }
 }
 
 
@@ -70,8 +98,6 @@ Govnaba = function() {
         page('/:board/', this.navBoardPage.bind(this));
         page("/:board/:localid", this.navThreadPage.bind(this));
         page();
-        this.views.showBase();
-        this.msgr.getBoards();
     }
 
     this.getThreadLink = function(opLocalId, postLocalId) {
@@ -90,7 +116,7 @@ Govnaba = function() {
     this.navThreadPage = function(ctx) {
         this.msgr.getThread(ctx.params.board, parseInt(ctx.params.localid));
         this.state.board = ctx.params.board;
-        this.state.thread = ctx.params.thread;
+        this.state.thread = parseInt(ctx.params.localid);
     }
 
     this.onBoardThreadsMessage = function(msg) {
@@ -103,7 +129,26 @@ Govnaba = function() {
 
     this.onThreadMessage = function(msg) {
         this.baseCont.displayThread(msg.Posts);
-        scroll(0,0);
+    }
+
+    this.onNewThreadMessage = function(msg) {
+
+    }
+
+    this.onNewPostMessage = function(msg) {
+        
+    }
+
+    this.sendPostingForm = function(evt) {
+        var topic = document.getElementById("input_topic").value;
+        var contents = document.getElementById("input_contents").value;
+        if (this.baseCont.state.ctx == ViewContext.BOARD) {
+            this.msgr.createThread(this.state.board, topic, contents);
+        }
+        else if (this.baseCont.state.ctx == ViewContext.THREAD) {
+            this.msgr.addPost(this.state.board, topic, contents, this.state.thread);
+        }
+        evt.preventDefault();
     }
 }
 

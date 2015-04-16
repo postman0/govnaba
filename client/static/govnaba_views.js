@@ -15,7 +15,6 @@ var Base = React.createClass({displayName: "Base",
 		this.setState({ctx: ViewContext.MAINPAGE, boards: boardList});
 	},
 	displayBoard: function(boardMsg) {
-		console.log(boardMsg);
 		this.setState({ctx: ViewContext.BOARD, threads: boardMsg.Threads});
 	},
 	displayThread: function(posts) {
@@ -39,10 +38,10 @@ var Base = React.createClass({displayName: "Base",
             boardList
             ), 
             React.createElement("div", {id: "content-board", className: "col-md-8"}, 
-             this.state.ctx == ViewContext.BOARD ? React.createElement(PostingForm, null) : null, 
+             this.state.ctx == ViewContext.BOARD ? React.createElement(PostingForm, {type: "board"}) : null, 
             threads, 
             posts, 
-             this.state.ctx == ViewContext.THREAD ? React.createElement(PostingForm, null) : null
+             this.state.ctx == ViewContext.THREAD ? React.createElement(PostingForm, {type: "thread"}) : null
             )
         )
 		);
@@ -134,25 +133,30 @@ var Post = React.createClass({displayName: "Post",
 
 var PostingForm = React.createClass({displayName: "PostingForm",
 	render: function() {
+		var submitCaption;
+		switch (this.props.type) {
+			case "thread": submitCaption = "Ответить"; break;
+			case "board":  submitCaption = "Создать тред"; break;
+		};
 		return (
 			React.createElement("div", {className: "panel panel-default postform"}, 
-			React.createElement("form", {className: "form-horizontal", action: "", role: "form"}, 
+			React.createElement("form", {className: "form-horizontal panel-body", action: "", role: "form", onSubmit: gvnb.sendPostingForm.bind(gvnb)}, 
 				React.createElement("div", {className: "form-group"}, 
 					React.createElement("label", {className: "control-label col-sm-2"}, "Тема"), 
 					React.createElement("div", {className: "col-sm-10"}, 
-						React.createElement("input", {name: "topic", type: "text", className: "form-control"})
+						React.createElement("input", {id: "input_topic", name: "topic", type: "text", className: "form-control", required: true})
 					)
 				), 
 				React.createElement("div", {className: "form-group"}, 
 					React.createElement("label", {className: "control-label col-sm-2"}, "Текст"), 
 					React.createElement("div", {className: "col-sm-10"}, 
-						React.createElement("textarea", {name: "contents", className: "form-control"}
+						React.createElement("textarea", {id: "input_contents", name: "contents", className: "form-control", required: true}
 						)
 					)
 				), 
 				React.createElement("div", {className: "form-group"}, 
-					React.createElement("div", {className: "col-sm-2"}, 
-							React.createElement("input", {type: "submit", className: "form-control"})
+					React.createElement("div", {className: "col-sm-2 col-sm-offset-2"}, 
+							React.createElement("input", {type: "submit", className: "form-control", value: submitCaption})
 					)
 				)
 			)

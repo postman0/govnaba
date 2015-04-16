@@ -15,7 +15,6 @@ var Base = React.createClass({
 		this.setState({ctx: ViewContext.MAINPAGE, boards: boardList});
 	},
 	displayBoard: function(boardMsg) {
-		console.log(boardMsg);
 		this.setState({ctx: ViewContext.BOARD, threads: boardMsg.Threads});
 	},
 	displayThread: function(posts) {
@@ -39,10 +38,10 @@ var Base = React.createClass({
             {boardList}
             </div>
             <div id="content-board" className="col-md-8">
-            { this.state.ctx == ViewContext.BOARD ? <PostingForm /> : null}
+            { this.state.ctx == ViewContext.BOARD ? <PostingForm type="board"/> : null}
             {threads}
             {posts}
-            { this.state.ctx == ViewContext.THREAD ? <PostingForm /> : null}
+            { this.state.ctx == ViewContext.THREAD ? <PostingForm type="thread"/> : null}
             </div>
         </div>
 		);
@@ -134,25 +133,30 @@ var Post = React.createClass({
 
 var PostingForm = React.createClass({
 	render: function() {
+		var submitCaption;
+		switch (this.props.type) {
+			case "thread": submitCaption = "Ответить"; break;
+			case "board":  submitCaption = "Создать тред"; break;
+		};
 		return (
 			<div className="panel panel-default postform">
-			<form className="form-horizontal" action="" role="form">
+			<form className="form-horizontal panel-body" action="" role="form" onSubmit={gvnb.sendPostingForm.bind(gvnb)}>
 				<div className="form-group">
 					<label className="control-label col-sm-2">Тема</label>
 					<div className="col-sm-10">
-						<input name="topic" type="text" className="form-control" />
+						<input id="input_topic" name="topic" type="text" className="form-control" required/>
 					</div>
 				</div>
 				<div className="form-group">
 					<label className="control-label col-sm-2">Текст</label>
 					<div className="col-sm-10">
-						<textarea name="contents" className="form-control">
+						<textarea id="input_contents" name="contents" className="form-control" required>
 						</textarea>
 					</div>
 				</div>
 				<div className="form-group">
-					<div className="col-sm-2">
-							<input type="submit" className="form-control" />
+					<div className="col-sm-2 col-sm-offset-2">
+							<input type="submit" className="form-control" value={submitCaption} />
 					</div>
 				</div>
 			</form>

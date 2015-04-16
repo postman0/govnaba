@@ -50,6 +50,7 @@ func (cl *Client) receiveLoop() {
 			cl.WriteChannel <- NewProtocolErrorMessage(cl.Id)
 			continue
 		}
+		log.Printf("%v", message)
 		go func() {
 			for _, msg := range message.Process(cl.db) {
 				cl.broadcastChannel <- msg
