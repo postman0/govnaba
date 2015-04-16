@@ -62,7 +62,7 @@ var GovnabaMessager = function(gvnb) {
 Govnaba = function() {
 
     this.msgr = new GovnabaMessager(this)
-    this.views = new GovnabaViews();
+    this.baseCont = GovnabaViews.mountBaseContainer();
     this.state = {};
     
     this.initialize = function() {
@@ -79,6 +79,7 @@ Govnaba = function() {
     }
 
     this.navMainPage = function(ctx) {
+        this.msgr.getBoards();
     }
 
     this.navBoardPage = function(ctx) {
@@ -93,15 +94,16 @@ Govnaba = function() {
     }
 
     this.onBoardThreadsMessage = function(msg) {
-        this.views.showBoardPage(msg);
+        this.baseCont.displayBoard(msg);
     }
 
     this.onBoardListMessage = function(msg) {
-        this.views.showBoardList(msg.Boards.filter(function (name) { return name.length > 0 }));
+        this.baseCont.displayMainPage(msg.Boards.filter(function (name) { return name.length > 0 }));
     }
 
     this.onThreadMessage = function(msg) {
-        this.views.showThread(msg.Posts)
+        this.baseCont.displayThread(msg.Posts);
+        scroll(0,0);
     }
 }
 

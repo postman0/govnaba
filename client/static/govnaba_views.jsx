@@ -1,12 +1,48 @@
 
+ViewContext = {
+	NONE: 0,
+	MAINPAGE: 1,
+	BOARD: 2,
+	THREAD: 3
+}
+
 var Base = React.createClass({
+
+	getInitialState: function() {
+		return {ctx: ViewContext.NONE}
+	},
+	displayMainPage: function(boardList) {
+		this.setState({ctx: ViewContext.MAINPAGE, boards: boardList});
+	},
+	displayBoard: function(boardMsg) {
+		console.log(boardMsg);
+		this.setState({ctx: ViewContext.BOARD, threads: boardMsg.Threads});
+	},
+	displayThread: function(posts) {
+		this.setState({ctx: ViewContext.THREAD, posts: posts});
+	},
 	render: function() {
+		var boardList, threads, posts;
+		if (this.state.ctx == ViewContext.MAINPAGE) {
+			boardList = <BoardList boards={this.state.boards} />;
+		}
+		if (this.state.ctx == ViewContext.BOARD) {
+			threads = <Board threads={this.state.threads} />;
+		}
+		if (this.state.ctx == ViewContext.THREAD) {
+			posts = <Thread posts={this.state.posts} />;
+		}
 		return (
 		<div id="content-main" className="container-fluid">
 			<NavBar />
             <div id="board-list" className="col-md-2">
+            {boardList}
             </div>
             <div id="content-board" className="col-md-8">
+            { this.state.ctx == ViewContext.BOARD ? <PostingForm /> : null}
+            {threads}
+            {posts}
+            { this.state.ctx == ViewContext.THREAD ? <PostingForm /> : null}
             </div>
         </div>
 		);
@@ -96,20 +132,38 @@ var Post = React.createClass({
 	}
 })
 
-
-var GovnabaViews = function() {
-	this.showBoardList = function(boards) {
-		React.render(<BoardList boards={boards} />, document.getElementById("board-list"));
+var PostingForm = React.createClass({
+	render: function() {
+		return (
+			<div className="panel panel-default postform">
+			<form className="form-horizontal" action="" role="form">
+				<div className="form-group">
+					<label className="control-label col-sm-2">Тема</label>
+					<div className="col-sm-10">
+						<input name="topic" type="text" className="form-control" />
+					</div>
+				</div>
+				<div className="form-group">
+					<label className="control-label col-sm-2">Текст</label>
+					<div className="col-sm-10">
+						<textarea name="contents" className="form-control">
+						</textarea>
+					</div>
+				</div>
+				<div className="form-group">
+					<div className="col-sm-2">
+							<input type="submit" className="form-control" />
+					</div>
+				</div>
+			</form>
+			</div>
+		);
 	}
+})
 
-	this.showBoardPage = function(msg) {
-		React.render(<Board threads={msg.Threads} />, document.getElementById("content-board"));
-	}
 
-	this.showBase = function() {
-		React.render(<Base />, document.getElementsByTagName("body")[0]);
-	}
-	this.showThread = function(posts) {
-		React.render(<Thread posts={posts} />, document.getElementById("content-board"));
+var GovnabaViews = {
+	mountBaseContainer: function() {
+		return React.render(<Base />, document.getElementsByTagName("body")[0]);
 	}
 }

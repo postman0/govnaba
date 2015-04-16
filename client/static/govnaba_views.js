@@ -1,12 +1,48 @@
 
+ViewContext = {
+	NONE: 0,
+	MAINPAGE: 1,
+	BOARD: 2,
+	THREAD: 3
+}
+
 var Base = React.createClass({displayName: "Base",
+
+	getInitialState: function() {
+		return {ctx: ViewContext.NONE}
+	},
+	displayMainPage: function(boardList) {
+		this.setState({ctx: ViewContext.MAINPAGE, boards: boardList});
+	},
+	displayBoard: function(boardMsg) {
+		console.log(boardMsg);
+		this.setState({ctx: ViewContext.BOARD, threads: boardMsg.Threads});
+	},
+	displayThread: function(posts) {
+		this.setState({ctx: ViewContext.THREAD, posts: posts});
+	},
 	render: function() {
+		var boardList, threads, posts;
+		if (this.state.ctx == ViewContext.MAINPAGE) {
+			boardList = React.createElement(BoardList, {boards: this.state.boards});
+		}
+		if (this.state.ctx == ViewContext.BOARD) {
+			threads = React.createElement(Board, {threads: this.state.threads});
+		}
+		if (this.state.ctx == ViewContext.THREAD) {
+			posts = React.createElement(Thread, {posts: this.state.posts});
+		}
 		return (
 		React.createElement("div", {id: "content-main", className: "container-fluid"}, 
 			React.createElement(NavBar, null), 
-            React.createElement("div", {id: "board-list", className: "col-md-2"}
+            React.createElement("div", {id: "board-list", className: "col-md-2"}, 
+            boardList
             ), 
-            React.createElement("div", {id: "content-board", className: "col-md-8"}
+            React.createElement("div", {id: "content-board", className: "col-md-8"}, 
+             this.state.ctx == ViewContext.BOARD ? React.createElement(PostingForm, null) : null, 
+            threads, 
+            posts, 
+             this.state.ctx == ViewContext.THREAD ? React.createElement(PostingForm, null) : null
             )
         )
 		);
@@ -96,20 +132,38 @@ var Post = React.createClass({displayName: "Post",
 	}
 })
 
-
-var GovnabaViews = function() {
-	this.showBoardList = function(boards) {
-		React.render(React.createElement(BoardList, {boards: boards}), document.getElementById("board-list"));
+var PostingForm = React.createClass({displayName: "PostingForm",
+	render: function() {
+		return (
+			React.createElement("div", {className: "panel panel-default postform"}, 
+			React.createElement("form", {className: "form-horizontal", action: "", role: "form"}, 
+				React.createElement("div", {className: "form-group"}, 
+					React.createElement("label", {className: "control-label col-sm-2"}, "Тема"), 
+					React.createElement("div", {className: "col-sm-10"}, 
+						React.createElement("input", {name: "topic", type: "text", className: "form-control"})
+					)
+				), 
+				React.createElement("div", {className: "form-group"}, 
+					React.createElement("label", {className: "control-label col-sm-2"}, "Текст"), 
+					React.createElement("div", {className: "col-sm-10"}, 
+						React.createElement("textarea", {name: "contents", className: "form-control"}
+						)
+					)
+				), 
+				React.createElement("div", {className: "form-group"}, 
+					React.createElement("div", {className: "col-sm-2"}, 
+							React.createElement("input", {type: "submit", className: "form-control"})
+					)
+				)
+			)
+			)
+		);
 	}
+})
 
-	this.showBoardPage = function(msg) {
-		React.render(React.createElement(Board, {threads: msg.Threads}), document.getElementById("content-board"));
-	}
 
-	this.showBase = function() {
-		React.render(React.createElement(Base, null), document.getElementsByTagName("body")[0]);
-	}
-	this.showThread = function(posts) {
-		React.render(React.createElement(Thread, {posts: posts}), document.getElementById("content-board"));
+var GovnabaViews = {
+	mountBaseContainer: function() {
+		return React.render(React.createElement(Base, null), document.getElementsByTagName("body")[0]);
 	}
 }
