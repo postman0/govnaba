@@ -143,6 +143,8 @@ Govnaba = function() {
         this.baseCont.displayThread(msg.Posts);
         // not implemented serverside
         //this.msgr.changeLocation("thread", this.state.thread);
+        // use board subscription instead
+        this.msgr.changeLocation("board", msg.Board);
     }
 
     this.onNewThreadMessage = function(msg) {
@@ -150,7 +152,12 @@ Govnaba = function() {
     }
 
     this.onNewPostMessage = function(msg) {
-        
+        this.baseCont.displayNewPost({
+            Topic: msg.Topic,
+            Contents: msg.Contents,
+            LocalId: msg.AnswerLocalId,
+            Date: msg.Date
+        });
     }
 
     this.sendPostingForm = function(evt) {

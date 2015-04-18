@@ -20,6 +20,11 @@ var Base = React.createClass({
 	displayThread: function(posts) {
 		this.setState({ctx: ViewContext.THREAD, posts: posts});
 	},
+	displayNewPost: function(post) {
+		posts = this.state.posts;
+		posts.push(post);
+		this.setState({posts: posts});
+	},
 	render: function() {
 		var boardList, threads, posts;
 		if (this.state.ctx == ViewContext.MAINPAGE) {

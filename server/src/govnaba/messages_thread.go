@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/jmoiron/sqlx"
 	"log"
+	"time"
 )
 
 type CreateThreadMessage struct {
@@ -76,6 +77,7 @@ type AddPostMessage struct {
 	Board         string
 	Topic         string
 	Contents      string
+	Date          time.Time
 	ThreadLocalId int
 	AnswerLocalId int
 }
@@ -97,12 +99,13 @@ func (msg *AddPostMessage) Process(db *sqlx.DB) []OutMessage {
 		$4,
 		$5,
 		nextval($2 || '_board_id_seq')
-		) RETURNING posts.board_local_id;`
+		) RETURNING posts.board_local_id, created_date;`
 
 	tx := db.MustBegin()
 	row := tx.QueryRowx(insertPostQuery, msg.ClientId.String(), msg.Board, msg.ThreadLocalId, msg.Topic, msg.Contents)
 	var answerId int
-	err := row.Scan(&answerId)
+	var date time.Time
+	err := row.Scan(&answerId, &date)
 	if err != nil {
 		tx.Rollback()
 		log.Println(err)
@@ -112,6 +115,7 @@ func (msg *AddPostMessage) Process(db *sqlx.DB) []OutMessage {
 	tx.Exec(`UPDATE threads SET last_bump_date = DEFAULT WHERE id = (SELECT thread_id FROM posts WHERE board_local_id = $1);`, msg.ThreadLocalId)
 	tx.Commit()
 	msg.AnswerLocalId = answerId
+	msg.Date = date
 	return []OutMessage{msg}
 }
 
