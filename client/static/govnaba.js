@@ -84,6 +84,16 @@ var GovnabaMessager = function(gvnb) {
             ThreadLocalId: thread
         }));
     }
+
+    this.changeLocation = function(locationType, location) {
+        var locType = ["mainPage", "board", "thread"].indexOf(locationType);
+        var loc = location.toString();
+        this.socket.send(JSON.stringify({
+            MessageType: 3,
+            LocationType: locType,
+            NewLocation: loc
+        }));
+    }
 }
 
 
@@ -106,6 +116,7 @@ Govnaba = function() {
 
     this.navMainPage = function(ctx) {
         this.msgr.getBoards();
+        this.msgr.changeLocation("mainPage", "");
     }
 
     this.navBoardPage = function(ctx) {
@@ -121,6 +132,7 @@ Govnaba = function() {
 
     this.onBoardThreadsMessage = function(msg) {
         this.baseCont.displayBoard(msg);
+        this.msgr.changeLocation("board", this.state.board);
     }
 
     this.onBoardListMessage = function(msg) {
@@ -129,6 +141,8 @@ Govnaba = function() {
 
     this.onThreadMessage = function(msg) {
         this.baseCont.displayThread(msg.Posts);
+        // not implemented serverside
+        //this.msgr.changeLocation("thread", this.state.thread);
     }
 
     this.onNewThreadMessage = function(msg) {
