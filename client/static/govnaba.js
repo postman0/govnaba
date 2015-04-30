@@ -39,6 +39,10 @@ var GovnabaMessager = function(gvnb) {
                 gvnb.onNewPostMessage(msg);
                 break;
             }
+            case 11: {
+                gvnb.onFileUploadSuccess(msg);
+                break;
+            }
         }
     }
     
@@ -93,6 +97,10 @@ var GovnabaMessager = function(gvnb) {
             LocationType: locType,
             NewLocation: loc
         }));
+    }
+
+    this.uploadFile = function(file) {
+        this.socket.send(file)
     }
 }
 
@@ -161,6 +169,23 @@ Govnaba = function() {
     }
 
     this.sendPostingForm = function(evt) {
+        var fileList = document.getElementById("input_file").files;
+        if (fileList.length > 0) {
+            this.msgr.uploadFile(fileList[0]);
+        } else {
+            var topic = document.getElementById("input_topic").value;
+            var contents = document.getElementById("input_contents").value;
+            if (this.baseCont.state.ctx == ViewContext.BOARD) {
+                this.msgr.createThread(this.state.board, topic, contents);
+            }
+            else if (this.baseCont.state.ctx == ViewContext.THREAD) {
+                this.msgr.addPost(this.state.board, topic, contents, this.state.thread);
+            }
+        }
+        evt.preventDefault();
+    }
+
+    this.onFileUploadSuccess = function(msg) {
         var topic = document.getElementById("input_topic").value;
         var contents = document.getElementById("input_contents").value;
         if (this.baseCont.state.ctx == ViewContext.BOARD) {
@@ -169,7 +194,6 @@ Govnaba = function() {
         else if (this.baseCont.state.ctx == ViewContext.THREAD) {
             this.msgr.addPost(this.state.board, topic, contents, this.state.thread);
         }
-        evt.preventDefault();
     }
 }
 

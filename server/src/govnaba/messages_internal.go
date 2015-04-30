@@ -86,3 +86,21 @@ func (msg *ChangeLocationMessage) Process(db *sqlx.DB) []OutMessage {
 func (msg *ChangeLocationMessage) GetDestination() Destination {
 	return Destination{} // garbage value
 }
+
+type FileUploadSuccessfulMessage struct {
+	MessageType byte
+	ClientId    uuid.UUID `json:"-"`
+	Filename    string
+}
+
+func (msg *FileUploadSuccessfulMessage) GetDestination() Destination {
+	return Destination{ClientDestination, "", msg.ClientId}
+}
+
+func (msg *FileUploadSuccessfulMessage) ToClient() []byte {
+	bytes, err := json.Marshal(msg)
+	if err != nil {
+		log.Println(err)
+	}
+	return bytes
+}

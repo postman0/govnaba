@@ -22,3 +22,5 @@ server/bin
 server/pkg
 # JSX internals
 client/static/.module-cache
+# Uploaded files
+client/static/uploads

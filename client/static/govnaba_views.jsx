@@ -149,7 +149,7 @@ var PostingForm = React.createClass({
 				<div className="form-group">
 					<label className="control-label col-sm-2">Тема</label>
 					<div className="col-sm-10">
-						<input id="input_topic" name="topic" type="text" className="form-control" required/>
+						<input id="input_topic" name="topic" type="text" className="form-control"/>
 					</div>
 				</div>
 				<div className="form-group">
@@ -157,6 +157,12 @@ var PostingForm = React.createClass({
 					<div className="col-sm-10">
 						<textarea id="input_contents" name="contents" className="form-control" required>
 						</textarea>
+					</div>
+				</div>
+				<div className="form-group">
+					<label className="control-label col-sm-2">Файл</label>
+					<div className="col-sm-10">
+						<input id="input_file" name="file" type="file"/>
 					</div>
 				</div>
 				<div className="form-group">

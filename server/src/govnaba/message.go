@@ -17,6 +17,7 @@ const (
 	BoardThreadListMessageType
 	GetThreadMessageType
 	ThreadPostsMessageType
+	FileUploadSuccessfulMessageType
 )
 
 type MessageConstructor func() InMessage

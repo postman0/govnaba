@@ -149,7 +149,7 @@ var PostingForm = React.createClass({displayName: "PostingForm",
 				React.createElement("div", {className: "form-group"}, 
 					React.createElement("label", {className: "control-label col-sm-2"}, "Тема"), 
 					React.createElement("div", {className: "col-sm-10"}, 
-						React.createElement("input", {id: "input_topic", name: "topic", type: "text", className: "form-control", required: true})
+						React.createElement("input", {id: "input_topic", name: "topic", type: "text", className: "form-control"})
 					)
 				), 
 				React.createElement("div", {className: "form-group"}, 
@@ -157,6 +157,12 @@ var PostingForm = React.createClass({displayName: "PostingForm",
 					React.createElement("div", {className: "col-sm-10"}, 
 						React.createElement("textarea", {id: "input_contents", name: "contents", className: "form-control", required: true}
 						)
+					)
+				), 
+				React.createElement("div", {className: "form-group"}, 
+					React.createElement("label", {className: "control-label col-sm-2"}, "Файл"), 
+					React.createElement("div", {className: "col-sm-10"}, 
+						React.createElement("input", {id: "input_file", name: "file", type: "file"})
 					)
 				), 
 				React.createElement("div", {className: "form-group"}, 
