@@ -5,9 +5,7 @@ import (
 	"encoding/json"
 	_ "errors"
 	"github.com/jmoiron/sqlx"
-	"github.com/lib/pq/hstore"
 	"log"
-	"time"
 )
 
 type GetBoardsMessage struct {
@@ -56,15 +54,6 @@ type GetBoardThreadsMessage struct {
 	Board       string
 	Count       int
 	SkipBatches int
-}
-
-type Post struct {
-	ThreadId int `json:"-"`
-	LocalId  int
-	Topic    string
-	Contents string
-	Date     time.Time
-	Attrs    hstore.Hstore
 }
 
 type BoardThreadListMessage struct {

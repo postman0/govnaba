@@ -2,11 +2,54 @@ package govnaba
 
 import (
 	"code.google.com/p/go-uuid/uuid"
+	"database/sql/driver"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/jmoiron/sqlx"
 	"log"
 	"time"
 )
+
+type PostAttributes map[string]interface{}
+
+func (pa *PostAttributes) Scan(src interface{}) error {
+	switch src.(type) {
+	case []byte:
+		err := json.Unmarshal(src.([]byte), pa)
+		if err != nil {
+			return errors.New(fmt.Sprintf("Invalid JSON: %s.", err))
+		}
+	case string:
+		err := json.Unmarshal([]byte(src.(string)), pa)
+		if err != nil {
+			return errors.New(fmt.Sprintf("Invalid JSON: %s.", err))
+		}
+	case nil:
+		// do nothing, nil map
+	default:
+		return errors.New("Unsuitable value for post attributes.")
+	}
+	return nil
+}
+
+func (pa *PostAttributes) Value() (driver.Value, error) {
+	b, err := json.Marshal(pa)
+	if err != nil {
+		return []byte{}, errors.New(fmt.Sprintf("Can't marshal attributes to JSON: %s", err))
+	} else {
+		return b, nil
+	}
+}
+
+type Post struct {
+	ThreadId int `json:"-"`
+	LocalId  int
+	Topic    string
+	Contents string
+	Date     time.Time
+	Attrs    PostAttributes
+}
 
 type CreateThreadMessage struct {
 	MessageType byte
