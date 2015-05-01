@@ -8,6 +8,8 @@ import (
 	"log"
 )
 
+// These messages help main broadcast goroutine to remove structs related to disconnected clients.
+// Its methods should be never called.
 type ClientDisconnectMessage struct {
 	MessageType byte
 	Id          uuid.UUID
@@ -27,6 +29,7 @@ func (msg *ClientDisconnectMessage) GetDestination() Destination {
 	return Destination{}
 }
 
+// This message is used to signal the client that it sent a wrong message.
 type ProtocolErrorMessage struct {
 	MessageType byte
 	Id          uuid.UUID `json:"-"`
@@ -48,12 +51,17 @@ func (msg *ProtocolErrorMessage) GetDestination() Destination {
 	return Destination{ClientDestination, "", msg.Id}
 }
 
+// Constants used in ChangeLocationMessage
 const (
+	// Not implemented
 	MainPage = iota
 	Board
+	// Not implemented
 	Thread
 )
 
+// These messages are used by clients for controlling incoming message stream.
+// Some messages are sent only to clients which are browsing some board or thread.
 type ChangeLocationMessage struct {
 	MessageType  byte
 	Id           uuid.UUID `json:"-"`
@@ -78,6 +86,7 @@ func (msg *ChangeLocationMessage) FromClient(cl *Client, msgBytes []byte) error 
 	return nil
 }
 
+// Process currently does nothing for these messages. All processing is done by the broadcast goroutine.
 func (msg *ChangeLocationMessage) Process(db *sqlx.DB) []OutMessage {
 	return []OutMessage{msg}
 	// todo: split into leave and enter notifications for other clients
@@ -87,6 +96,7 @@ func (msg *ChangeLocationMessage) GetDestination() Destination {
 	return Destination{} // garbage value
 }
 
+// This message tells the client that a file upload was successful.
 type FileUploadSuccessfulMessage struct {
 	MessageType byte
 	ClientId    uuid.UUID `json:"-"`

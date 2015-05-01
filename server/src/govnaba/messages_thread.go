@@ -11,12 +11,17 @@ import (
 	"time"
 )
 
+// An utility type for unmarshallling attributes from the database.
 type PostAttributes map[string]interface{}
 
+// This shows what post processors are used for various boards.
+// Processors will be called in the order of their placement in the slice.
 var EnabledPostProcessors = map[string][]PostProcessor{
 	"test": []PostProcessor{ImageProcessor},
 }
 
+// Scan unmarshals JSON into a map[string]interface{}.
+// If the value is NULL then the result is a nil map.
 func (pa *PostAttributes) Scan(src interface{}) error {
 	switch src.(type) {
 	case []byte:
@@ -37,6 +42,7 @@ func (pa *PostAttributes) Scan(src interface{}) error {
 	return nil
 }
 
+// Value marshals the map into JSON.
 func (pa PostAttributes) Value() (driver.Value, error) {
 	b, err := json.Marshal(pa)
 	if err != nil {
@@ -46,9 +52,12 @@ func (pa PostAttributes) Value() (driver.Value, error) {
 	}
 }
 
+// Helper struct used in various situations.
 type Post struct {
-	Board    string `json:"-"`
-	ThreadId int    `json:"-"`
+	Board string `json:"-"`
+	// Parent thread's id on the board?
+	ThreadId int `json:"-"`
+	// Post's id on the board?
 	LocalId  int
 	Topic    string
 	Contents string
@@ -56,6 +65,8 @@ type Post struct {
 	Attrs    PostAttributes
 }
 
+// These messages are used for both creating new threads
+// and notifying other client about a new thread.
 type CreateThreadMessage struct {
 	MessageType byte
 	ClientId    uuid.UUID `json:"-"`
@@ -63,8 +74,11 @@ type CreateThreadMessage struct {
 	Topic       string
 	Contents    string
 	Attrs       PostAttributes
-	ThreadId    int
-	LocalId     int
+	// dunno for what this is used, apparently this is database-local thread id
+	// and clients have no business knowing it
+	ThreadId int
+	// Board-related id
+	LocalId int
 }
 
 func (msg *CreateThreadMessage) FromClient(cl *Client, msgBytes []byte) error {
@@ -76,6 +90,8 @@ func (msg *CreateThreadMessage) FromClient(cl *Client, msgBytes []byte) error {
 	return nil
 }
 
+// Process for these messages checks if the board exists, applies post processors for the board,
+// creates a new thread and the op-post.
 func (msg *CreateThreadMessage) Process(db *sqlx.DB) []OutMessage {
 	row := db.QueryRowx(`SELECT EXISTS(SELECT 1 FROM boards WHERE name = $1);`, msg.Board)
 	var boardExists bool
@@ -123,6 +139,7 @@ func (msg *CreateThreadMessage) Process(db *sqlx.DB) []OutMessage {
 		// todo: return error
 	}
 	msg.LocalId = post_id
+	//TODO: determine why the fuck this is needed
 	msg.ThreadId = thread_id
 	return []OutMessage{msg}
 }
@@ -139,15 +156,19 @@ func (msg *CreateThreadMessage) GetDestination() Destination {
 	return Destination{DestinationType: BoardDestination, Board: msg.Board}
 }
 
+// AddPostMessage is used for creating new posts
+// and notifying other clients on the board about those posts.
 type AddPostMessage struct {
-	MessageType   byte
-	ClientId      uuid.UUID `json:"-"`
-	Board         string
-	Topic         string
-	Contents      string
-	Attrs         PostAttributes
-	Date          time.Time
+	MessageType byte
+	ClientId    uuid.UUID `json:"-"`
+	Board       string
+	Topic       string
+	Contents    string
+	Attrs       PostAttributes
+	Date        time.Time
+	// Parent thread id
 	ThreadLocalId int
+	// This post's id
 	AnswerLocalId int
 }
 
@@ -160,6 +181,7 @@ func (msg *AddPostMessage) FromClient(cl *Client, msgBytes []byte) error {
 	return nil
 }
 
+// Process applies post processors to the new post and stores it in the database.
 func (msg *AddPostMessage) Process(db *sqlx.DB) []OutMessage {
 
 	p := Post{
@@ -223,13 +245,16 @@ func (msg *AddPostMessage) GetDestination() Destination {
 	return Destination{DestinationType: BoardDestination, Board: msg.Board}
 }
 
+// GetThreadMessage is used for requesting all posts of a thread.
 type GetThreadMessage struct {
 	MessageType byte
 	ClientId    uuid.UUID `json:"-"`
 	Board       string
-	LocalId     int
+	// Thread id
+	LocalId int
 }
 
+// This message is used for sending thread's posts to the client who requested them.
 type ThreadPostsMessage struct {
 	MessageType byte
 	ClientId    uuid.UUID `json:"-"`

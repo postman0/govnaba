@@ -19,22 +19,36 @@ import (
 	"time"
 )
 
+// Client structs are used for communicating with remote clients via websocket.
 type Client struct {
-	WriteChannel     chan OutMessage
+	// WriteChannel is used for sending messages to the client
+	WriteChannel chan OutMessage
+	// A reference to the global broadcast thread
 	broadcastChannel chan OutMessage
-	Id               uuid.UUID
-	conn             *websocket.Conn
-	db               *sqlx.DB
+	// Client's unique identificator
+	Id uuid.UUID
+	// Websocket connection
+	conn *websocket.Conn
+	// A handle to the database. It's used for processing incoming messages.
+	db *sqlx.DB
 }
 
+// Maximum file size allowed for uploading.
 var MaxFileSizeKB int64 = 8 * 1024
+
+// The path where uploaded files are saved.
 var FileUploadPath string = "./client/static/uploads"
+
+// File types allowed for uploading and corresponding extensions.
+// Those are used for saving the files.
 var validFileTypes map[string]string = map[string]string{
 	"image/jpeg": "jpg",
 	"image/png":  "png",
 	"image/gif":  "gif",
 }
 
+// receiveLoop listens on the websocket for incoming messages, processes them
+// and handles the results to the global broadcast thread.
 func (cl *Client) receiveLoop() {
 	for {
 		msgType, rdr, err := cl.conn.NextReader()
@@ -88,12 +102,14 @@ func (cl *Client) receiveLoop() {
 	}
 }
 
+// writeLoop listens on the write channel for outgoing messages and sends them to the client.
 func (cl *Client) writeLoop() {
 	for message := range cl.WriteChannel {
 		cl.conn.WriteMessage(websocket.TextMessage, message.ToClient())
 	}
 }
 
+// This function is used for file uploading.
 func (cl *Client) handleFileUpload(rdr io.Reader) {
 	cmg, _ := cmagic.NewMagic(cmagic.MagicMimeType)
 	cmg.LoadDatabases(nil)
@@ -157,6 +173,7 @@ func (cl *Client) handleFileUpload(rdr io.Reader) {
 	}
 }
 
+// A constructor for the Client structure.
 func NewClient(conn *websocket.Conn, uuid uuid.UUID, broadcastChannel chan OutMessage, db *sqlx.DB) *Client {
 	c := Client{make(chan OutMessage, 5), broadcastChannel, uuid, conn, db}
 	c.conn.SetReadLimit(MaxFileSizeKB * 1024)

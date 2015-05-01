@@ -8,6 +8,7 @@ import (
 	"log"
 )
 
+// This message is used for requesting available boards list
 type GetBoardsMessage struct {
 	MessageType byte
 	ClientId    uuid.UUID
@@ -30,6 +31,7 @@ func (msg *GetBoardsMessage) Process(db *sqlx.DB) []OutMessage {
 	return []OutMessage{&boards}
 }
 
+// This message is used for sending available boards to the client.
 type BoardListMessage struct {
 	MessageType byte
 	ClientId    uuid.UUID `json:"-"`
@@ -48,19 +50,24 @@ func (msg *BoardListMessage) GetDestination() Destination {
 	return Destination{DestinationType: ClientDestination, Id: msg.ClientId}
 }
 
+// This message is used for requesting a set of threads from some board.
 type GetBoardThreadsMessage struct {
 	MessageType byte
 	ClientId    uuid.UUID
 	Board       string
-	Count       int
+	// How many threads to return
+	Count int
+	// How many threads*Count to skip. This can be used for pagination.
 	SkipBatches int
 }
 
+// This is used for sending requested threads to the client.
 type BoardThreadListMessage struct {
 	MessageType byte
 	ClientId    uuid.UUID `json:"-"`
 	Board       string
-	Threads     [][]Post
+	// A slice of threads where each thread is a slice of Post's.
+	Threads [][]Post
 }
 
 func (msg *GetBoardThreadsMessage) FromClient(cl *Client, msgBytes []byte) error {
@@ -73,6 +80,8 @@ func (msg *GetBoardThreadsMessage) FromClient(cl *Client, msgBytes []byte) error
 }
 
 func (msg *GetBoardThreadsMessage) Process(db *sqlx.DB) []OutMessage {
+	// dats a bigass query
+	// probably slow as fuck
 	const query = `
 	SELECT thread_id AS threadid, board_local_id AS localid, created_date AS date, topic, contents, attrs
 	FROM (SELECT *, row_number() OVER (PARTITION BY thread_id ORDER BY is_op DESC, board_local_id DESC) AS rnum FROM 
