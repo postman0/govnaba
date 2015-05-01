@@ -13,6 +13,10 @@ import (
 
 type PostAttributes map[string]interface{}
 
+var EnabledPostProcessors = map[string][]PostProcessor{
+	"test": []PostProcessor{ImageProcessor},
+}
+
 func (pa *PostAttributes) Scan(src interface{}) error {
 	switch src.(type) {
 	case []byte:
@@ -33,7 +37,7 @@ func (pa *PostAttributes) Scan(src interface{}) error {
 	return nil
 }
 
-func (pa *PostAttributes) Value() (driver.Value, error) {
+func (pa PostAttributes) Value() (driver.Value, error) {
 	b, err := json.Marshal(pa)
 	if err != nil {
 		return []byte{}, errors.New(fmt.Sprintf("Can't marshal attributes to JSON: %s", err))
@@ -43,7 +47,8 @@ func (pa *PostAttributes) Value() (driver.Value, error) {
 }
 
 type Post struct {
-	ThreadId int `json:"-"`
+	Board    string `json:"-"`
+	ThreadId int    `json:"-"`
 	LocalId  int
 	Topic    string
 	Contents string
@@ -57,6 +62,7 @@ type CreateThreadMessage struct {
 	Board       string
 	Topic       string
 	Contents    string
+	Attrs       PostAttributes
 	ThreadId    int
 	LocalId     int
 }
@@ -79,16 +85,35 @@ func (msg *CreateThreadMessage) Process(db *sqlx.DB) []OutMessage {
 		return nil
 		// todo: return error
 	}
+	p := Post{
+		Board:    msg.Board,
+		Topic:    msg.Topic,
+		Contents: msg.Contents,
+		Attrs:    msg.Attrs,
+	}
+	var err error = nil
+	for _, pp := range EnabledPostProcessors[msg.Board] {
+		err = pp(msg.ClientId, &p)
+		if err != nil {
+			log.Printf("Invalid post: %s", err)
+			//TODO: send error
+			return nil
+		}
+	}
+	msg.Board = p.Board
+	msg.Topic = p.Topic
+	msg.Contents = p.Contents
+	msg.Attrs = p.Attrs
 	tx := db.MustBegin()
 	row = tx.QueryRowx(`INSERT INTO threads (board_id) VALUES ((SELECT id FROM boards WHERE name = $1)) RETURNING id;`, msg.Board)
 	var thread_id int
-	err := row.Scan(&thread_id)
+	err = row.Scan(&thread_id)
 	if err != nil {
 		log.Println(err)
 	}
-	row = tx.QueryRowx(`INSERT INTO posts (user_id, thread_id, board_local_id, topic, contents, is_op) 
-		VALUES (NULL, $1, nextval($2 || '_board_id_seq'), $3, $4, TRUE) RETURNING board_local_id;`,
-		thread_id, msg.Board, msg.Topic, msg.Contents)
+	row = tx.QueryRowx(`INSERT INTO posts (user_id, thread_id, board_local_id, topic, contents, attrs, is_op) 
+		VALUES (NULL, $1, nextval($2 || '_board_id_seq'), $3, $4, $5, TRUE) RETURNING board_local_id;`,
+		thread_id, msg.Board, msg.Topic, msg.Contents, msg.Attrs)
 	var post_id int
 	err = row.Scan(&post_id)
 	tx.Commit()
@@ -120,6 +145,7 @@ type AddPostMessage struct {
 	Board         string
 	Topic         string
 	Contents      string
+	Attrs         PostAttributes
 	Date          time.Time
 	ThreadLocalId int
 	AnswerLocalId int
@@ -136,19 +162,42 @@ func (msg *AddPostMessage) FromClient(cl *Client, msgBytes []byte) error {
 
 func (msg *AddPostMessage) Process(db *sqlx.DB) []OutMessage {
 
-	const insertPostQuery = `INSERT INTO posts (user_id, thread_id, topic, contents, board_local_id) VALUES 
+	p := Post{
+		Board:    msg.Board,
+		Topic:    msg.Topic,
+		Contents: msg.Contents,
+		Attrs:    msg.Attrs,
+		ThreadId: msg.ThreadLocalId,
+	}
+	var err error = nil
+	for _, pp := range EnabledPostProcessors[msg.Board] {
+		err = pp(msg.ClientId, &p)
+		if err != nil {
+			log.Printf("Invalid post: %s", err)
+			//TODO: send error
+			return nil
+		}
+	}
+	msg.Board = p.Board
+	msg.Topic = p.Topic
+	msg.Contents = p.Contents
+	msg.Attrs = p.Attrs
+	msg.ThreadLocalId = p.ThreadId
+	const insertPostQuery = `INSERT INTO posts (user_id, thread_id, topic, contents, attrs, board_local_id) VALUES 
 		((SELECT users.id FROM users WHERE client_id = $1),
 		(SELECT threads.id FROM threads, boards, posts WHERE board_id = boards.id AND thread_id = threads.id AND boards.name = $2 AND posts.board_local_id = $3),
 		$4,
 		$5,
+		$6,
 		nextval($2 || '_board_id_seq')
 		) RETURNING posts.board_local_id, created_date;`
 
 	tx := db.MustBegin()
-	row := tx.QueryRowx(insertPostQuery, msg.ClientId.String(), msg.Board, msg.ThreadLocalId, msg.Topic, msg.Contents)
+	row := tx.QueryRowx(insertPostQuery, msg.ClientId.String(),
+		msg.Board, msg.ThreadLocalId, msg.Topic, msg.Contents, msg.Attrs)
 	var answerId int
 	var date time.Time
-	err := row.Scan(&answerId, &date)
+	err = row.Scan(&answerId, &date)
 	if err != nil {
 		tx.Rollback()
 		log.Println(err)

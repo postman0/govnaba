@@ -122,6 +122,22 @@ var Post = React.createClass({
 			minute: "numeric",
 			second: "numeric"});
 		datestr = datestr.charAt(0).toUpperCase() + datestr.slice(1);
+		var imgs = null;
+		attrs = this.props.postData.Attrs;
+		if (attrs && attrs.images) {
+			imgs = (
+				<div className="post-images">
+				{attrs.images.map(function(imgName){
+					return (
+						<a href={"/static/uploads/"+imgName} target="_blank">
+							<img className="post-image img-thumbnail pull-left" src={"/static/uploads/thumb"+imgName}></img>
+						</a>
+					)
+				})}
+				</div>
+			);
+			console.log(imgs);
+		}
 		return (
 			<div className="panel panel-default post-container">
 				<div className="panel-heading">
@@ -129,6 +145,7 @@ var Post = React.createClass({
 				<span className="post-header-date">{datestr}</span>
 				</div>
 				<div className="panel-body">
+					{imgs}
 					{this.props.postData.Contents}
 				</div>
 			</div>

@@ -122,6 +122,22 @@ var Post = React.createClass({displayName: "Post",
 			minute: "numeric",
 			second: "numeric"});
 		datestr = datestr.charAt(0).toUpperCase() + datestr.slice(1);
+		var imgs = null;
+		attrs = this.props.postData.Attrs;
+		if (attrs && attrs.images) {
+			imgs = (
+				React.createElement("div", {className: "post-images"}, 
+				attrs.images.map(function(imgName){
+					return (
+						React.createElement("a", {href: "/static/uploads/"+imgName, target: "_blank"}, 
+							React.createElement("img", {className: "post-image img-thumbnail pull-left", src: "/static/uploads/thumb"+imgName})
+						)
+					)
+				})
+				)
+			);
+			console.log(imgs);
+		}
 		return (
 			React.createElement("div", {className: "panel panel-default post-container"}, 
 				React.createElement("div", {className: "panel-heading"}, 
@@ -129,6 +145,7 @@ var Post = React.createClass({displayName: "Post",
 				React.createElement("span", {className: "post-header-date"}, datestr)
 				), 
 				React.createElement("div", {className: "panel-body"}, 
+					imgs, 
 					this.props.postData.Contents
 				)
 			)

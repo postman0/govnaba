@@ -70,22 +70,24 @@ var GovnabaMessager = function(gvnb) {
         }))
     }
 
-    this.createThread = function(board, topic, contents) {
+    this.createThread = function(board, topic, contents, attrs) {
         this.socket.send(JSON.stringify({
             MessageType: 2,
             Board: board,
             Topic: topic,
-            Contents: contents
+            Contents: contents,
+            Attrs: attrs
         }));
     }
 
-    this.addPost = function(board, topic, contents, thread) {
+    this.addPost = function(board, topic, contents, thread, attrs) {
         this.socket.send(JSON.stringify({
             MessageType: 4,
             Board: board,
             Topic: topic,
             Contents: contents,
-            ThreadLocalId: thread
+            ThreadLocalId: thread,
+            Attrs: attrs
         }));
     }
 
@@ -164,7 +166,8 @@ Govnaba = function() {
             Topic: msg.Topic,
             Contents: msg.Contents,
             LocalId: msg.AnswerLocalId,
-            Date: msg.Date
+            Date: msg.Date,
+            Attrs: msg.Attrs
         });
     }
 
@@ -188,11 +191,12 @@ Govnaba = function() {
     this.onFileUploadSuccess = function(msg) {
         var topic = document.getElementById("input_topic").value;
         var contents = document.getElementById("input_contents").value;
+        var attrs = {"images": [msg.Filename]}
         if (this.baseCont.state.ctx == ViewContext.BOARD) {
-            this.msgr.createThread(this.state.board, topic, contents);
+            this.msgr.createThread(this.state.board, topic, contents, attrs);
         }
         else if (this.baseCont.state.ctx == ViewContext.THREAD) {
-            this.msgr.addPost(this.state.board, topic, contents, this.state.thread);
+            this.msgr.addPost(this.state.board, topic, contents, this.state.thread, attrs);
         }
     }
 }
