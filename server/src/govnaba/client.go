@@ -7,6 +7,11 @@ import (
 	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/jmoiron/sqlx"
+	"github.com/nfnt/resize"
+	"image"
+	"image/gif"
+	"image/jpeg"
+	"image/png"
 	"io"
 	"io/ioutil"
 	"log"
@@ -117,6 +122,33 @@ func (cl *Client) handleFileUpload(rdr io.Reader) {
 				os.Remove(f.Name())
 				return
 			}
+			// thumbnail generation
+			f.Seek(0, 0)
+			img, _, err := image.Decode(f)
+			if err != nil {
+				log.Printf("Image decoding error: %s", err)
+				return
+			}
+			imgThumb := resize.Thumbnail(300, 200, img, resize.Bilinear)
+			fthumb, err := os.Create(fmt.Sprintf("%s/thumb%d.%s", FileUploadPath, curTime, ext))
+			if err != nil {
+				log.Printf("File upload failed: %s", err)
+				return
+			}
+			defer fthumb.Close()
+			switch ext {
+			case "jpg":
+				err = jpeg.Encode(fthumb, imgThumb, &jpeg.Options{Quality: 100})
+			case "png":
+				err = png.Encode(fthumb, imgThumb)
+			case "gif":
+				err = gif.Encode(fthumb, imgThumb, &gif.Options{NumColors: 256})
+			}
+			if err != nil {
+				log.Printf("Image encoding error: %s", err)
+				return
+			}
+
 			cl.broadcastChannel <- &FileUploadSuccessfulMessage{FileUploadSuccessfulMessageType, cl.Id,
 				fmt.Sprintf("%d.%s", curTime, ext)}
 		} else {
