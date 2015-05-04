@@ -25,6 +25,11 @@ var Base = React.createClass({
 		posts.push(post);
 		this.setState({posts: posts});
 	},
+	displayNewThread: function(thread) {
+		threads = this.state.threads;
+		threads.unshift(thread);
+		this.setState({threads: threads});
+	},
 	render: function() {
 		var boardList, threads, posts;
 		if (this.state.ctx == ViewContext.MAINPAGE) {

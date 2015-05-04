@@ -158,7 +158,14 @@ Govnaba = function() {
     }
 
     this.onNewThreadMessage = function(msg) {
-
+        this.baseCont.displayNewThread([{
+            Topic: msg.Topic,
+            Contents: msg.Contents,
+            ThreadId: msg.LocalId,
+            LocalId: msg.LocalId,
+            Date: msg.Date,
+            Attrs: msg.Attrs
+        }]);
     }
 
     this.onNewPostMessage = function(msg) {

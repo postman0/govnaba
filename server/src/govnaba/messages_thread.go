@@ -73,6 +73,7 @@ type CreateThreadMessage struct {
 	Board       string
 	Topic       string
 	Contents    string
+	Date        time.Time
 	Attrs       PostAttributes
 	// dunno for what this is used, apparently this is database-local thread id
 	// and clients have no business knowing it
@@ -127,18 +128,16 @@ func (msg *CreateThreadMessage) Process(db *sqlx.DB) []OutMessage {
 	if err != nil {
 		log.Println(err)
 	}
-	row = tx.QueryRowx(`INSERT INTO posts (user_id, thread_id, board_local_id, topic, contents, attrs, is_op) 
-		VALUES (NULL, $1, nextval($2 || '_board_id_seq'), $3, $4, $5, TRUE) RETURNING board_local_id;`,
+	err = tx.Get(msg, `INSERT INTO posts (user_id, thread_id, board_local_id, topic, contents, attrs, is_op) 
+		VALUES (NULL, $1, nextval($2 || '_board_id_seq'), $3, $4, $5, TRUE)
+		RETURNING board_local_id AS localid, created_date AS date;`,
 		thread_id, msg.Board, msg.Topic, msg.Contents, msg.Attrs)
-	var post_id int
-	err = row.Scan(&post_id)
 	tx.Commit()
 	if err != nil {
 		log.Println(err)
 		return nil
 		// todo: return error
 	}
-	msg.LocalId = post_id
 	//TODO: determine why the fuck this is needed
 	msg.ThreadId = thread_id
 	return []OutMessage{msg}
