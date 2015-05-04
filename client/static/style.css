@@ -16,7 +16,22 @@
 	float: right;
 }
 
+.post-header-topic {
+	font-weight: bold;
+}
+
 .post-image {
 	margin-right: 10px;
 	margin-bottom: 10px;
+}
+
+.post-body {
+	word-wrap: break-word;
+}
+.post-body-bold {
+	font-weight: bold;
+}
+
+.post-body-italic {
+	font-style: italic;
 }

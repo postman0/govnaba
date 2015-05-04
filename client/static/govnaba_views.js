@@ -136,17 +136,71 @@ var Post = React.createClass({displayName: "Post",
 				})
 				)
 			);
-			console.log(imgs);
 		}
+		var topic = null;
+		if (this.props.postData.Topic) {
+			topic = React.createElement("span", {className: "post-header-topic"}, this.props.postData.Topic)
+		}
+
+		function processMarkup(str) {
+			var tagsToReplace = {
+			    '&': '&amp;',
+			    '<': '&lt;',
+			    '>': '&gt;'
+			};
+
+			function replaceTag(tag) {
+			    return tagsToReplace[tag] || tag;
+			}
+
+			function safeTagsReplace(str) {
+			    return str.replace(/[&<>]/g, replaceTag);
+			}
+
+			var boldCount = 0, italicCount = 0;
+			var iBold = 0, iItalic = 0;
+			var text = safeTagsReplace(str);
+			text = text.replace(/\n/, "<br>");
+			text = text.replace(/\*\*/g, function() {
+				boldCount++;
+				var rplcmnt;
+				if (iBold % 2 == 0)
+					rplcmnt = '<span class="post-body-bold">'
+				else
+					rplcmnt = '</span>';
+
+				iBold++;
+				return rplcmnt;
+			});
+			text = text.replace(/\*/g, function() {
+				italicCount++;
+				var rplcmnt;
+				if (iItalic % 2 == 0)
+					rplcmnt = '<span class="post-body-italic">'
+				else
+					rplcmnt = '</span>';
+				iItalic++;
+				return rplcmnt;
+			});
+			if (boldCount % 2 == 1)
+				text += '</span>';
+			if (italicCount % 2 == 1)
+				text += '</span>';
+			return {__html: text};
+		}
+
+
 		return (
 			React.createElement("div", {className: "panel panel-default post-container"}, 
 				React.createElement("div", {className: "panel-heading"}, 
 				React.createElement("a", {href: gvnb.getThreadLink(this.props.opPostId, this.props.postData.LocalId), className: "post-header-id"}, "#", this.props.postData.LocalId), 
+				topic, 
 				React.createElement("span", {className: "post-header-date"}, datestr)
 				), 
 				React.createElement("div", {className: "panel-body"}, 
 					imgs, 
-					this.props.postData.Contents
+					React.createElement("div", {className: "post-body", 
+						dangerouslySetInnerHTML: processMarkup(this.props.postData.Contents)})
 				)
 			)
 		)
@@ -184,7 +238,7 @@ var PostingForm = React.createClass({displayName: "PostingForm",
 				), 
 				React.createElement("div", {className: "form-group"}, 
 					React.createElement("div", {className: "col-sm-2 col-sm-offset-2"}, 
-							React.createElement("input", {type: "submit", className: "form-control", value: submitCaption})
+						React.createElement("input", {type: "submit", className: "form-control", value: submitCaption})
 					)
 				)
 			)

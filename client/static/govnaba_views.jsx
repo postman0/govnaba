@@ -136,17 +136,71 @@ var Post = React.createClass({
 				})}
 				</div>
 			);
-			console.log(imgs);
 		}
+		var topic = null;
+		if (this.props.postData.Topic) {
+			topic = <span className="post-header-topic">{this.props.postData.Topic}</span>
+		}
+
+		function processMarkup(str) {
+			var tagsToReplace = {
+			    '&': '&amp;',
+			    '<': '&lt;',
+			    '>': '&gt;'
+			};
+
+			function replaceTag(tag) {
+			    return tagsToReplace[tag] || tag;
+			}
+
+			function safeTagsReplace(str) {
+			    return str.replace(/[&<>]/g, replaceTag);
+			}
+
+			var boldCount = 0, italicCount = 0;
+			var iBold = 0, iItalic = 0;
+			var text = safeTagsReplace(str);
+			text = text.replace(/\n/, "<br>");
+			text = text.replace(/\*\*/g, function() {
+				boldCount++;
+				var rplcmnt;
+				if (iBold % 2 == 0)
+					rplcmnt = '<span class="post-body-bold">'
+				else
+					rplcmnt = '</span>';
+
+				iBold++;
+				return rplcmnt;
+			});
+			text = text.replace(/\*/g, function() {
+				italicCount++;
+				var rplcmnt;
+				if (iItalic % 2 == 0)
+					rplcmnt = '<span class="post-body-italic">'
+				else
+					rplcmnt = '</span>';
+				iItalic++;
+				return rplcmnt;
+			});
+			if (boldCount % 2 == 1)
+				text += '</span>';
+			if (italicCount % 2 == 1)
+				text += '</span>';
+			return {__html: text};
+		}
+
+
 		return (
 			<div className="panel panel-default post-container">
 				<div className="panel-heading">
 				<a href={gvnb.getThreadLink(this.props.opPostId, this.props.postData.LocalId)} className="post-header-id">#{this.props.postData.LocalId}</a>
+				{topic}
 				<span className="post-header-date">{datestr}</span>
 				</div>
 				<div className="panel-body">
 					{imgs}
-					{this.props.postData.Contents}
+					<div className="post-body" 
+						dangerouslySetInnerHTML={processMarkup(this.props.postData.Contents)}></div>
 				</div>
 			</div>
 		)
@@ -184,7 +238,7 @@ var PostingForm = React.createClass({
 				</div>
 				<div className="form-group">
 					<div className="col-sm-2 col-sm-offset-2">
-							<input type="submit" className="form-control" value={submitCaption} />
+						<input type="submit" className="form-control" value={submitCaption} />
 					</div>
 				</div>
 			</form>

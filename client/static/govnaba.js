@@ -2,7 +2,7 @@
 var GovnabaMessager = function(gvnb) {
 
     this.gvnb = gvnb;
-    this.hostname = "localhost:8080"
+    this.hostname = document.domain + ":8080"
     this.socket = new WebSocket("ws://" + this.hostname + "/connect");
 
     this.socket.onopen = function() {
