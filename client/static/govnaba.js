@@ -43,6 +43,12 @@ var GovnabaMessager = function(gvnb) {
                 gvnb.onFileUploadSuccess(msg);
                 break;
             }
+            case 12:
+            case 13:
+            case 14: {
+                gvnb.onError(msg)
+                break;
+            }
         }
     }
     
@@ -176,6 +182,21 @@ Govnaba = function() {
             Date: msg.Date,
             Attrs: msg.Attrs
         });
+    }
+
+    this.onError = function(msg) {
+        $('.postform > form').append('\
+            <div class="form-group">\
+                <div class="form-error alert alert-danger col-sm-offset-2 col-sm-10">' +
+                    function() {if (msg.ErrorMessage) {
+                        return msg.ErrorMessage
+                    } else if (msg.MessageType == 13) {
+                        return "Загрузка файла не удалась."
+                    } else if (msg.MessageType == 14) {
+                        return "Внутренняя ошибка сервера."
+                    }}() +
+                '</div>\
+            </div>');
     }
 
     this.sendPostingForm = function(evt) {

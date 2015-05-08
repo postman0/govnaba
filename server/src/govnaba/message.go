@@ -19,6 +19,9 @@ const (
 	GetThreadMessageType
 	ThreadPostsMessageType
 	FileUploadSuccessfulMessageType
+	InvalidRequestErrorMessageType
+	FileUploadErrorMessageType
+	InternalServerErrorMessageType
 )
 
 // This type is used in reconstructing messages sent by clients.

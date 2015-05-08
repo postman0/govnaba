@@ -95,9 +95,9 @@ func (msg *GetBoardThreadsMessage) Process(db *sqlx.DB) []OutMessage {
 	posts := []Post{}
 	err := db.Select(&posts, query, msg.Board, msg.Count, msg.SkipBatches)
 	if err != nil {
-		log.Println(err)
+		// this never fails, it returns empty results instead
+		log.Printf("%v", err)
 		return nil
-		// todo: handle
 	}
 	answer := BoardThreadListMessage{
 		MessageType: BoardThreadListMessageType,

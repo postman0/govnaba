@@ -120,6 +120,7 @@ func (cl *Client) handleFileUpload(rdr io.Reader) {
 		mimetype, err := cmg.Buffer(buf)
 		if err != nil {
 			log.Printf("File upload failed: %s", err)
+			cl.WriteChannel <- &InternalServerErrorMessage{InternalServerErrorMessageType, cl.Id}
 			return
 		}
 		ext, allowed := validFileTypes[mimetype]
@@ -128,6 +129,7 @@ func (cl *Client) handleFileUpload(rdr io.Reader) {
 			f, err := os.Create(fmt.Sprintf("%s/%d.%s", FileUploadPath, curTime, ext))
 			if err != nil {
 				log.Printf("File upload failed: %s", err)
+				cl.WriteChannel <- &InternalServerErrorMessage{InternalServerErrorMessageType, cl.Id}
 				return
 			}
 			defer f.Close()
@@ -136,6 +138,7 @@ func (cl *Client) handleFileUpload(rdr io.Reader) {
 			if err != nil {
 				log.Printf("File upload failed: %s", err)
 				os.Remove(f.Name())
+				cl.WriteChannel <- &InternalServerErrorMessage{InternalServerErrorMessageType, cl.Id}
 				return
 			}
 			// thumbnail generation
@@ -143,12 +146,14 @@ func (cl *Client) handleFileUpload(rdr io.Reader) {
 			img, _, err := image.Decode(f)
 			if err != nil {
 				log.Printf("Image decoding error: %s", err)
+				cl.WriteChannel <- &InternalServerErrorMessage{InternalServerErrorMessageType, cl.Id}
 				return
 			}
 			imgThumb := resize.Thumbnail(300, 200, img, resize.Bilinear)
 			fthumb, err := os.Create(fmt.Sprintf("%s/thumb%d.%s", FileUploadPath, curTime, ext))
 			if err != nil {
 				log.Printf("File upload failed: %s", err)
+				cl.WriteChannel <- &InternalServerErrorMessage{InternalServerErrorMessageType, cl.Id}
 				return
 			}
 			defer fthumb.Close()
@@ -162,6 +167,7 @@ func (cl *Client) handleFileUpload(rdr io.Reader) {
 			}
 			if err != nil {
 				log.Printf("Image encoding error: %s", err)
+				cl.WriteChannel <- &InternalServerErrorMessage{InternalServerErrorMessageType, cl.Id}
 				return
 			}
 
@@ -169,6 +175,10 @@ func (cl *Client) handleFileUpload(rdr io.Reader) {
 				fmt.Sprintf("%d.%s", curTime, ext)}
 		} else {
 			log.Printf("Illegal upload of %s file", mimetype)
+			cl.WriteChannel <- &FileUploadErrorMessage{
+				FileUploadErrorMessageType,
+				cl.Id,
+			}
 		}
 	}
 }

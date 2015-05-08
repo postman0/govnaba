@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 	"log"
 	"time"
 )
@@ -99,8 +100,12 @@ func (msg *CreateThreadMessage) Process(db *sqlx.DB) []OutMessage {
 	row.Scan(&boardExists)
 	if !boardExists {
 		log.Printf("Tried to post into invalid board /%s/", msg.Board)
-		return nil
-		// todo: return error
+		return []OutMessage{&InvalidRequestErrorMessage{
+			InvalidRequestErrorMessageType,
+			msg.ClientId,
+			ResourceDoesntExist,
+			"Board doesnt exist",
+		}}
 	}
 	p := Post{
 		Board:    msg.Board,
@@ -113,8 +118,12 @@ func (msg *CreateThreadMessage) Process(db *sqlx.DB) []OutMessage {
 		err = pp(msg.ClientId, &p)
 		if err != nil {
 			log.Printf("Invalid post: %s", err)
-			//TODO: send error
-			return nil
+			return []OutMessage{&InvalidRequestErrorMessage{
+				InvalidRequestErrorMessageType,
+				msg.ClientId,
+				InvalidArguments,
+				err.Error(),
+			}}
 		}
 	}
 	msg.Board = p.Board
@@ -126,7 +135,7 @@ func (msg *CreateThreadMessage) Process(db *sqlx.DB) []OutMessage {
 	var thread_id int
 	err = row.Scan(&thread_id)
 	if err != nil {
-		log.Println(err)
+		log.Printf("%#v", err)
 	}
 	err = tx.Get(msg, `INSERT INTO posts (user_id, thread_id, board_local_id, topic, contents, attrs, is_op) 
 		VALUES (NULL, $1, nextval($2 || '_board_id_seq'), $3, $4, $5, TRUE)
@@ -134,7 +143,7 @@ func (msg *CreateThreadMessage) Process(db *sqlx.DB) []OutMessage {
 		thread_id, msg.Board, msg.Topic, msg.Contents, msg.Attrs)
 	tx.Commit()
 	if err != nil {
-		log.Println(err)
+		log.Printf("%#v", err)
 		return nil
 		// todo: return error
 	}
@@ -195,8 +204,12 @@ func (msg *AddPostMessage) Process(db *sqlx.DB) []OutMessage {
 		err = pp(msg.ClientId, &p)
 		if err != nil {
 			log.Printf("Invalid post: %s", err)
-			//TODO: send error
-			return nil
+			return []OutMessage{&InvalidRequestErrorMessage{
+				InvalidRequestErrorMessageType,
+				msg.ClientId,
+				InvalidArguments,
+				err.Error(),
+			}}
 		}
 	}
 	msg.Board = p.Board
@@ -221,7 +234,7 @@ func (msg *AddPostMessage) Process(db *sqlx.DB) []OutMessage {
 	err = row.Scan(&answerId, &date)
 	if err != nil {
 		tx.Rollback()
-		log.Println(err)
+		log.Printf("%#v", err)
 		// todo: return error
 		return nil
 	}
@@ -285,7 +298,7 @@ func (msg *GetThreadMessage) Process(db *sqlx.DB) []OutMessage {
 	}
 	err := db.Select(&answer.Posts, query, msg.LocalId, msg.Board)
 	if err != nil {
-		log.Println(err)
+		log.Printf("%#v", err)
 		return nil
 	}
 	return []OutMessage{&answer}
