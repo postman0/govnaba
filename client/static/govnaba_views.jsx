@@ -135,7 +135,8 @@ var Post = React.createClass({
 				{attrs.images.map(function(imgName){
 					return (
 						<a href={"/static/uploads/"+imgName} target="_blank">
-							<img className="post-image img-thumbnail pull-left" src={"/static/uploads/thumb"+imgName}></img>
+							<img className="post-image img-thumbnail pull-left" src={"/static/uploads/thumb"+imgName}
+							 alt={imgName}></img>
 						</a>
 					)
 				})}
@@ -221,7 +222,7 @@ var PostingForm = React.createClass({
 		};
 		return (
 			<div className="panel panel-default postform">
-			<form className="form-horizontal panel-body" action="" role="form" onSubmit={gvnb.sendPostingForm.bind(gvnb)}>
+			<form className="form-horizontal panel-body" action="#" role="form" onSubmit={gvnb.sendPostingForm.bind(gvnb)}>
 				<div className="form-group">
 					<label className="control-label col-sm-2">Тема</label>
 					<div className="col-sm-10">

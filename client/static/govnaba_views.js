@@ -135,7 +135,8 @@ var Post = React.createClass({displayName: "Post",
 				attrs.images.map(function(imgName){
 					return (
 						React.createElement("a", {href: "/static/uploads/"+imgName, target: "_blank"}, 
-							React.createElement("img", {className: "post-image img-thumbnail pull-left", src: "/static/uploads/thumb"+imgName})
+							React.createElement("img", {className: "post-image img-thumbnail pull-left", src: "/static/uploads/thumb"+imgName, 
+							 alt: imgName})
 						)
 					)
 				})
@@ -221,7 +222,7 @@ var PostingForm = React.createClass({displayName: "PostingForm",
 		};
 		return (
 			React.createElement("div", {className: "panel panel-default postform"}, 
-			React.createElement("form", {className: "form-horizontal panel-body", action: "", role: "form", onSubmit: gvnb.sendPostingForm.bind(gvnb)}, 
+			React.createElement("form", {className: "form-horizontal panel-body", action: "#", role: "form", onSubmit: gvnb.sendPostingForm.bind(gvnb)}, 
 				React.createElement("div", {className: "form-group"}, 
 					React.createElement("label", {className: "control-label col-sm-2"}, "Тема"), 
 					React.createElement("div", {className: "col-sm-10"}, 
