@@ -94,7 +94,13 @@ var Board = React.createClass({displayName: "Board",
 					return (
 						React.createElement(Thread, {posts: val, key: val[0].LocalId})
 					)
-				})
+				}), 
+				React.createElement("nav", null, 
+					React.createElement("ul", {className: "pager"}, 
+						React.createElement("li", null, React.createElement("a", {href: "/" + gvnb.state.board + "?page=" + (gvnb.state.page-1)}, "Назад")), 
+						React.createElement("li", null, React.createElement("a", {href: "/" + gvnb.state.board + "?page=" + (gvnb.state.page+1)}, "Вперед"))
+					)
+				)
 			)
 		)
 	}

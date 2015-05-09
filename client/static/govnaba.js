@@ -120,10 +120,16 @@ Govnaba = function() {
     this.state = {};
     
     this.initialize = function() {
+        page('*', this.parseQueryString.bind(this));
         page('/', this.navMainPage.bind(this));
         page('/:board/', this.navBoardPage.bind(this));
         page("/:board/:localid", this.navThreadPage.bind(this));
         page();
+    }
+
+    this.parseQueryString = function(ctx, next) {
+        ctx.query = qs.parse(ctx.querystring);
+        next();
     }
 
     this.getThreadLink = function(opLocalId, postLocalId) {
@@ -136,8 +142,11 @@ Govnaba = function() {
     }
 
     this.navBoardPage = function(ctx) {
-        this.msgr.getBoardPage(ctx.params.board, 0);
+        console.log(ctx);
+        var page = parseInt(ctx.query.page || "0");
+        this.msgr.getBoardPage(ctx.params.board, page);
         this.state.board = ctx.params.board;
+        this.state.page = page;
     }
 
     this.navThreadPage = function(ctx) {

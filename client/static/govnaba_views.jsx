@@ -95,6 +95,12 @@ var Board = React.createClass({
 						<Thread posts={val} key={val[0].LocalId}/>
 					)
 				})}
+				<nav>
+					<ul className="pager">
+						<li><a href={"/" + gvnb.state.board + "?page=" + (gvnb.state.page-1)}>Назад</a></li>
+						<li><a href={"/" + gvnb.state.board + "?page=" + (gvnb.state.page+1)}>Вперед</a></li>
+					</ul>
+				</nav>
 			</div>
 		)
 	}
