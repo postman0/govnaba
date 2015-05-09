@@ -88,8 +88,17 @@ func HandleClients() {
 							delete(boardClients, m.Id.String())
 						}
 						if m.LocationType == govnaba.Board {
-							boardClients := boardsClientsMap[m.NewLocation]
-							boardClients[m.Id.String()] = clients[m.Id.String()]
+							boardClients, ok := boardsClientsMap[m.NewLocation]
+							if ok {
+								boardClients[m.Id.String()] = clients[m.Id.String()]
+							} else {
+								clients[m.Id.String()].WriteChannel <- &govnaba.InvalidRequestErrorMessage{
+									govnaba.InvalidRequestErrorMessageType,
+									m.Id,
+									govnaba.ResourceDoesntExist,
+									"Board doesn't exist",
+								}
+							}
 						}
 						log.Printf("%v", boardsClientsMap)
 					}
