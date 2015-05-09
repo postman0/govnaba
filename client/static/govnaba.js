@@ -142,7 +142,6 @@ Govnaba = function() {
     }
 
     this.navBoardPage = function(ctx) {
-        console.log(ctx);
         var page = parseInt(ctx.query.page || "0");
         this.msgr.getBoardPage(ctx.params.board, page);
         this.state.board = ctx.params.board;

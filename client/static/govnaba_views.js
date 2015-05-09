@@ -166,38 +166,38 @@ var Post = React.createClass({displayName: "Post",
 			}
 
 			function safeTagsReplace(str) {
-			    return str.replace(/[&<>]/g, replaceTag);
+			    return str.replace(/[&<>'"]/g, replaceTag);
 			}
 
-			var boldCount = 0, italicCount = 0;
-			var iBold = 0, iItalic = 0;
-			var text = safeTagsReplace(str);
-			text = text.replace(/\n/, "<br>");
-			text = text.replace(/\*\*/g, function() {
-				boldCount++;
-				var rplcmnt;
-				if (iBold % 2 == 0)
-					rplcmnt = '<span class="post-body-bold">'
-				else
-					rplcmnt = '</span>';
+			function replaceMarkupTags(str, regex, className) {
+				var tagCount = 0;
+				var text = str.replace(regex, function() {
+					var rplcmnt;
+					if (tagCount % 2 == 0)
+						rplcmnt = '<span class="'+ className + '">'
+					else
+						rplcmnt = '</span>';
+					tagCount++;
+					return rplcmnt;
+				});
+				if (tagCount % 2 == 1)
+					text += '</span>';
+				return text;
+			}
 
-				iBold++;
-				return rplcmnt;
+			var text = safeTagsReplace(str);
+			text = text.replace(/\n/, " <br></br>");
+			text = replaceMarkupTags(text, /\*\*/g, "post-body-bold");
+			text = replaceMarkupTags(text, /\*/g, "post-body-italic");
+			text = replaceMarkupTags(text, /%%/g, "post-body-spoiler");
+			text = replaceMarkupTags(text, /__/g, "post-body-underline");
+
+			text = text.replace(/\w(?:\w|\.|\-)*\:\S+/, function(match) {
+				return '<a target="_blank" href="' + safeTagsReplace(match).replace(/"/g, "&quot;") + '">' + 
+					safeTagsReplace(match) + 
+				'</a>';
 			});
-			text = text.replace(/\*/g, function() {
-				italicCount++;
-				var rplcmnt;
-				if (iItalic % 2 == 0)
-					rplcmnt = '<span class="post-body-italic">'
-				else
-					rplcmnt = '</span>';
-				iItalic++;
-				return rplcmnt;
-			});
-			if (boldCount % 2 == 1)
-				text += '</span>';
-			if (italicCount % 2 == 1)
-				text += '</span>';
+
 			return {__html: text};
 		}
 

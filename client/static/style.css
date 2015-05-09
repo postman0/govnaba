@@ -35,3 +35,16 @@
 .post-body-italic {
 	font-style: italic;
 }
+
+.post-body-spoiler {
+	color: gray;
+	background-color: gray;	
+}
+
+.post-body-spoiler:hover {
+	color: black;
+}
+
+.post-body-underline {
+	text-decoration: underline;
+}
