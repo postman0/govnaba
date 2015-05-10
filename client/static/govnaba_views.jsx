@@ -186,13 +186,19 @@ var Post = React.createClass({
 			}
 
 			var text = safeTagsReplace(str);
-			text = text.replace(/\n/, " <br></br>");
+			text = text.replace(/^&gt;(.*$\n)/mg, function(match, contents){
+				console.log(match);
+				console.log(contents);
+				return '<blockquote class="post-body-quote">' + safeTagsReplace(contents) + '</blockquote>';
+			});
+			console.log(text);
+			text = text.replace(/\n/, " <br>");
 			text = replaceMarkupTags(text, /\*\*/g, "post-body-bold");
 			text = replaceMarkupTags(text, /\*/g, "post-body-italic");
 			text = replaceMarkupTags(text, /%%/g, "post-body-spoiler");
 			text = replaceMarkupTags(text, /__/g, "post-body-underline");
 
-			text = text.replace(/\w(?:\w|\.|\-)*\:\S+/, function(match) {
+			text = text.replace(/\w(?:\w|\.|\-)*\:\S+/g, function(match) {
 				return '<a target="_blank" href="' + safeTagsReplace(match).replace(/"/g, "&quot;") + '">' + 
 					safeTagsReplace(match) + 
 				'</a>';
