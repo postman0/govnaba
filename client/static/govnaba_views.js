@@ -207,6 +207,8 @@ var Post = React.createClass({displayName: "Post",
 				React.createElement("div", {className: "panel-heading"}, 
 				React.createElement("a", {href: gvnb.getThreadLink(this.props.opPostId, this.props.postData.LocalId), className: "post-header-id"}, "#", this.props.postData.LocalId), 
 				topic, 
+				 (attrs && attrs.sage) ? React.createElement("span", {className: "label label-sage"}, "SAGE") : null, 
+				 (attrs && attrs.op) ? React.createElement("span", {className: "label label-primary"}, "OP") : null, 
 				React.createElement("span", {className: "post-header-date"}, datestr)
 				), 
 				React.createElement("div", {className: "panel-body"}, 
@@ -246,6 +248,16 @@ var PostingForm = React.createClass({displayName: "PostingForm",
 					React.createElement("label", {className: "control-label col-sm-2"}, "Файл"), 
 					React.createElement("div", {className: "col-sm-10"}, 
 						React.createElement("input", {id: "input_file", name: "file", type: "file"})
+					)
+				), 
+				React.createElement("div", {className: "form-group"}, 
+					React.createElement("div", {className: "col-sm-2 col-sm-offset-2"}, 
+						React.createElement("input", {id: "input_sage", type: "checkbox", name: "sage", className: "checkbox-inline", value: ""}, 
+							"SAGE"
+						), 
+						React.createElement("input", {id: "input_op", type: "checkbox", name: "op", className: "checkbox-inline", value: ""}, 
+							"OP"
+						)
 					)
 				), 
 				React.createElement("div", {className: "form-group"}, 

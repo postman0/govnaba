@@ -212,13 +212,19 @@ Govnaba = function() {
         if (fileList.length > 0) {
             this.msgr.uploadFile(fileList[0]);
         } else {
+            var attrs = {};
             var topic = document.getElementById("input_topic").value;
             var contents = document.getElementById("input_contents").value;
+            if (document.getElementById("input_sage").checked)
+                attrs.sage = true;
+            if (document.getElementById("input_op").checked)
+                attrs.op = true;
+
             if (this.baseCont.state.ctx == ViewContext.BOARD) {
-                this.msgr.createThread(this.state.board, topic, contents);
+                this.msgr.createThread(this.state.board, topic, contents, attrs);
             }
             else if (this.baseCont.state.ctx == ViewContext.THREAD) {
-                this.msgr.addPost(this.state.board, topic, contents, this.state.thread);
+                this.msgr.addPost(this.state.board, topic, contents, this.state.thread, attrs);
             }
         }
         evt.preventDefault();
@@ -228,6 +234,11 @@ Govnaba = function() {
         var topic = document.getElementById("input_topic").value;
         var contents = document.getElementById("input_contents").value;
         var attrs = {"images": [msg.Filename]}
+        if (document.getElementById("input_sage").checked)
+            attrs.sage = true;
+        if (document.getElementById("input_op").checked)
+            attrs.op = true;
+        
         if (this.baseCont.state.ctx == ViewContext.BOARD) {
             this.msgr.createThread(this.state.board, topic, contents, attrs);
         }

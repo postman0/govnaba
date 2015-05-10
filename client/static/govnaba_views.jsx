@@ -207,6 +207,8 @@ var Post = React.createClass({
 				<div className="panel-heading">
 				<a href={gvnb.getThreadLink(this.props.opPostId, this.props.postData.LocalId)} className="post-header-id">#{this.props.postData.LocalId}</a>
 				{topic}
+				{ (attrs && attrs.sage) ? <span className='label label-sage'>SAGE</span> : null}
+				{ (attrs && attrs.op) ? <span className='label label-primary'>OP</span> : null}
 				<span className="post-header-date">{datestr}</span>
 				</div>
 				<div className="panel-body">
@@ -246,6 +248,16 @@ var PostingForm = React.createClass({
 					<label className="control-label col-sm-2">Файл</label>
 					<div className="col-sm-10">
 						<input id="input_file" name="file" type="file"/>
+					</div>
+				</div>
+				<div className="form-group">
+					<div className="col-sm-2 col-sm-offset-2">
+						<input id="input_sage" type="checkbox" name="sage" className="checkbox-inline" value="">
+							SAGE
+						</input>
+						<input id="input_op" type="checkbox" name="op" className="checkbox-inline" value="">
+							OP
+						</input>
 					</div>
 				</div>
 				<div className="form-group">

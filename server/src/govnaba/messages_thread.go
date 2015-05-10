@@ -15,12 +15,6 @@ import (
 // An utility type for unmarshallling attributes from the database.
 type PostAttributes map[string]interface{}
 
-// This shows what post processors are used for various boards.
-// Processors will be called in the order of their placement in the slice.
-var EnabledPostProcessors = map[string][]PostProcessor{
-	"test": []PostProcessor{ImageProcessor},
-}
-
 // Scan unmarshals JSON into a map[string]interface{}.
 // If the value is NULL then the result is a nil map.
 func (pa *PostAttributes) Scan(src interface{}) error {
@@ -114,8 +108,8 @@ func (msg *CreateThreadMessage) Process(db *sqlx.DB) []OutMessage {
 		Attrs:    msg.Attrs,
 	}
 	var err error = nil
-	for _, pp := range EnabledPostProcessors[msg.Board] {
-		err = pp(msg.ClientId, &p)
+	for _, pp := range EnabledPostProcessorsPre[msg.Board] {
+		err = pp(msg.ClientId, &p, db)
 		if err != nil {
 			log.Printf("Invalid post: %s", err)
 			return []OutMessage{&InvalidRequestErrorMessage{
@@ -130,6 +124,7 @@ func (msg *CreateThreadMessage) Process(db *sqlx.DB) []OutMessage {
 	msg.Topic = p.Topic
 	msg.Contents = p.Contents
 	msg.Attrs = p.Attrs
+
 	tx := db.MustBegin()
 	row = tx.QueryRowx(`INSERT INTO threads (board_id) VALUES ((SELECT id FROM boards WHERE name = $1)) RETURNING id;`, msg.Board)
 	var thread_id int
@@ -138,15 +133,24 @@ func (msg *CreateThreadMessage) Process(db *sqlx.DB) []OutMessage {
 		log.Printf("%#v", err)
 	}
 	err = tx.Get(msg, `INSERT INTO posts (user_id, thread_id, board_local_id, topic, contents, attrs, is_op) 
-		VALUES (NULL, $1, nextval($2 || '_board_id_seq'), $3, $4, $5, TRUE)
+		VALUES ((SELECT users.id FROM users WHERE client_id = $1), $2, nextval($3 || '_board_id_seq'), $4, $5, $6, TRUE)
 		RETURNING board_local_id AS localid, created_date AS date;`,
-		thread_id, msg.Board, msg.Topic, msg.Contents, msg.Attrs)
+		msg.ClientId.String(), thread_id, msg.Board, msg.Topic, msg.Contents, msg.Attrs)
 	tx.Commit()
 	if err != nil {
 		log.Printf("%#v", err)
 		return nil
 		// todo: return error
 	}
+
+	for _, pp := range EnabledPostProcessorsPost[msg.Board] {
+		_ = pp(msg.ClientId, &p, db)
+	}
+	msg.Board = p.Board
+	msg.Topic = p.Topic
+	msg.Contents = p.Contents
+	msg.Attrs = p.Attrs
+
 	//TODO: determine why the fuck this is needed
 	msg.ThreadId = thread_id
 	return []OutMessage{msg}
@@ -200,8 +204,8 @@ func (msg *AddPostMessage) Process(db *sqlx.DB) []OutMessage {
 		ThreadId: msg.ThreadLocalId,
 	}
 	var err error = nil
-	for _, pp := range EnabledPostProcessors[msg.Board] {
-		err = pp(msg.ClientId, &p)
+	for _, pp := range EnabledPostProcessorsPre[msg.Board] {
+		err = pp(msg.ClientId, &p, db)
 		if err != nil {
 			log.Printf("Invalid post: %s", err)
 			return []OutMessage{&InvalidRequestErrorMessage{
@@ -238,10 +242,17 @@ func (msg *AddPostMessage) Process(db *sqlx.DB) []OutMessage {
 		// todo: return error
 		return nil
 	}
-	tx.Exec(`UPDATE threads SET last_bump_date = DEFAULT WHERE id = (SELECT thread_id FROM posts WHERE board_local_id = $1);`, msg.ThreadLocalId)
+	//tx.Exec(`UPDATE threads SET last_bump_date = DEFAULT WHERE id = (SELECT thread_id FROM posts WHERE board_local_id = $1);`, msg.ThreadLocalId)
 	tx.Commit()
 	msg.AnswerLocalId = answerId
 	msg.Date = date
+	for _, pp := range EnabledPostProcessorsPost[msg.Board] {
+		_ = pp(msg.ClientId, &p, db)
+	}
+	msg.Board = p.Board
+	msg.Topic = p.Topic
+	msg.Contents = p.Contents
+	msg.Attrs = p.Attrs
 	return []OutMessage{msg}
 }
 

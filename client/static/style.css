@@ -18,6 +18,12 @@
 
 .post-header-topic {
 	font-weight: bold;
+	margin-right: 0.5em;
+}
+
+.label-sage {
+	background-color: black;
+	color: white;
 }
 
 .post-image {
