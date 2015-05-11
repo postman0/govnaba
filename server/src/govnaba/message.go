@@ -21,6 +21,8 @@ const (
 	InvalidRequestErrorMessageType
 	FileUploadErrorMessageType
 	InternalServerErrorMessageType
+	UserLoginMessageType
+	UserLoginSuccessfulMessageType
 )
 
 // This type is used in reconstructing messages sent by clients.
@@ -45,6 +47,9 @@ var MessageConstructors = map[byte]MessageConstructor{
 	},
 	GetThreadMessageType: func(cl *Client) InMessage {
 		return &GetThreadMessage{MessageBase: MessageBase{GetThreadMessageType, cl}}
+	},
+	UserLoginMessageType: func(cl *Client) InMessage {
+		return &UserLoginMessage{MessageBase: MessageBase{UserLoginMessageType, cl}}
 	},
 }
 

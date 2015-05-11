@@ -46,7 +46,11 @@ var GovnabaMessager = function(gvnb) {
             case 12:
             case 13:
             case 14: {
-                gvnb.onError(msg)
+                gvnb.onError(msg);
+                break;
+            }
+            case 16: {
+                gvnb.onLoginSuccessfulMessage(msg);
                 break;
             }
         }
@@ -110,16 +114,24 @@ var GovnabaMessager = function(gvnb) {
     this.uploadFile = function(file) {
         this.socket.send(file)
     }
+
+    this.attemptLogin = function(key) {
+        this.socket.send(JSON.stringify({
+            MessageType: 15,
+            Key: key
+        }))
+    }
 }
 
 
 Govnaba = function() {
-
+    
     this.msgr = new GovnabaMessager(this)
-    this.baseCont = GovnabaViews.mountBaseContainer();
-    this.state = {};
     
     this.initialize = function() {
+        this.baseCont = GovnabaViews.mountBaseContainer();
+        this.state = {};
+
         page('*', this.parseQueryString.bind(this));
         page('/', this.navMainPage.bind(this));
         page('/:board/', this.navBoardPage.bind(this));
@@ -228,6 +240,16 @@ Govnaba = function() {
             }
         }
         evt.preventDefault();
+    }
+
+    this.sendLoginForm = function(evt) {
+        gvnb.msgr.attemptLogin($("#input_login_key")[0].value);
+        evt.preventDefault();
+    }
+
+    this.onLoginSuccessfulMessage = function(msg) {
+        document.cookie = "userid=" + msg.Cookie + "; expires=Fri, 31 Dec 9999 23:59:59 GMT; path=/";
+        location.reload();
     }
 
     this.onFileUploadSuccess = function(msg) {

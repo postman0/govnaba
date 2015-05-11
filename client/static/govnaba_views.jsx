@@ -65,6 +65,12 @@ var NavBar = React.createClass({
 				<div className="navbar-header">
 					<a className="navbar-brand" href="/">Govnaba</a>
 				</div>
+				<div className="navbar-form navbar-right">
+					<form className="form-inline" action="#" onSubmit={gvnb.sendLoginForm.bind(gvnb)}>
+						<input id="input_login_key" type="text" className="form-control" placeholder="Ключ"></input>
+						<input id="input_login_submit" type="submit" className="form-control" value="Вход"></input>
+					</form>
+				</div>
 			</nav>
 		)
 	}
@@ -187,11 +193,8 @@ var Post = React.createClass({
 
 			var text = safeTagsReplace(str);
 			text = text.replace(/^&gt;(.*$\n)/mg, function(match, contents){
-				console.log(match);
-				console.log(contents);
 				return '<blockquote class="post-body-quote">' + safeTagsReplace(contents) + '</blockquote>';
 			});
-			console.log(text);
 			text = text.replace(/\n/, " <br>");
 			text = replaceMarkupTags(text, /\*\*/g, "post-body-bold");
 			text = replaceMarkupTags(text, /\*/g, "post-body-italic");

@@ -3,6 +3,7 @@ package govnaba
 import (
 	"encoding/json"
 	_ "errors"
+	"github.com/gorilla/securecookie"
 	"github.com/jmoiron/sqlx"
 	"log"
 )
@@ -98,6 +99,73 @@ func (msg *FileUploadSuccessfulMessage) GetDestination() Destination {
 }
 
 func (msg *FileUploadSuccessfulMessage) ToClient() []byte {
+	bytes, err := json.Marshal(msg)
+	if err != nil {
+		log.Println(err)
+	}
+	return bytes
+}
+
+var SecureCookie *securecookie.SecureCookie
+
+type UserLoginMessage struct {
+	MessageBase
+	Key string
+}
+
+type UserLoginSuccessfulMessage struct {
+	MessageBase
+	Cookie string
+}
+
+func (msg *UserLoginMessage) FromClient(cl *Client, msgBytes []byte) error {
+	err := json.Unmarshal(msgBytes, msg)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (msg *UserLoginMessage) Process(db *sqlx.DB) []OutMessage {
+	if len(msg.Key) > 64 || len(msg.Key) < 1 {
+		return []OutMessage{&InvalidRequestErrorMessage{
+			MessageBase{InvalidRequestErrorMessageType, msg.Client},
+			InvalidArguments,
+			"The key has invalid length.",
+		}}
+	}
+	userId := 0
+	const query = `WITH new_row AS (
+		INSERT INTO users (key)
+		SELECT $1::varchar
+		WHERE NOT EXISTS (SELECT * FROM users WHERE key = $1)
+		RETURNING *
+		)
+		SELECT id FROM new_row
+		UNION
+		SELECT id FROM users WHERE key = $1::varchar;`
+	err := db.Get(&userId, query, msg.Key)
+	if err != nil {
+		log.Printf("%#v", err)
+	}
+	cook, err := SecureCookie.Encode("userid", userId)
+	if err != nil {
+		log.Println(err)
+	}
+	log.Println(userId)
+	return []OutMessage{
+		&UserLoginSuccessfulMessage{
+			MessageBase{UserLoginSuccessfulMessageType, msg.Client},
+			cook,
+		},
+	}
+}
+
+func (msg *UserLoginSuccessfulMessage) GetDestination() Destination {
+	return Destination{ClientDestination, "", msg.Client.Id}
+}
+
+func (msg *UserLoginSuccessfulMessage) ToClient() []byte {
 	bytes, err := json.Marshal(msg)
 	if err != nil {
 		log.Println(err)

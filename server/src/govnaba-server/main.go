@@ -110,6 +110,7 @@ func getUserFromIP(req *http.Request) (int, http.Header) {
 		var header http.Header
 		header = make(map[string][]string)
 		encId, _ := secureCookie.Encode("userid", userID)
+		log.Println(encId)
 		cookie := http.Cookie{
 			Name:    "userid",
 			Value:   encId,
@@ -136,6 +137,7 @@ func main() {
 	}
 
 	secureCookie = securecookie.New([]byte(*cookieHashKey), nil)
+	govnaba.SecureCookie = secureCookie
 	globalChannel = make(chan govnaba.OutMessage, 10)
 	newClientsChannel = make(chan *govnaba.Client, 10)
 	clients = make(map[int]*govnaba.Client)
@@ -161,17 +163,18 @@ func main() {
 		var userId int = 0
 		c, err := req.Cookie("userid")
 		if err == nil {
-			err = secureCookie.Decode("userid", c.String(), &userId)
+			err = secureCookie.Decode("userid", c.Value, &userId)
 		}
 		var header http.Header = nil
 		if err != nil {
+			log.Printf("cookie decoding error: %s", err)
 			userId, header = getUserFromIP(req)
 		}
 		conn, err := upgrader.Upgrade(rw, req, header)
 		if err != nil {
 			log.Printf("Upgrade failed: %v", err)
 		} else {
-			log.Printf("Client connected.")
+			log.Printf("User id %d connected.", userId)
 		}
 		newClientsChannel <- govnaba.NewClient(conn, userId, globalChannel, db)
 	})
