@@ -1,7 +1,6 @@
 package govnaba
 
 import (
-	"code.google.com/p/go-uuid/uuid"
 	"encoding/json"
 	_ "errors"
 	"github.com/jmoiron/sqlx"
@@ -10,18 +9,18 @@ import (
 
 // This message is used for requesting available boards list
 type GetBoardsMessage struct {
-	MessageType byte
-	ClientId    uuid.UUID
+	MessageBase
 }
 
 func (msg *GetBoardsMessage) FromClient(cl *Client, msgBytes []byte) error {
-	msg.ClientId = cl.Id
 	return nil
 }
 
 func (msg *GetBoardsMessage) Process(db *sqlx.DB) []OutMessage {
-	boards := BoardListMessage{MessageType: BoardListMessageType, Boards: make([]string, 16)}
-	boards.ClientId = msg.ClientId
+	boards := BoardListMessage{
+		MessageBase: MessageBase{BoardListMessageType, msg.Client},
+		Boards:      make([]string, 16),
+	}
 	rows, _ := db.Queryx(`SELECT name FROM boards;`)
 	i := 0
 	for rows.Next() {
@@ -33,9 +32,8 @@ func (msg *GetBoardsMessage) Process(db *sqlx.DB) []OutMessage {
 
 // This message is used for sending available boards to the client.
 type BoardListMessage struct {
-	MessageType byte
-	ClientId    uuid.UUID `json:"-"`
-	Boards      []string
+	MessageBase
+	Boards []string
 }
 
 func (msg *BoardListMessage) ToClient() []byte {
@@ -47,14 +45,13 @@ func (msg *BoardListMessage) ToClient() []byte {
 }
 
 func (msg *BoardListMessage) GetDestination() Destination {
-	return Destination{DestinationType: ClientDestination, Id: msg.ClientId}
+	return Destination{DestinationType: ClientDestination, Id: msg.Client.Id}
 }
 
 // This message is used for requesting a set of threads from some board.
 type GetBoardThreadsMessage struct {
-	MessageType byte
-	ClientId    uuid.UUID
-	Board       string
+	MessageBase
+	Board string
 	// How many threads to return
 	Count int
 	// How many threads*Count to skip. This can be used for pagination.
@@ -63,9 +60,8 @@ type GetBoardThreadsMessage struct {
 
 // This is used for sending requested threads to the client.
 type BoardThreadListMessage struct {
-	MessageType byte
-	ClientId    uuid.UUID `json:"-"`
-	Board       string
+	MessageBase
+	Board string
 	// A slice of threads where each thread is a slice of Post's.
 	Threads [][]Post
 }
@@ -75,7 +71,6 @@ func (msg *GetBoardThreadsMessage) FromClient(cl *Client, msgBytes []byte) error
 	if err != nil {
 		return err
 	}
-	msg.ClientId = cl.Id
 	return nil
 }
 
@@ -100,8 +95,7 @@ func (msg *GetBoardThreadsMessage) Process(db *sqlx.DB) []OutMessage {
 		return nil
 	}
 	answer := BoardThreadListMessage{
-		MessageType: BoardThreadListMessageType,
-		ClientId:    msg.ClientId,
+		MessageBase: MessageBase{BoardThreadListMessageType, msg.Client},
 		Board:       msg.Board,
 		Threads:     [][]Post{},
 	}
@@ -127,5 +121,5 @@ func (msg *BoardThreadListMessage) ToClient() []byte {
 }
 
 func (msg *BoardThreadListMessage) GetDestination() Destination {
-	return Destination{DestinationType: ClientDestination, Id: msg.ClientId}
+	return Destination{DestinationType: ClientDestination, Id: msg.Client.Id}
 }

@@ -1,7 +1,6 @@
 package govnaba
 
 import (
-	"code.google.com/p/go-uuid/uuid"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -27,16 +26,26 @@ const (
 // This type is used in reconstructing messages sent by clients.
 // Members of this type should return a structure conforming to InMessage
 // with MessageType field set to its corresponding type constant.
-type MessageConstructor func() InMessage
+type MessageConstructor func(*Client) InMessage
 
 // Available message constructors.
 var MessageConstructors = map[byte]MessageConstructor{
-	CreateThreadMessageType:    func() InMessage { return &CreateThreadMessage{MessageType: CreateThreadMessageType} },
-	ChangeLocationMessageType:  func() InMessage { return &ChangeLocationMessage{MessageType: ChangeLocationMessageType} },
-	AddPostMessageType:         func() InMessage { return &AddPostMessage{MessageType: AddPostMessageType} },
-	GetBoardsMessageType:       func() InMessage { return &GetBoardsMessage{MessageType: GetBoardsMessageType} },
-	GetBoardThreadsMessageType: func() InMessage { return &GetBoardThreadsMessage{MessageType: GetBoardThreadsMessageType} },
-	GetThreadMessageType:       func() InMessage { return &GetThreadMessage{MessageType: GetThreadMessageType} },
+	CreateThreadMessageType: func(cl *Client) InMessage {
+		return &CreateThreadMessage{MessageBase: MessageBase{CreateThreadMessageType, cl}}
+	},
+	ChangeLocationMessageType: func(cl *Client) InMessage {
+		return &ChangeLocationMessage{MessageBase: MessageBase{ChangeLocationMessageType, cl}}
+	},
+	AddPostMessageType: func(cl *Client) InMessage { return &AddPostMessage{MessageBase: MessageBase{AddPostMessageType, cl}} },
+	GetBoardsMessageType: func(cl *Client) InMessage {
+		return &GetBoardsMessage{MessageBase: MessageBase{GetBoardsMessageType, cl}}
+	},
+	GetBoardThreadsMessageType: func(cl *Client) InMessage {
+		return &GetBoardThreadsMessage{MessageBase: MessageBase{GetBoardThreadsMessageType, cl}}
+	},
+	GetThreadMessageType: func(cl *Client) InMessage {
+		return &GetThreadMessage{MessageBase: MessageBase{GetThreadMessageType, cl}}
+	},
 }
 
 // InMessage describes messages which are recieved from client.
@@ -58,6 +67,11 @@ type OutMessage interface {
 	ToClient() []byte
 }
 
+type MessageBase struct {
+	MessageType int
+	Client      *Client `json:"-"`
+}
+
 // Destination types.
 const (
 	// Send to one client
@@ -72,5 +86,5 @@ const (
 type Destination struct {
 	DestinationType byte
 	Board           string
-	Id              uuid.UUID
+	Id              int
 }

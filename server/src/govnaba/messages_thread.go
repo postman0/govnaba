@@ -1,7 +1,6 @@
 package govnaba
 
 import (
-	"code.google.com/p/go-uuid/uuid"
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
@@ -63,13 +62,12 @@ type Post struct {
 // These messages are used for both creating new threads
 // and notifying other client about a new thread.
 type CreateThreadMessage struct {
-	MessageType byte
-	ClientId    uuid.UUID `json:"-"`
-	Board       string
-	Topic       string
-	Contents    string
-	Date        time.Time
-	Attrs       PostAttributes
+	MessageBase
+	Board    string
+	Topic    string
+	Contents string
+	Date     time.Time
+	Attrs    PostAttributes
 	// dunno for what this is used, apparently this is database-local thread id
 	// and clients have no business knowing it
 	ThreadId int
@@ -82,7 +80,6 @@ func (msg *CreateThreadMessage) FromClient(cl *Client, msgBytes []byte) error {
 	if err != nil {
 		return err
 	}
-	msg.ClientId = cl.Id
 	return nil
 }
 
@@ -95,8 +92,7 @@ func (msg *CreateThreadMessage) Process(db *sqlx.DB) []OutMessage {
 	if !boardExists {
 		log.Printf("Tried to post into invalid board /%s/", msg.Board)
 		return []OutMessage{&InvalidRequestErrorMessage{
-			InvalidRequestErrorMessageType,
-			msg.ClientId,
+			MessageBase{InvalidRequestErrorMessageType, msg.Client},
 			ResourceDoesntExist,
 			"Board doesnt exist",
 		}}
@@ -109,12 +105,11 @@ func (msg *CreateThreadMessage) Process(db *sqlx.DB) []OutMessage {
 	}
 	var err error = nil
 	for _, pp := range EnabledPostProcessorsPre[msg.Board] {
-		err = pp(msg.ClientId, &p, db)
+		err = pp(msg.Client, &p)
 		if err != nil {
 			log.Printf("Invalid post: %s", err)
 			return []OutMessage{&InvalidRequestErrorMessage{
-				InvalidRequestErrorMessageType,
-				msg.ClientId,
+				MessageBase{InvalidRequestErrorMessageType, msg.Client},
 				InvalidArguments,
 				err.Error(),
 			}}
@@ -133,9 +128,9 @@ func (msg *CreateThreadMessage) Process(db *sqlx.DB) []OutMessage {
 		log.Printf("%#v", err)
 	}
 	err = tx.Get(msg, `INSERT INTO posts (user_id, thread_id, board_local_id, topic, contents, attrs, is_op) 
-		VALUES ((SELECT users.id FROM users WHERE client_id = $1), $2, nextval($3 || '_board_id_seq'), $4, $5, $6, TRUE)
+		VALUES ($1, $2, nextval($3 || '_board_id_seq'), $4, $5, $6, TRUE)
 		RETURNING board_local_id AS localid, created_date AS date;`,
-		msg.ClientId.String(), thread_id, msg.Board, msg.Topic, msg.Contents, msg.Attrs)
+		msg.Client.Id, thread_id, msg.Board, msg.Topic, msg.Contents, msg.Attrs)
 	tx.Commit()
 	if err != nil {
 		log.Printf("%#v", err)
@@ -144,7 +139,7 @@ func (msg *CreateThreadMessage) Process(db *sqlx.DB) []OutMessage {
 	}
 
 	for _, pp := range EnabledPostProcessorsPost[msg.Board] {
-		_ = pp(msg.ClientId, &p, db)
+		_ = pp(msg.Client, &p)
 	}
 	msg.Board = p.Board
 	msg.Topic = p.Topic
@@ -171,13 +166,12 @@ func (msg *CreateThreadMessage) GetDestination() Destination {
 // AddPostMessage is used for creating new posts
 // and notifying other clients on the board about those posts.
 type AddPostMessage struct {
-	MessageType byte
-	ClientId    uuid.UUID `json:"-"`
-	Board       string
-	Topic       string
-	Contents    string
-	Attrs       PostAttributes
-	Date        time.Time
+	MessageBase
+	Board    string
+	Topic    string
+	Contents string
+	Attrs    PostAttributes
+	Date     time.Time
 	// Parent thread id
 	ThreadLocalId int
 	// This post's id
@@ -189,7 +183,6 @@ func (msg *AddPostMessage) FromClient(cl *Client, msgBytes []byte) error {
 	if err != nil {
 		return err
 	}
-	msg.ClientId = cl.Id
 	return nil
 }
 
@@ -205,12 +198,11 @@ func (msg *AddPostMessage) Process(db *sqlx.DB) []OutMessage {
 	}
 	var err error = nil
 	for _, pp := range EnabledPostProcessorsPre[msg.Board] {
-		err = pp(msg.ClientId, &p, db)
+		err = pp(msg.Client, &p)
 		if err != nil {
 			log.Printf("Invalid post: %s", err)
 			return []OutMessage{&InvalidRequestErrorMessage{
-				InvalidRequestErrorMessageType,
-				msg.ClientId,
+				MessageBase{InvalidRequestErrorMessageType, msg.Client},
 				InvalidArguments,
 				err.Error(),
 			}}
@@ -222,7 +214,7 @@ func (msg *AddPostMessage) Process(db *sqlx.DB) []OutMessage {
 	msg.Attrs = p.Attrs
 	msg.ThreadLocalId = p.ThreadId
 	const insertPostQuery = `INSERT INTO posts (user_id, thread_id, topic, contents, attrs, board_local_id) VALUES 
-		((SELECT users.id FROM users WHERE client_id = $1),
+		($1,
 		(SELECT threads.id FROM threads, boards, posts WHERE board_id = boards.id AND thread_id = threads.id AND boards.name = $2 AND posts.board_local_id = $3),
 		$4,
 		$5,
@@ -231,7 +223,7 @@ func (msg *AddPostMessage) Process(db *sqlx.DB) []OutMessage {
 		) RETURNING posts.board_local_id, created_date;`
 
 	tx := db.MustBegin()
-	row := tx.QueryRowx(insertPostQuery, msg.ClientId.String(),
+	row := tx.QueryRowx(insertPostQuery, msg.Client.Id,
 		msg.Board, msg.ThreadLocalId, msg.Topic, msg.Contents, msg.Attrs)
 	var answerId int
 	var date time.Time
@@ -247,7 +239,7 @@ func (msg *AddPostMessage) Process(db *sqlx.DB) []OutMessage {
 	msg.AnswerLocalId = answerId
 	msg.Date = date
 	for _, pp := range EnabledPostProcessorsPost[msg.Board] {
-		_ = pp(msg.ClientId, &p, db)
+		_ = pp(msg.Client, &p)
 	}
 	msg.Board = p.Board
 	msg.Topic = p.Topic
@@ -270,19 +262,17 @@ func (msg *AddPostMessage) GetDestination() Destination {
 
 // GetThreadMessage is used for requesting all posts of a thread.
 type GetThreadMessage struct {
-	MessageType byte
-	ClientId    uuid.UUID `json:"-"`
-	Board       string
+	MessageBase
+	Board string
 	// Thread id
 	LocalId int
 }
 
 // This message is used for sending thread's posts to the client who requested them.
 type ThreadPostsMessage struct {
-	MessageType byte
-	ClientId    uuid.UUID `json:"-"`
-	Board       string
-	Posts       []Post
+	MessageBase
+	Board string
+	Posts []Post
 }
 
 func (msg *GetThreadMessage) FromClient(cl *Client, msgBytes []byte) error {
@@ -290,7 +280,6 @@ func (msg *GetThreadMessage) FromClient(cl *Client, msgBytes []byte) error {
 	if err != nil {
 		return err
 	}
-	msg.ClientId = cl.Id
 	return nil
 }
 
@@ -302,8 +291,7 @@ func (msg *GetThreadMessage) Process(db *sqlx.DB) []OutMessage {
 	ORDER BY board_local_id ASC;
 	`
 	answer := ThreadPostsMessage{
-		MessageType: ThreadPostsMessageType,
-		ClientId:    msg.ClientId,
+		MessageBase: MessageBase{ThreadPostsMessageType, msg.Client},
 		Board:       msg.Board,
 		Posts:       []Post{},
 	}
@@ -324,5 +312,5 @@ func (msg *ThreadPostsMessage) ToClient() []byte {
 }
 
 func (msg *ThreadPostsMessage) GetDestination() Destination {
-	return Destination{DestinationType: ClientDestination, Id: msg.ClientId}
+	return Destination{DestinationType: ClientDestination, Id: msg.Client.Id}
 }

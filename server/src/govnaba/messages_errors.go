@@ -1,7 +1,6 @@
 package govnaba
 
 import (
-	"code.google.com/p/go-uuid/uuid"
 	"encoding/json"
 	"log"
 )
@@ -13,8 +12,7 @@ const (
 
 // These messages are intended for signaling client's errors to themselves.
 type InvalidRequestErrorMessage struct {
-	MessageType  byte
-	ClientId     uuid.UUID `json:"-"`
+	MessageBase
 	ErrorType    byte
 	ErrorMessage string
 }
@@ -28,12 +26,11 @@ func (msg *InvalidRequestErrorMessage) ToClient() []byte {
 }
 
 func (msg *InvalidRequestErrorMessage) GetDestination() Destination {
-	return Destination{DestinationType: ClientDestination, Id: msg.ClientId}
+	return Destination{DestinationType: ClientDestination, Id: msg.Client.Id}
 }
 
 type FileUploadErrorMessage struct {
-	MessageType byte
-	ClientId    uuid.UUID `json:"-"`
+	MessageBase
 }
 
 func (msg *FileUploadErrorMessage) ToClient() []byte {
@@ -45,14 +42,13 @@ func (msg *FileUploadErrorMessage) ToClient() []byte {
 }
 
 func (msg *FileUploadErrorMessage) GetDestination() Destination {
-	return Destination{DestinationType: ClientDestination, Id: msg.ClientId}
+	return Destination{DestinationType: ClientDestination, Id: msg.Client.Id}
 }
 
 // This message type is intended for notifying clients
 // about an unsolvable error on the server's end.
 type InternalServerErrorMessage struct {
-	MessageType byte
-	ClientId    uuid.UUID `json:"-"`
+	MessageBase
 }
 
 func (msg *InternalServerErrorMessage) ToClient() []byte {
@@ -64,5 +60,5 @@ func (msg *InternalServerErrorMessage) ToClient() []byte {
 }
 
 func (msg *InternalServerErrorMessage) GetDestination() Destination {
-	return Destination{DestinationType: ClientDestination, Id: msg.ClientId}
+	return Destination{DestinationType: ClientDestination, Id: msg.Client.Id}
 }

@@ -1,7 +1,6 @@
 package govnaba
 
 import (
-	"code.google.com/p/go-uuid/uuid"
 	"encoding/json"
 	_ "errors"
 	"github.com/jmoiron/sqlx"
@@ -11,12 +10,11 @@ import (
 // These messages help main broadcast goroutine to remove structs related to disconnected clients.
 // Its methods should be never called.
 type ClientDisconnectMessage struct {
-	MessageType byte
-	Id          uuid.UUID
+	MessageBase
 }
 
-func NewClientDisconnectMessage(id uuid.UUID) *ClientDisconnectMessage {
-	return &ClientDisconnectMessage{ClientDisconnectMessageType, id}
+func NewClientDisconnectMessage(cl *Client) *ClientDisconnectMessage {
+	return &ClientDisconnectMessage{MessageBase{ClientDisconnectMessageType, cl}}
 }
 
 func (msg *ClientDisconnectMessage) ToClient() []byte {
@@ -31,12 +29,11 @@ func (msg *ClientDisconnectMessage) GetDestination() Destination {
 
 // This message is used to signal the client that it sent a wrong message.
 type ProtocolErrorMessage struct {
-	MessageType byte
-	Id          uuid.UUID `json:"-"`
+	MessageBase
 }
 
-func NewProtocolErrorMessage(id uuid.UUID) *ProtocolErrorMessage {
-	return &ProtocolErrorMessage{ProtocolErrorMessageType, id}
+func NewProtocolErrorMessage(cl *Client) *ProtocolErrorMessage {
+	return &ProtocolErrorMessage{MessageBase{ProtocolErrorMessageType, cl}}
 }
 
 func (msg *ProtocolErrorMessage) ToClient() []byte {
@@ -48,7 +45,7 @@ func (msg *ProtocolErrorMessage) ToClient() []byte {
 }
 
 func (msg *ProtocolErrorMessage) GetDestination() Destination {
-	return Destination{ClientDestination, "", msg.Id}
+	return Destination{ClientDestination, "", msg.Client.Id}
 }
 
 // Constants used in ChangeLocationMessage
@@ -63,14 +60,9 @@ const (
 // These messages are used by clients for controlling incoming message stream.
 // Some messages are sent only to clients which are browsing some board or thread.
 type ChangeLocationMessage struct {
-	MessageType  byte
-	Id           uuid.UUID `json:"-"`
+	MessageBase
 	LocationType byte
 	NewLocation  string
-}
-
-func NewChangeLocationMessage() *ChangeLocationMessage {
-	return &ChangeLocationMessage{MessageType: ChangeLocationMessageType}
 }
 
 func (msg *ChangeLocationMessage) ToClient() []byte {
@@ -82,7 +74,6 @@ func (msg *ChangeLocationMessage) FromClient(cl *Client, msgBytes []byte) error 
 	if err != nil {
 		return err
 	}
-	msg.Id = cl.Id
 	return nil
 }
 
@@ -98,13 +89,12 @@ func (msg *ChangeLocationMessage) GetDestination() Destination {
 
 // This message tells the client that a file upload was successful.
 type FileUploadSuccessfulMessage struct {
-	MessageType byte
-	ClientId    uuid.UUID `json:"-"`
-	Filename    string
+	MessageBase
+	Filename string
 }
 
 func (msg *FileUploadSuccessfulMessage) GetDestination() Destination {
-	return Destination{ClientDestination, "", msg.ClientId}
+	return Destination{ClientDestination, "", msg.Client.Id}
 }
 
 func (msg *FileUploadSuccessfulMessage) ToClient() []byte {

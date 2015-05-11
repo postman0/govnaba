@@ -2,7 +2,6 @@ package govnaba
 
 import (
 	"cmagic"
-	"code.google.com/p/go-uuid/uuid"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
@@ -26,7 +25,7 @@ type Client struct {
 	// A reference to the global broadcast thread
 	broadcastChannel chan OutMessage
 	// Client's unique identificator
-	Id uuid.UUID
+	Id int
 	// Websocket connection
 	conn *websocket.Conn
 	// A handle to the database. It's used for processing incoming messages.
@@ -54,40 +53,40 @@ func (cl *Client) receiveLoop() {
 		msgType, rdr, err := cl.conn.NextReader()
 		if err != nil {
 			log.Printf("Error on reading from websocket: %v", err)
-			cl.broadcastChannel <- NewClientDisconnectMessage(cl.Id)
+			cl.broadcastChannel <- NewClientDisconnectMessage(cl)
 			return
 		}
 		if msgType == websocket.TextMessage {
 			buf, err := ioutil.ReadAll(rdr)
 			if err != nil {
 				log.Printf("Error on reading from websocket: %v", err)
-				cl.broadcastChannel <- NewClientDisconnectMessage(cl.Id)
+				cl.broadcastChannel <- NewClientDisconnectMessage(cl)
 				return
 			}
 			var m map[string]interface{}
 			err = json.Unmarshal(buf, &m)
 			if err != nil {
 				log.Printf("JSON unmarshalling error: %v", err)
-				cl.WriteChannel <- NewProtocolErrorMessage(cl.Id)
+				cl.WriteChannel <- NewProtocolErrorMessage(cl)
 				continue
 			}
 			messageType, success := m["MessageType"].(float64)
 			if !success {
 				log.Printf("Couldn't find message type in JSON")
-				cl.WriteChannel <- NewProtocolErrorMessage(cl.Id)
+				cl.WriteChannel <- NewProtocolErrorMessage(cl)
 				continue
 			}
 			messageConstructor := MessageConstructors[byte(messageType)]
 			if messageConstructor == nil {
 				log.Printf("Invalid message type")
-				cl.WriteChannel <- NewProtocolErrorMessage(cl.Id)
+				cl.WriteChannel <- NewProtocolErrorMessage(cl)
 				continue
 			}
-			message := messageConstructor()
+			message := messageConstructor(cl)
 			err = message.FromClient(cl, buf)
 			if err != nil {
 				log.Printf("Couldn't decode message: %s", err)
-				cl.WriteChannel <- NewProtocolErrorMessage(cl.Id)
+				cl.WriteChannel <- NewProtocolErrorMessage(cl)
 				continue
 			}
 			log.Printf("%v", message)
@@ -120,7 +119,7 @@ func (cl *Client) handleFileUpload(rdr io.Reader) {
 		mimetype, err := cmg.Buffer(buf)
 		if err != nil {
 			log.Printf("File upload failed: %s", err)
-			cl.WriteChannel <- &InternalServerErrorMessage{InternalServerErrorMessageType, cl.Id}
+			cl.WriteChannel <- &InternalServerErrorMessage{MessageBase{InternalServerErrorMessageType, cl}}
 			return
 		}
 		ext, allowed := validFileTypes[mimetype]
@@ -129,7 +128,7 @@ func (cl *Client) handleFileUpload(rdr io.Reader) {
 			f, err := os.Create(fmt.Sprintf("%s/%d.%s", FileUploadPath, curTime, ext))
 			if err != nil {
 				log.Printf("File upload failed: %s", err)
-				cl.WriteChannel <- &InternalServerErrorMessage{InternalServerErrorMessageType, cl.Id}
+				cl.WriteChannel <- &InternalServerErrorMessage{MessageBase{InternalServerErrorMessageType, cl}}
 				return
 			}
 			defer f.Close()
@@ -138,7 +137,7 @@ func (cl *Client) handleFileUpload(rdr io.Reader) {
 			if err != nil {
 				log.Printf("File upload failed: %s", err)
 				os.Remove(f.Name())
-				cl.WriteChannel <- &InternalServerErrorMessage{InternalServerErrorMessageType, cl.Id}
+				cl.WriteChannel <- &InternalServerErrorMessage{MessageBase{InternalServerErrorMessageType, cl}}
 				return
 			}
 			// thumbnail generation
@@ -146,14 +145,14 @@ func (cl *Client) handleFileUpload(rdr io.Reader) {
 			img, _, err := image.Decode(f)
 			if err != nil {
 				log.Printf("Image decoding error: %s", err)
-				cl.WriteChannel <- &InternalServerErrorMessage{InternalServerErrorMessageType, cl.Id}
+				cl.WriteChannel <- &InternalServerErrorMessage{MessageBase{InternalServerErrorMessageType, cl}}
 				return
 			}
 			imgThumb := resize.Thumbnail(300, 200, img, resize.Bilinear)
 			fthumb, err := os.Create(fmt.Sprintf("%s/thumb%d.%s", FileUploadPath, curTime, ext))
 			if err != nil {
 				log.Printf("File upload failed: %s", err)
-				cl.WriteChannel <- &InternalServerErrorMessage{InternalServerErrorMessageType, cl.Id}
+				cl.WriteChannel <- &InternalServerErrorMessage{MessageBase{InternalServerErrorMessageType, cl}}
 				return
 			}
 			defer fthumb.Close()
@@ -167,25 +166,22 @@ func (cl *Client) handleFileUpload(rdr io.Reader) {
 			}
 			if err != nil {
 				log.Printf("Image encoding error: %s", err)
-				cl.WriteChannel <- &InternalServerErrorMessage{InternalServerErrorMessageType, cl.Id}
+				cl.WriteChannel <- &InternalServerErrorMessage{MessageBase{InternalServerErrorMessageType, cl}}
 				return
 			}
 
-			cl.broadcastChannel <- &FileUploadSuccessfulMessage{FileUploadSuccessfulMessageType, cl.Id,
+			cl.broadcastChannel <- &FileUploadSuccessfulMessage{MessageBase{FileUploadSuccessfulMessageType, cl},
 				fmt.Sprintf("%d.%s", curTime, ext)}
 		} else {
 			log.Printf("Illegal upload of %s file", mimetype)
-			cl.WriteChannel <- &FileUploadErrorMessage{
-				FileUploadErrorMessageType,
-				cl.Id,
-			}
+			cl.WriteChannel <- &FileUploadErrorMessage{MessageBase{FileUploadErrorMessageType, cl}}
 		}
 	}
 }
 
 // A constructor for the Client structure.
-func NewClient(conn *websocket.Conn, uuid uuid.UUID, broadcastChannel chan OutMessage, db *sqlx.DB) *Client {
-	c := Client{make(chan OutMessage, 5), broadcastChannel, uuid, conn, db}
+func NewClient(conn *websocket.Conn, id int, broadcastChannel chan OutMessage, db *sqlx.DB) *Client {
+	c := Client{make(chan OutMessage, 5), broadcastChannel, id, conn, db}
 	c.conn.SetReadLimit(MaxFileSizeKB * 1024)
 	go c.writeLoop()
 	go c.receiveLoop()
