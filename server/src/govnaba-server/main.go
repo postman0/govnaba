@@ -36,7 +36,12 @@ var boardsClientsMap map[string]map[int]*govnaba.Client
 func sendMessage(msg govnaba.OutMessage) {
 	dest := msg.GetDestination()
 	if dest.DestinationType == govnaba.ClientDestination {
-		clients[dest.Id].WriteChannel <- msg
+		client, ok := clients[dest.Id]
+		if !ok || (client == nil) {
+			log.Println("bad client for msg %v", msg)
+		} else {
+			client.WriteChannel <- msg
+		}
 	} else if dest.DestinationType == govnaba.BoardDestination {
 		for _, client := range boardsClientsMap[dest.Board] {
 			log.Printf("Sending message %v of type %T to client %v", msg, msg, *client)
