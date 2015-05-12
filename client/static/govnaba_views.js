@@ -12,13 +12,14 @@ var Base = React.createClass({displayName: "Base",
 		return {ctx: ViewContext.NONE}
 	},
 	displayMainPage: function(boardList) {
-		this.setState({ctx: ViewContext.MAINPAGE, boards: boardList});
+		this.setState({ctx: ViewContext.MAINPAGE, boards: boardList, curBoard: null, curThread: null});
 	},
 	displayBoard: function(boardMsg) {
-		this.setState({ctx: ViewContext.BOARD, threads: boardMsg.Threads});
+		this.setState({ctx: ViewContext.BOARD, threads: boardMsg.Threads, 
+			curBoard: boardMsg.Board, curThread: null});
 	},
 	displayThread: function(posts) {
-		this.setState({ctx: ViewContext.THREAD, posts: posts});
+		this.setState({ctx: ViewContext.THREAD, posts: posts, curThread: posts[0].LocalId});
 	},
 	displayNewPost: function(post) {
 		posts = this.state.posts;
@@ -44,15 +45,20 @@ var Base = React.createClass({displayName: "Base",
 		return (
 		React.createElement("div", {id: "content-main", className: "container-fluid"}, 
 			React.createElement(NavBar, null), 
-            React.createElement("div", {id: "board-list", className: "col-md-2"}, 
-            boardList
-            ), 
-            React.createElement("div", {id: "content-board", className: "col-md-8"}, 
-             this.state.ctx == ViewContext.BOARD ? React.createElement(PostingForm, {type: "board"}) : null, 
-            threads, 
-            posts, 
-             this.state.ctx == ViewContext.THREAD ? React.createElement(PostingForm, {type: "thread"}) : null
-            )
+			React.createElement("div", {className: "row"}, 
+				React.createElement(NavBreadCrumbs, {thread: this.state.curThread, board: this.state.curBoard})
+			), 
+			React.createElement("div", {className: "row"}, 
+	            React.createElement("div", {id: "board-list", className: "col-md-2"}, 
+	            	boardList
+	            ), 
+	            React.createElement("div", {id: "content-board", className: "col-md-8"}, 
+		             this.state.ctx == ViewContext.BOARD ? React.createElement(PostingForm, {type: "board"}) : null, 
+		            threads, 
+		            posts, 
+		             this.state.ctx == ViewContext.THREAD ? React.createElement(PostingForm, {type: "thread"}) : null
+            	)
+        	)
         )
 		);
 	}
@@ -65,11 +71,33 @@ var NavBar = React.createClass({displayName: "NavBar",
 				React.createElement("div", {className: "navbar-header"}, 
 					React.createElement("a", {className: "navbar-brand", href: "/"}, "Govnaba")
 				), 
-				React.createElement("div", {className: "navbar-form navbar-right"}, 
-					React.createElement("form", {className: "form-inline", action: "#", onSubmit: gvnb.sendLoginForm.bind(gvnb)}, 
-						React.createElement("input", {id: "input_login_key", type: "text", className: "form-control", placeholder: "Ключ"}), 
-						React.createElement("input", {id: "input_login_submit", type: "submit", className: "form-control", value: "Вход"})
+				React.createElement("div", {className: "collapse navbar-collapse"}, 
+					React.createElement("div", {className: "navbar-form navbar-right"}, 
+						React.createElement("form", {className: "form-inline", action: "#", onSubmit: gvnb.sendLoginForm.bind(gvnb)}, 
+							React.createElement("input", {id: "input_login_key", type: "text", className: "form-control", placeholder: "Ключ"}), 
+							React.createElement("input", {id: "input_login_submit", type: "submit", className: "form-control", value: "Вход"})
+						)
 					)
+				)
+			)
+		)
+	}
+})
+
+var NavBreadCrumbs = React.createClass({displayName: "NavBreadCrumbs",
+	render: function() {
+		var board = null;
+		if(this.props.board)
+			board = React.createElement("li", null, React.createElement("a", {href: "/"+this.props.board+"/"}, "/"+this.props.board+"/"))
+		var thread = null;
+		if(this.props.thread)
+			thread = React.createElement("li", null, React.createElement("a", {href: "/"+this.props.board+"/"+this.props.thread}, "Тред #"+this.props.thread))
+		return (
+			React.createElement("div", {className: "col-md-12"}, 
+				React.createElement("ol", {className: "breadcrumb breadcrumb-navbar"}, 
+					React.createElement("li", null, React.createElement("a", {href: "/"}, "Главная")), 
+					board, 
+					thread
 				)
 			)
 		)
@@ -124,6 +152,9 @@ var Thread = React.createClass({displayName: "Thread",
 				})
 			)
 		)
+	},
+	componentDidMount: function() {
+		gvnb.performScroll();
 	}
 })
 
@@ -212,9 +243,11 @@ var Post = React.createClass({displayName: "Post",
 
 
 		return (
-			React.createElement("div", {className: "panel panel-default post-container"}, 
+			React.createElement("div", {id: "post-" + this.props.postData.LocalId, className: "panel panel-default post-container"}, 
 				React.createElement("div", {className: "panel-heading"}, 
-				React.createElement("a", {href: gvnb.getThreadLink(this.props.opPostId, this.props.postData.LocalId), className: "post-header-id"}, "#", this.props.postData.LocalId), 
+				React.createElement("a", {
+					href: gvnb.getThreadLink(this.props.opPostId, this.props.postData.LocalId), 
+					className: "post-header-id"}, "#", this.props.postData.LocalId), 
 				topic, 
 				 (attrs && attrs.sage) ? React.createElement("span", {className: "label label-sage"}, "SAGE") : null, 
 				 (attrs && attrs.op) ? React.createElement("span", {className: "label label-primary"}, "OP") : null, 

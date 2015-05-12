@@ -90,11 +90,11 @@ func (cl *Client) receiveLoop() {
 				continue
 			}
 			log.Printf("%v", message)
-			go func() {
-				for _, msg := range message.Process(cl.db) {
-					cl.broadcastChannel <- msg
-				}
-			}()
+
+			for _, msg := range message.Process(cl.db) {
+				cl.broadcastChannel <- msg
+			}
+
 		} else if msgType == websocket.BinaryMessage {
 			cl.handleFileUpload(rdr)
 		}

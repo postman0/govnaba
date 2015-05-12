@@ -148,7 +148,11 @@ func (msg *CreateThreadMessage) Process(db *sqlx.DB) []OutMessage {
 
 	//TODO: determine why the fuck this is needed
 	msg.ThreadId = thread_id
-	return []OutMessage{msg}
+	return []OutMessage{msg, &PostingSuccesfulMessage{
+		MessageBase{PostingSuccesfulMessageType, msg.Client},
+		msg.LocalId,
+	},
+	}
 }
 
 func (msg *CreateThreadMessage) ToClient() []byte {
@@ -234,7 +238,6 @@ func (msg *AddPostMessage) Process(db *sqlx.DB) []OutMessage {
 		// todo: return error
 		return nil
 	}
-	//tx.Exec(`UPDATE threads SET last_bump_date = DEFAULT WHERE id = (SELECT thread_id FROM posts WHERE board_local_id = $1);`, msg.ThreadLocalId)
 	tx.Commit()
 	msg.AnswerLocalId = answerId
 	msg.Date = date
@@ -245,7 +248,11 @@ func (msg *AddPostMessage) Process(db *sqlx.DB) []OutMessage {
 	msg.Topic = p.Topic
 	msg.Contents = p.Contents
 	msg.Attrs = p.Attrs
-	return []OutMessage{msg}
+	return []OutMessage{msg, &PostingSuccesfulMessage{
+		MessageBase{PostingSuccesfulMessageType, msg.Client},
+		msg.AnswerLocalId,
+	},
+	}
 }
 
 func (msg *AddPostMessage) ToClient() []byte {
@@ -258,6 +265,23 @@ func (msg *AddPostMessage) ToClient() []byte {
 
 func (msg *AddPostMessage) GetDestination() Destination {
 	return Destination{DestinationType: BoardDestination, Board: msg.Board}
+}
+
+type PostingSuccesfulMessage struct {
+	MessageBase
+	LocalId int
+}
+
+func (msg *PostingSuccesfulMessage) ToClient() []byte {
+	bytes, err := json.Marshal(msg)
+	if err != nil {
+		log.Println(err)
+	}
+	return bytes
+}
+
+func (msg *PostingSuccesfulMessage) GetDestination() Destination {
+	return Destination{DestinationType: ClientDestination, Id: msg.Client.Id}
 }
 
 // GetThreadMessage is used for requesting all posts of a thread.

@@ -12,13 +12,14 @@ var Base = React.createClass({
 		return {ctx: ViewContext.NONE}
 	},
 	displayMainPage: function(boardList) {
-		this.setState({ctx: ViewContext.MAINPAGE, boards: boardList});
+		this.setState({ctx: ViewContext.MAINPAGE, boards: boardList, curBoard: null, curThread: null});
 	},
 	displayBoard: function(boardMsg) {
-		this.setState({ctx: ViewContext.BOARD, threads: boardMsg.Threads});
+		this.setState({ctx: ViewContext.BOARD, threads: boardMsg.Threads, 
+			curBoard: boardMsg.Board, curThread: null});
 	},
 	displayThread: function(posts) {
-		this.setState({ctx: ViewContext.THREAD, posts: posts});
+		this.setState({ctx: ViewContext.THREAD, posts: posts, curThread: posts[0].LocalId});
 	},
 	displayNewPost: function(post) {
 		posts = this.state.posts;
@@ -44,15 +45,20 @@ var Base = React.createClass({
 		return (
 		<div id="content-main" className="container-fluid">
 			<NavBar />
-            <div id="board-list" className="col-md-2">
-            {boardList}
-            </div>
-            <div id="content-board" className="col-md-8">
-            { this.state.ctx == ViewContext.BOARD ? <PostingForm type="board"/> : null}
-            {threads}
-            {posts}
-            { this.state.ctx == ViewContext.THREAD ? <PostingForm type="thread"/> : null}
-            </div>
+			<div className="row">
+				<NavBreadCrumbs thread={this.state.curThread} board={this.state.curBoard} />
+			</div>
+			<div className="row">
+	            <div id="board-list" className="col-md-2">
+	            	{boardList}
+	            </div>
+	            <div id="content-board" className="col-md-8">
+		            { this.state.ctx == ViewContext.BOARD ? <PostingForm type="board"/> : null}
+		            {threads}
+		            {posts}
+		            { this.state.ctx == ViewContext.THREAD ? <PostingForm type="thread"/> : null}
+            	</div>
+        	</div>
         </div>
 		);
 	}
@@ -65,13 +71,35 @@ var NavBar = React.createClass({
 				<div className="navbar-header">
 					<a className="navbar-brand" href="/">Govnaba</a>
 				</div>
-				<div className="navbar-form navbar-right">
-					<form className="form-inline" action="#" onSubmit={gvnb.sendLoginForm.bind(gvnb)}>
-						<input id="input_login_key" type="text" className="form-control" placeholder="Ключ"></input>
-						<input id="input_login_submit" type="submit" className="form-control" value="Вход"></input>
-					</form>
+				<div className="collapse navbar-collapse">
+					<div className="navbar-form navbar-right">
+						<form className="form-inline" action="#" onSubmit={gvnb.sendLoginForm.bind(gvnb)}>
+							<input id="input_login_key" type="text" className="form-control" placeholder="Ключ"></input>
+							<input id="input_login_submit" type="submit" className="form-control" value="Вход"></input>
+						</form>
+					</div>
 				</div>
 			</nav>
+		)
+	}
+})
+
+var NavBreadCrumbs = React.createClass({
+	render: function() {
+		var board = null;
+		if(this.props.board)
+			board = <li><a href={"/"+this.props.board+"/"}>{"/"+this.props.board+"/"}</a></li>
+		var thread = null;
+		if(this.props.thread)
+			thread = <li><a href={"/"+this.props.board+"/"+this.props.thread}>{"Тред #"+this.props.thread}</a></li>
+		return (
+			<div className="col-md-12">
+				<ol className="breadcrumb breadcrumb-navbar">
+					<li><a href="/">Главная</a></li>
+					{board}
+					{thread}
+				</ol>
+			</div>
 		)
 	}
 })
@@ -124,6 +152,9 @@ var Thread = React.createClass({
 				})}
 			</div>
 		)
+	},
+	componentDidMount: function() {
+		gvnb.performScroll();
 	}
 })
 
@@ -212,9 +243,11 @@ var Post = React.createClass({
 
 
 		return (
-			<div className="panel panel-default post-container">
+			<div id={"post-" + this.props.postData.LocalId} className="panel panel-default post-container">
 				<div className="panel-heading">
-				<a href={gvnb.getThreadLink(this.props.opPostId, this.props.postData.LocalId)} className="post-header-id">#{this.props.postData.LocalId}</a>
+				<a 
+					href={gvnb.getThreadLink(this.props.opPostId, this.props.postData.LocalId)} 
+					className="post-header-id">#{this.props.postData.LocalId}</a>
 				{topic}
 				{ (attrs && attrs.sage) ? <span className='label label-sage'>SAGE</span> : null}
 				{ (attrs && attrs.op) ? <span className='label label-primary'>OP</span> : null}

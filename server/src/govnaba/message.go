@@ -23,6 +23,7 @@ const (
 	InternalServerErrorMessageType
 	UserLoginMessageType
 	UserLoginSuccessfulMessageType
+	PostingSuccesfulMessageType
 )
 
 // This type is used in reconstructing messages sent by clients.

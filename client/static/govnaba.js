@@ -53,6 +53,10 @@ var GovnabaMessager = function(gvnb) {
                 gvnb.onLoginSuccessfulMessage(msg);
                 break;
             }
+            case 17: {
+                gvnb.onPostSuccessfulMessage(msg);
+                break;
+            }
         }
     }
     
@@ -129,8 +133,8 @@ Govnaba = function() {
     this.msgr = new GovnabaMessager(this)
     
     this.initialize = function() {
-        this.baseCont = GovnabaViews.mountBaseContainer();
         this.state = {};
+        this.baseCont = GovnabaViews.mountBaseContainer();
 
         page('*', this.parseQueryString.bind(this));
         page('/', this.navMainPage.bind(this));
@@ -145,7 +149,8 @@ Govnaba = function() {
     }
 
     this.getThreadLink = function(opLocalId, postLocalId) {
-        return '/' + this.state.board + '/' + opLocalId.toString() + "#" + postLocalId.toString();
+        return '/' + this.state.board + '/' + opLocalId.toString() + 
+            (opLocalId != postLocalId ? "#" + postLocalId.toString() : "");
     }
 
     this.navMainPage = function(ctx) {
@@ -164,6 +169,17 @@ Govnaba = function() {
         this.msgr.getThread(ctx.params.board, parseInt(ctx.params.localid));
         this.state.board = ctx.params.board;
         this.state.thread = parseInt(ctx.params.localid);
+        this.state.scrollTo = ctx.hash;
+    }
+
+    this.performScroll = function() {
+        if(this.state.scrollTo) {
+            var where = "#post-" + this.state.scrollTo;
+            this.state.scrollTo = null;
+            scroll(null, $(where).offset().top);
+        } else {
+            scroll(0, 0);
+        }
     }
 
     this.onBoardThreadsMessage = function(msg) {
@@ -202,6 +218,11 @@ Govnaba = function() {
             Date: msg.Date,
             Attrs: msg.Attrs
         });
+    }
+
+    this.onPostSuccessfulMessage = function(msg) {
+        $("#input_topic").val("");
+        $("#input_contents").val("");
     }
 
     this.onError = function(msg) {
