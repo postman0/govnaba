@@ -90,6 +90,9 @@ func AnswerLinksProcessor(cl *Client, p *Post) error {
 	}
 	matches := r.FindAllStringSubmatch(p.Contents, -1)
 	postIds := make([]string, len(matches))
+	if len(postIds) < 1 {
+		return nil
+	}
 	for i, m := range matches {
 		postIds[i] = m[1]
 	}
