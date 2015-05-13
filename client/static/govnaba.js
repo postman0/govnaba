@@ -166,13 +166,19 @@ Govnaba = function() {
     }
 
     this.navThreadPage = function(ctx) {
-        this.msgr.getThread(ctx.params.board, parseInt(ctx.params.localid));
-        this.state.board = ctx.params.board;
-        this.state.thread = parseInt(ctx.params.localid);
-        this.state.scrollTo = ctx.hash;
+        if (parseInt(ctx.params.localid) != this.state.thread) {
+            this.msgr.getThread(ctx.params.board, parseInt(ctx.params.localid));
+            this.state.board = ctx.params.board;
+            this.state.thread = parseInt(ctx.params.localid);
+            this.state.scrollTo = ctx.hash;
+        } else {
+            this.state.scrollTo = ctx.hash;
+            this.performScroll();
+        }
     }
 
     this.performScroll = function() {
+        console.log(this.state.scrollTo);
         if(this.state.scrollTo) {
             var where = "#post-" + this.state.scrollTo;
             this.state.scrollTo = null;

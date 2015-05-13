@@ -3,7 +3,10 @@ package govnaba
 import (
 	"errors"
 	"fmt"
-	_ "github.com/jmoiron/sqlx"
+	"github.com/jmoiron/sqlx"
+	"log"
+	"regexp"
+	"strconv"
 )
 
 // Post processors are used for doing various processing of the new post
@@ -14,7 +17,7 @@ type PostProcessor func(*Client, *Post) error
 // before uploading a post into the database.
 // Processors will be called in the order of their placement in the slice.
 var EnabledPostProcessorsPre = map[string][]PostProcessor{
-	"test": []PostProcessor{ImageProcessor, SageProcessorPre, OPProcessor},
+	"test": []PostProcessor{AnswerLinksProcessor, ImageProcessor, SageProcessorPre, OPProcessor},
 }
 
 // Same as EnabledPostProcessorsPre but these are used
@@ -77,5 +80,46 @@ func OPProcessor(cl *Client, p *Post) error {
 		}
 
 	}
+	return nil
+}
+
+func AnswerLinksProcessor(cl *Client, p *Post) error {
+	r, err := regexp.Compile(`>>(\d+)`)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	matches := r.FindAllStringSubmatch(p.Contents, -1)
+	postIds := make([]string, len(matches))
+	for i, m := range matches {
+		postIds[i] = m[1]
+	}
+	// keys are board-relative ids of the post,
+	// values are board-relative thread ids
+	refMap := make(map[string]int)
+	query, args, err := sqlx.In(`SELECT p.board_local_id AS post_id, op.board_local_id AS op_id 
+		FROM posts AS p INNER JOIN posts AS op ON p.thread_id = op.thread_id AND op.is_op = TRUE
+		INNER JOIN threads ON p.thread_id = threads.id
+		INNER JOIN boards ON board_id = boards.id AND boards.name = ?
+		WHERE p.board_local_id IN (?);`, p.Board, postIds)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	query = cl.db.Rebind(query)
+	rows, err := cl.db.Queryx(query, args...)
+	if err != nil {
+		log.Printf("Query error: %s", err)
+		return nil
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var postId, threadId int
+		err := rows.Scan(&postId, &threadId)
+		if err != nil {
+			log.Println(err)
+			return nil
+		}
+		refMap[strconv.Itoa(postId)] = threadId
+	}
+	p.Attrs["refs"] = refMap
 	return nil
 }

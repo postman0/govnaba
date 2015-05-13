@@ -159,6 +159,66 @@ var Thread = React.createClass({displayName: "Thread",
 })
 
 var Post = React.createClass({displayName: "Post",
+	processMarkup: function(str) {
+		var tagsToReplace = {
+		    '&': '&amp;',
+		    '<': '&lt;',
+		    '>': '&gt;'
+		};
+
+		function replaceTag(tag) {
+		    return tagsToReplace[tag] || tag;
+		}
+
+		function safeTagsReplace(str) {
+		    return str.replace(/[&<>'"]/g, replaceTag);
+		}
+
+		function replaceMarkupTags(str, regex, className) {
+			var tagCount = 0;
+			var text = str.replace(regex, function() {
+				var rplcmnt;
+				if (tagCount % 2 == 0)
+					rplcmnt = '<span class="'+ className + '">'
+				else
+					rplcmnt = '</span>';
+				tagCount++;
+				return rplcmnt;
+			});
+			if (tagCount % 2 == 1)
+				text += '</span>';
+			return text;
+		}
+
+		var text = safeTagsReplace(str);
+
+		var opPostId = this.props.opPostId;
+		var attrs = this.props.postData.Attrs;
+		text = text.replace(/&gt;&gt;(\d+)/g, function(match, id) {
+			if (attrs && attrs.refs && attrs.refs[id]) {
+				return '<a href="' + gvnb.getThreadLink(attrs.refs[id], id) + '">' + match + '</a>';
+			} else {
+				return match
+			}
+		});
+		text = text.replace(/^&gt;(.*$\n)/mg, function(match, contents){
+			return '<blockquote class="post-body-quote">' + safeTagsReplace(contents) + '</blockquote>';
+		});
+		text = text.replace(/\n/, " <br>");
+		text = replaceMarkupTags(text, /\*\*/g, "post-body-bold");
+		text = replaceMarkupTags(text, /\*/g, "post-body-italic");
+		text = replaceMarkupTags(text, /%%/g, "post-body-spoiler");
+		text = replaceMarkupTags(text, /__/g, "post-body-underline");
+
+		text = text.replace(/\w(?:\w|\.|\-)*\:\S+/g, function(match) {
+			return '<a target="_blank" href="' + safeTagsReplace(match).replace(/"/g, "&quot;") + '">' + 
+				safeTagsReplace(match) + 
+			'</a>';
+		});
+
+		return {__html: text};
+	},
+
 	render: function() {
 		var datestr = new Date(this.props.postData.Date).toLocaleString({}, {
 			hour12: false,
@@ -191,57 +251,6 @@ var Post = React.createClass({displayName: "Post",
 			topic = React.createElement("span", {className: "post-header-topic"}, this.props.postData.Topic)
 		}
 
-		function processMarkup(str) {
-			var tagsToReplace = {
-			    '&': '&amp;',
-			    '<': '&lt;',
-			    '>': '&gt;'
-			};
-
-			function replaceTag(tag) {
-			    return tagsToReplace[tag] || tag;
-			}
-
-			function safeTagsReplace(str) {
-			    return str.replace(/[&<>'"]/g, replaceTag);
-			}
-
-			function replaceMarkupTags(str, regex, className) {
-				var tagCount = 0;
-				var text = str.replace(regex, function() {
-					var rplcmnt;
-					if (tagCount % 2 == 0)
-						rplcmnt = '<span class="'+ className + '">'
-					else
-						rplcmnt = '</span>';
-					tagCount++;
-					return rplcmnt;
-				});
-				if (tagCount % 2 == 1)
-					text += '</span>';
-				return text;
-			}
-
-			var text = safeTagsReplace(str);
-			text = text.replace(/^&gt;(.*$\n)/mg, function(match, contents){
-				return '<blockquote class="post-body-quote">' + safeTagsReplace(contents) + '</blockquote>';
-			});
-			text = text.replace(/\n/, " <br>");
-			text = replaceMarkupTags(text, /\*\*/g, "post-body-bold");
-			text = replaceMarkupTags(text, /\*/g, "post-body-italic");
-			text = replaceMarkupTags(text, /%%/g, "post-body-spoiler");
-			text = replaceMarkupTags(text, /__/g, "post-body-underline");
-
-			text = text.replace(/\w(?:\w|\.|\-)*\:\S+/g, function(match) {
-				return '<a target="_blank" href="' + safeTagsReplace(match).replace(/"/g, "&quot;") + '">' + 
-					safeTagsReplace(match) + 
-				'</a>';
-			});
-
-			return {__html: text};
-		}
-
-
 		return (
 			React.createElement("div", {id: "post-" + this.props.postData.LocalId, className: "panel panel-default post-container"}, 
 				React.createElement("div", {className: "panel-heading"}, 
@@ -256,7 +265,7 @@ var Post = React.createClass({displayName: "Post",
 				React.createElement("div", {className: "panel-body"}, 
 					imgs, 
 					React.createElement("div", {className: "post-body", 
-						dangerouslySetInnerHTML: processMarkup(this.props.postData.Contents)})
+						dangerouslySetInnerHTML: this.processMarkup(this.props.postData.Contents)})
 				)
 			)
 		)
