@@ -31,6 +31,9 @@ var Base = React.createClass({
 		threads.unshift(thread);
 		this.setState({threads: threads});
 	},
+	displayUserCount: function(count) {
+		this.setState({users: count});
+	},
 	render: function() {
 		var boardList, threads, posts;
 		if (this.state.ctx == ViewContext.MAINPAGE) {
@@ -44,7 +47,7 @@ var Base = React.createClass({
 		}
 		return (
 		<div id="content-main" className="container-fluid">
-			<NavBar />
+			<NavBar users={this.state.users}/>
 			<div className="row">
 				<NavBreadCrumbs thread={this.state.curThread} board={this.state.curBoard} />
 			</div>
@@ -71,6 +74,13 @@ var NavBar = React.createClass({
 				<div className="navbar-header">
 					<a className="navbar-brand" href="/">Govnaba</a>
 				</div>
+				{ this.props.users ? 
+					<div className="navbar-users navbar-text">
+						<span className="glyphicon glyphicon-user icon-usercount"></span>
+						{this.props.users}
+					</div> 
+					: null
+				}
 				<div className="collapse navbar-collapse">
 					<div className="navbar-form navbar-right">
 						<form className="form-inline" action="#" onSubmit={gvnb.sendLoginForm.bind(gvnb)}>

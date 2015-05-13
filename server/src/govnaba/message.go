@@ -24,6 +24,7 @@ const (
 	UserLoginMessageType
 	UserLoginSuccessfulMessageType
 	PostingSuccesfulMessageType
+	UsersOnlineMessageType
 )
 
 // This type is used in reconstructing messages sent by clients.

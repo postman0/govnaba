@@ -28,6 +28,32 @@ func (msg *ClientDisconnectMessage) GetDestination() Destination {
 	return Destination{}
 }
 
+type UsersOnlineMessage struct {
+	MessageBase
+	Board string
+	Count int
+}
+
+func (msg *UsersOnlineMessage) ToClient() []byte {
+	bytes, err := json.Marshal(msg)
+	if err != nil {
+		log.Println(err)
+	}
+	return bytes
+}
+
+func (msg *UsersOnlineMessage) GetDestination() Destination {
+	return Destination{BoardDestination, msg.Board, 0}
+}
+
+func NewUsersOnlineMessage(board string, count int) *UsersOnlineMessage {
+	return &UsersOnlineMessage{
+		MessageBase{UsersOnlineMessageType, nil},
+		board,
+		count,
+	}
+}
+
 // This message is used to signal the client that it sent a wrong message.
 type ProtocolErrorMessage struct {
 	MessageBase

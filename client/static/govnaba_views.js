@@ -31,6 +31,9 @@ var Base = React.createClass({displayName: "Base",
 		threads.unshift(thread);
 		this.setState({threads: threads});
 	},
+	displayUserCount: function(count) {
+		this.setState({users: count});
+	},
 	render: function() {
 		var boardList, threads, posts;
 		if (this.state.ctx == ViewContext.MAINPAGE) {
@@ -44,7 +47,7 @@ var Base = React.createClass({displayName: "Base",
 		}
 		return (
 		React.createElement("div", {id: "content-main", className: "container-fluid"}, 
-			React.createElement(NavBar, null), 
+			React.createElement(NavBar, {users: this.state.users}), 
 			React.createElement("div", {className: "row"}, 
 				React.createElement(NavBreadCrumbs, {thread: this.state.curThread, board: this.state.curBoard})
 			), 
@@ -71,6 +74,13 @@ var NavBar = React.createClass({displayName: "NavBar",
 				React.createElement("div", {className: "navbar-header"}, 
 					React.createElement("a", {className: "navbar-brand", href: "/"}, "Govnaba")
 				), 
+				 this.props.users ? 
+					React.createElement("div", {className: "navbar-users navbar-text"}, 
+						React.createElement("span", {className: "glyphicon glyphicon-user icon-usercount"}), 
+						this.props.users
+					) 
+					: null, 
+				
 				React.createElement("div", {className: "collapse navbar-collapse"}, 
 					React.createElement("div", {className: "navbar-form navbar-right"}, 
 						React.createElement("form", {className: "form-inline", action: "#", onSubmit: gvnb.sendLoginForm.bind(gvnb)}, 

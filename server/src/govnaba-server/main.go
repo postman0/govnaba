@@ -64,20 +64,23 @@ func HandleClients() {
 				case *govnaba.ClientDisconnectMessage:
 					{
 						delete(clients, m.Client.Id)
-						for _, boardClients := range boardsClientsMap {
+						for board, boardClients := range boardsClientsMap {
 							delete(boardClients, m.Client.Id)
+							sendMessage(govnaba.NewUsersOnlineMessage(board, len(boardClients)))
 						}
 					}
 				case *govnaba.ChangeLocationMessage:
 					{
 						log.Println(msg)
-						for _, boardClients := range boardsClientsMap {
+						for board, boardClients := range boardsClientsMap {
 							delete(boardClients, m.Client.Id)
+							sendMessage(govnaba.NewUsersOnlineMessage(board, len(boardClients)))
 						}
 						if m.LocationType == govnaba.Board {
 							boardClients, ok := boardsClientsMap[m.NewLocation]
 							if ok {
 								boardClients[m.Client.Id] = clients[m.Client.Id]
+								sendMessage(govnaba.NewUsersOnlineMessage(m.NewLocation, len(boardClients)))
 							} else {
 								clients[m.Client.Id].WriteChannel <- &govnaba.InvalidRequestErrorMessage{
 									govnaba.MessageBase{govnaba.InvalidRequestErrorMessageType, m.Client},

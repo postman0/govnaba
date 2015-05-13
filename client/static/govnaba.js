@@ -57,6 +57,10 @@ var GovnabaMessager = function(gvnb) {
                 gvnb.onPostSuccessfulMessage(msg);
                 break;
             }
+            case 18: {
+                gvnb.onUserCountMessage(msg);
+                break;
+            }
         }
     }
     
@@ -156,6 +160,8 @@ Govnaba = function() {
     this.navMainPage = function(ctx) {
         this.msgr.getBoards();
         this.msgr.changeLocation("mainPage", "");
+        this.state = {};
+        this.baseCont.displayUserCount(null);
     }
 
     this.navBoardPage = function(ctx) {
@@ -230,6 +236,11 @@ Govnaba = function() {
     this.onPostSuccessfulMessage = function(msg) {
         $("#input_topic").val("");
         $("#input_contents").val("");
+    }
+
+    this.onUserCountMessage = function(msg) {
+        if (msg.Board == this.state.board)
+            this.baseCont.displayUserCount(msg.Count);
     }
 
     this.onError = function(msg) {
