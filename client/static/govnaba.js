@@ -163,6 +163,7 @@ Govnaba = function() {
         this.msgr.getBoardPage(ctx.params.board, page);
         this.state.board = ctx.params.board;
         this.state.page = page;
+        this.state.thread = null;
     }
 
     this.navThreadPage = function(ctx) {
