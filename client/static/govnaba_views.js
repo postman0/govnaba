@@ -261,6 +261,22 @@ var Post = React.createClass({displayName: "Post",
 			topic = React.createElement("span", {className: "post-header-topic"}, this.props.postData.Topic)
 		}
 
+		var answers = null;
+		if (attrs && attrs.answers) {
+			answers = React.createElement("div", {className: "post-answers"}, 
+			"Ответы:",  
+			
+				Object.keys(attrs.answers).map(function(answ){
+					return (
+						React.createElement("a", {className: "post-answer", href: gvnb.getThreadLink(attrs.answers[answ], answ), 
+							key: answ}, 
+						"#", answ
+						))
+				})
+			
+			)
+		}
+
 		return (
 			React.createElement("div", {id: "post-" + this.props.postData.LocalId, className: "panel panel-default post-container"}, 
 				React.createElement("div", {className: "panel-heading"}, 
@@ -275,7 +291,8 @@ var Post = React.createClass({displayName: "Post",
 				React.createElement("div", {className: "panel-body"}, 
 					imgs, 
 					React.createElement("div", {className: "post-body", 
-						dangerouslySetInnerHTML: this.processMarkup(this.props.postData.Contents)})
+						dangerouslySetInnerHTML: this.processMarkup(this.props.postData.Contents)}), 
+					answers
 				)
 			)
 		)

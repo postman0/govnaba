@@ -261,6 +261,22 @@ var Post = React.createClass({
 			topic = <span className="post-header-topic">{this.props.postData.Topic}</span>
 		}
 
+		var answers = null;
+		if (attrs && attrs.answers) {
+			answers = <div className="post-answers">
+			Ответы: 
+			{
+				Object.keys(attrs.answers).map(function(answ){
+					return (
+						<a className="post-answer" href={gvnb.getThreadLink(attrs.answers[answ], answ)}
+							key={answ}>
+						#{answ}
+						</a>)
+				})
+			}
+			</div>
+		}
+
 		return (
 			<div id={"post-" + this.props.postData.LocalId} className="panel panel-default post-container">
 				<div className="panel-heading">
@@ -276,6 +292,7 @@ var Post = React.createClass({
 					{imgs}
 					<div className="post-body" 
 						dangerouslySetInnerHTML={this.processMarkup(this.props.postData.Contents)}></div>
+					{answers}
 				</div>
 			</div>
 		)

@@ -29,6 +29,15 @@
 	margin-right: 0.5em;
 }
 
+.post-answers {
+	font-size: 0.9em;
+	margin-top: 1em;
+}
+
+.post-answer {
+	margin-left: 0.5em;
+}
+
 .label-sage {
 	background-color: black;
 	color: white;

@@ -138,6 +138,9 @@ func (msg *CreateThreadMessage) Process(db *sqlx.DB) []OutMessage {
 		// todo: return error
 	}
 
+	p.LocalId = msg.LocalId
+	p.ThreadId = msg.LocalId
+	p.Date = msg.Date
 	for _, pp := range EnabledPostProcessorsPost[msg.Board] {
 		_ = pp(msg.Client, &p)
 	}
@@ -241,6 +244,8 @@ func (msg *AddPostMessage) Process(db *sqlx.DB) []OutMessage {
 	tx.Commit()
 	msg.AnswerLocalId = answerId
 	msg.Date = date
+	p.LocalId = msg.AnswerLocalId
+	p.Date = msg.Date
 	for _, pp := range EnabledPostProcessorsPost[msg.Board] {
 		_ = pp(msg.Client, &p)
 	}

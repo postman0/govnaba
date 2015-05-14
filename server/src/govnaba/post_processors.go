@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 	"log"
 	"regexp"
 	"strconv"
@@ -24,7 +25,7 @@ var EnabledPostProcessorsPre = map[string][]PostProcessor{
 // after putting the post into the database.
 // Errors are ignored.
 var EnabledPostProcessorsPost = map[string][]PostProcessor{
-	"test": []PostProcessor{SageProcessorPost},
+	"test": []PostProcessor{SageProcessorPost, AnswerMapProcessor},
 }
 
 // ImageProcessor limits attached to the post images to one.
@@ -124,5 +125,64 @@ func AnswerLinksProcessor(cl *Client, p *Post) error {
 		refMap[strconv.Itoa(postId)] = threadId
 	}
 	p.Attrs["refs"] = refMap
+	return nil
+}
+
+func AnswerMapProcessor(cl *Client, p *Post) error {
+	refs, ok := p.Attrs["refs"].(map[string]int)
+	if !ok || refs == nil {
+		log.Printf("Unsuitable refs type for %v", refs)
+		return nil
+	}
+	var i = 0
+	for postId := range refs {
+		if i > 9 {
+			break
+		}
+		firstTime := true
+		var err error
+		for firstTime || (err != nil && err.(*pq.Error).Code.Class() == "40") {
+			firstTime = false
+			tx, err := cl.db.Beginx()
+			if err != nil {
+				log.Printf("error starting transaction in answer map building: %#v", err)
+				return nil
+			}
+			_, err = tx.Exec("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;")
+			if err != nil {
+				log.Printf("error setting isolation level: %#v", err)
+				tx.Rollback()
+				return nil
+			}
+			var pa PostAttributes = PostAttributes{}
+			err = tx.Get(&pa, `SELECT attrs FROM posts INNER JOIN threads ON thread_id = threads.id 
+				WHERE board_local_id = $1 AND board_id = (SELECT id FROM boards WHERE name = $2);`,
+				postId, p.Board)
+			if err != nil {
+				log.Printf("%#v", err)
+				tx.Rollback()
+				return nil
+			}
+			answerMap, ok := pa["answers"].(map[string]interface{})
+			if !ok || (answerMap == nil) {
+				log.Printf("Unsuitable answer map type for %v, got %T", pa["answers"], pa["answers"])
+				answerMap = make(map[string]interface{})
+			}
+			answerMap[strconv.Itoa(p.LocalId)] = p.ThreadId
+			pa["answers"] = answerMap
+			_, err = tx.Exec(`UPDATE posts SET attrs = $1
+				FROM threads WHERE thread_id = threads.id AND board_id = (SELECT id FROM boards WHERE name = $2)
+				AND board_local_id = $3;`, pa, p.Board, postId)
+			if err != nil {
+				log.Printf("%#v", err)
+				tx.Rollback()
+			}
+			err = tx.Commit()
+			if err != nil {
+				log.Printf("%#v", err)
+				tx.Rollback()
+			}
+		}
+	}
 	return nil
 }
