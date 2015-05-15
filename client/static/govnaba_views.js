@@ -34,6 +34,9 @@ var Base = React.createClass({displayName: "Base",
 	displayUserCount: function(count) {
 		this.setState({users: count});
 	},
+	displayCaptcha: function(base64img) {
+		this.setState({captcha: base64img});
+	},
 	render: function() {
 		var boardList, threads, posts;
 		if (this.state.ctx == ViewContext.MAINPAGE) {
@@ -56,10 +59,14 @@ var Base = React.createClass({displayName: "Base",
 	            	boardList
 	            ), 
 	            React.createElement("div", {id: "content-board", className: "col-md-8"}, 
-		             this.state.ctx == ViewContext.BOARD ? React.createElement(PostingForm, {type: "board"}) : null, 
+		             this.state.ctx == ViewContext.BOARD ? 
+		            	React.createElement(PostingForm, {type: "board", captcha: this.state.captcha}) 
+		            	: null, 
 		            threads, 
 		            posts, 
-		             this.state.ctx == ViewContext.THREAD ? React.createElement(PostingForm, {type: "thread"}) : null
+		             this.state.ctx == ViewContext.THREAD ? 
+		            	React.createElement(PostingForm, {type: "thread", captcha: this.state.captcha}) 
+		            	: null
             	)
         	)
         )
@@ -338,6 +345,26 @@ var PostingForm = React.createClass({displayName: "PostingForm",
 						)
 					)
 				), 
+				
+					this.props.captcha ?
+					React.createElement("div", {className: "form-group"}, 
+						React.createElement("label", {className: "control-label col-sm-2"}, "Капча"), 
+						React.createElement("div", {className: "col-sm-10"}, 
+							React.createElement("img", {src: "data:image/png;base64," + this.props.captcha})
+						)
+					)
+					: null, 
+				
+				
+					this.props.captcha ?
+					React.createElement("div", {className: "form-group"}, 
+						React.createElement("label", {className: "control-label col-sm-2"}, "Ответ"), 
+						React.createElement("div", {className: "col-sm-10"}, 
+							React.createElement("input", {id: "input_captcha", name: "captcha", type: "text", className: "form-control"})
+						)
+					)
+					: null, 
+				
 				React.createElement("div", {className: "form-group"}, 
 					React.createElement("div", {className: "col-sm-2 col-sm-offset-2"}, 
 						React.createElement("input", {type: "submit", className: "form-control", value: submitCaption})

@@ -34,6 +34,9 @@ var Base = React.createClass({
 	displayUserCount: function(count) {
 		this.setState({users: count});
 	},
+	displayCaptcha: function(base64img) {
+		this.setState({captcha: base64img});
+	},
 	render: function() {
 		var boardList, threads, posts;
 		if (this.state.ctx == ViewContext.MAINPAGE) {
@@ -56,10 +59,14 @@ var Base = React.createClass({
 	            	{boardList}
 	            </div>
 	            <div id="content-board" className="col-md-8">
-		            { this.state.ctx == ViewContext.BOARD ? <PostingForm type="board"/> : null}
+		            { this.state.ctx == ViewContext.BOARD ? 
+		            	<PostingForm type="board" captcha={this.state.captcha}/> 
+		            	: null}
 		            {threads}
 		            {posts}
-		            { this.state.ctx == ViewContext.THREAD ? <PostingForm type="thread"/> : null}
+		            { this.state.ctx == ViewContext.THREAD ? 
+		            	<PostingForm type="thread" captcha={this.state.captcha}/> 
+		            	: null}
             	</div>
         	</div>
         </div>
@@ -338,6 +345,26 @@ var PostingForm = React.createClass({
 						</input>
 					</div>
 				</div>
+				{
+					this.props.captcha ?
+					<div className="form-group">
+						<label className="control-label col-sm-2">Капча</label>
+						<div className="col-sm-10">
+							<img src={"data:image/png;base64," + this.props.captcha}></img>
+						</div>
+					</div>
+					: null
+				}
+				{
+					this.props.captcha ?
+					<div className="form-group">
+						<label className="control-label col-sm-2">Ответ</label>
+						<div className="col-sm-10">
+							<input id="input_captcha" name="captcha" type="text" className="form-control"/>
+						</div>
+					</div>
+					: null
+				}
 				<div className="form-group">
 					<div className="col-sm-2 col-sm-offset-2">
 						<input type="submit" className="form-control" value={submitCaption} />

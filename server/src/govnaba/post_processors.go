@@ -3,8 +3,10 @@ package govnaba
 import (
 	"errors"
 	"fmt"
+	"github.com/dchest/captcha"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
+	"github.com/mitchellh/mapstructure"
 	"log"
 	"regexp"
 	"strconv"
@@ -18,7 +20,7 @@ type PostProcessor func(*Client, *Post) error
 // before uploading a post into the database.
 // Processors will be called in the order of their placement in the slice.
 var EnabledPostProcessorsPre = map[string][]PostProcessor{
-	"test": []PostProcessor{AnswerLinksProcessor, ImageProcessor, SageProcessorPre, OPProcessor},
+	"test": []PostProcessor{CaptchaProcessor, AnswerLinksProcessor, ImageProcessor, SageProcessorPre, OPProcessor},
 }
 
 // Same as EnabledPostProcessorsPre but these are used
@@ -183,6 +185,25 @@ func AnswerMapProcessor(cl *Client, p *Post) error {
 				tx.Rollback()
 			}
 		}
+	}
+	return nil
+}
+
+func CaptchaProcessor(cl *Client, p *Post) error {
+	errMsgInvalid := errors.New("Captcha data is invalid or missing.")
+	var capData struct {
+		Id       string
+		Solution string
+	}
+	err := mapstructure.Decode(p.Attrs["captcha"], &capData)
+	if err != nil {
+		log.Println(err)
+		return errMsgInvalid
+	}
+	log.Println(capData)
+	ok := captcha.VerifyString(capData.Id, capData.Solution)
+	if !ok {
+		return errors.New("Captcha has expired or solution is wrong.")
 	}
 	return nil
 }

@@ -61,6 +61,10 @@ var GovnabaMessager = function(gvnb) {
                 gvnb.onUserCountMessage(msg);
                 break;
             }
+            case 19: {
+                gvnb.onCaptchaMessage(msg);
+                break;
+            }
         }
     }
     
@@ -128,6 +132,10 @@ var GovnabaMessager = function(gvnb) {
             MessageType: 15,
             Key: key
         }))
+    }
+
+    this.getNewCaptcha = function() {
+        this.socket.send(JSON.stringify({MessageType: 19}));
     }
 }
 
@@ -198,6 +206,7 @@ Govnaba = function() {
     this.onBoardThreadsMessage = function(msg) {
         this.baseCont.displayBoard(msg);
         this.msgr.changeLocation("board", this.state.board);
+        this.msgr.getNewCaptcha();
     }
 
     this.onBoardListMessage = function(msg) {
@@ -210,6 +219,7 @@ Govnaba = function() {
         //this.msgr.changeLocation("thread", this.state.thread);
         // use board subscription instead
         this.msgr.changeLocation("board", msg.Board);
+        this.msgr.getNewCaptcha();
     }
 
     this.onNewThreadMessage = function(msg) {
@@ -236,11 +246,18 @@ Govnaba = function() {
     this.onPostSuccessfulMessage = function(msg) {
         $("#input_topic").val("");
         $("#input_contents").val("");
+        $("#input_captcha").val("");
+        gvnb.msgr.getNewCaptcha();
     }
 
     this.onUserCountMessage = function(msg) {
         if (msg.Board == this.state.board)
             this.baseCont.displayUserCount(msg.Count);
+    }
+
+    this.onCaptchaMessage = function(msg) {
+        localStorage["captcha_id"] = msg.CaptchaId;
+        this.baseCont.displayCaptcha(msg.CaptchaImage);
     }
 
     this.onError = function(msg) {
@@ -256,6 +273,7 @@ Govnaba = function() {
                     }}() +
                 '</div>\
             </div>');
+        gvnb.msgr.getNewCaptcha();
     }
 
     this.sendPostingForm = function(evt) {
@@ -270,7 +288,10 @@ Govnaba = function() {
                 attrs.sage = true;
             if (document.getElementById("input_op").checked)
                 attrs.op = true;
-
+            attrs.captcha = {
+                id: localStorage["captcha_id"],
+                solution: document.getElementById("input_captcha").value
+            }
             if (this.baseCont.state.ctx == ViewContext.BOARD) {
                 this.msgr.createThread(this.state.board, topic, contents, attrs);
             }
@@ -299,7 +320,11 @@ Govnaba = function() {
             attrs.sage = true;
         if (document.getElementById("input_op").checked)
             attrs.op = true;
-        
+        attrs.captcha = {
+                "Id": localStorage["captcha_id"],
+                "Solution": document.getElementById("input_captcha").value
+        }
+
         if (this.baseCont.state.ctx == ViewContext.BOARD) {
             this.msgr.createThread(this.state.board, topic, contents, attrs);
         }
