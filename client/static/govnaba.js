@@ -214,7 +214,7 @@ Govnaba = function() {
     }
 
     this.onThreadMessage = function(msg) {
-        this.baseCont.displayThread(msg.Posts);
+        this.baseCont.displayThread(msg);
         // not implemented serverside
         //this.msgr.changeLocation("thread", this.state.thread);
         // use board subscription instead

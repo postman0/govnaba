@@ -18,8 +18,9 @@ var Base = React.createClass({
 		this.setState({ctx: ViewContext.BOARD, threads: boardMsg.Threads, 
 			curBoard: boardMsg.Board, curThread: null});
 	},
-	displayThread: function(posts) {
-		this.setState({ctx: ViewContext.THREAD, posts: posts, curThread: posts[0].LocalId});
+	displayThread: function(postsMsg) {
+		this.setState({ctx: ViewContext.THREAD, posts: postsMsg.Posts,
+			curBoard: postsMsg.Board, curThread: postsMsg.Posts[0].LocalId});
 	},
 	displayNewPost: function(post) {
 		posts = this.state.posts;
