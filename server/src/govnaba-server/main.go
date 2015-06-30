@@ -11,6 +11,7 @@ import (
 	"govnaba"
 	"log"
 	"net/http"
+	"runtime"
 	"strings"
 	"time"
 )
@@ -63,6 +64,7 @@ func HandleClients() {
 				switch m := msg.(type) {
 				case *govnaba.ClientDisconnectMessage:
 					{
+						close(m.Client.WriteChannel)
 						delete(clients, m.Client.Id)
 						for board, boardClients := range boardsClientsMap {
 							delete(boardClients, m.Client.Id)
@@ -168,6 +170,7 @@ func main() {
 
 	http.DefaultServeMux.HandleFunc("/connect", func(rw http.ResponseWriter, req *http.Request) {
 		log.Printf("New client from %s", req.RemoteAddr)
+		log.Printf("Current goroutine count: %d", runtime.NumGoroutine())
 		var userId int = 0
 		c, err := req.Cookie("userid")
 		if err == nil {

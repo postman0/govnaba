@@ -52,21 +52,24 @@ func (cl *Client) receiveLoop() {
 	for {
 		msgType, rdr, err := cl.conn.NextReader()
 		if err != nil {
-			log.Printf("Error on reading from websocket: %v", err)
+			log.Printf("Error on reading from websocket for userid %d, ip %s: %v",
+				cl.Id, cl.conn.RemoteAddr().String(), err)
 			cl.broadcastChannel <- NewClientDisconnectMessage(cl)
 			return
 		}
 		if msgType == websocket.TextMessage {
 			buf, err := ioutil.ReadAll(rdr)
 			if err != nil {
-				log.Printf("Error on reading from websocket: %v", err)
+				log.Printf("Error on reading from websocket for userid %d, ip %s: %v",
+					cl.Id, cl.conn.RemoteAddr().String(), err)
 				cl.broadcastChannel <- NewClientDisconnectMessage(cl)
 				return
 			}
 			var m map[string]interface{}
 			err = json.Unmarshal(buf, &m)
 			if err != nil {
-				log.Printf("JSON unmarshalling error: %v", err)
+				log.Printf("JSON unmarshalling error for userid %d, ip %s: %v",
+					cl.Id, cl.conn.RemoteAddr().String(), err)
 				cl.WriteChannel <- NewProtocolErrorMessage(cl)
 				continue
 			}
@@ -85,7 +88,8 @@ func (cl *Client) receiveLoop() {
 			message := messageConstructor(cl)
 			err = message.FromClient(cl, buf)
 			if err != nil {
-				log.Printf("Couldn't decode message: %s", err)
+				log.Printf("Couldn't decode message for userid %d, ip %s: %s",
+					cl.Id, cl.conn.RemoteAddr().String(), err)
 				cl.WriteChannel <- NewProtocolErrorMessage(cl)
 				continue
 			}
@@ -104,7 +108,11 @@ func (cl *Client) receiveLoop() {
 // writeLoop listens on the write channel for outgoing messages and sends them to the client.
 func (cl *Client) writeLoop() {
 	for message := range cl.WriteChannel {
-		cl.conn.WriteMessage(websocket.TextMessage, message.ToClient())
+		err := cl.conn.WriteMessage(websocket.TextMessage, message.ToClient())
+		if err != nil {
+			log.Printf("Write error for userid %d, ip %s: %s", cl.Id, cl.conn.RemoteAddr().String(), err)
+			break
+		}
 	}
 }
 
