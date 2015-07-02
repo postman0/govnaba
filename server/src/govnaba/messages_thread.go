@@ -48,10 +48,10 @@ func (pa PostAttributes) Value() (driver.Value, error) {
 
 // Helper struct used in various situations.
 type Post struct {
-	Board string `json:"-"`
-	// Parent thread's id on the board?
-	ThreadId int `json:"-"`
-	// Post's id on the board?
+	Board string
+	// Parent thread's id on the board
+	ThreadId int
+	// Post's id on the board
 	LocalId  int
 	Topic    string
 	Contents string
@@ -63,16 +63,7 @@ type Post struct {
 // and notifying other client about a new thread.
 type CreateThreadMessage struct {
 	MessageBase
-	Board    string
-	Topic    string
-	Contents string
-	Date     time.Time
-	Attrs    PostAttributes
-	// dunno for what this is used, apparently this is database-local thread id
-	// and clients have no business knowing it
-	ThreadId int
-	// Board-related id
-	LocalId int
+	Post
 }
 
 func (msg *CreateThreadMessage) FromClient(cl *Client, msgBytes []byte) error {
@@ -97,15 +88,9 @@ func (msg *CreateThreadMessage) Process(db *sqlx.DB) []OutMessage {
 			"Board doesnt exist",
 		}}
 	}
-	p := Post{
-		Board:    msg.Board,
-		Topic:    msg.Topic,
-		Contents: msg.Contents,
-		Attrs:    msg.Attrs,
-	}
 	var err error = nil
 	for _, pp := range EnabledPostProcessorsPre[msg.Board] {
-		err = pp(msg.Client, &p)
+		err = pp(msg.Client, &msg.Post)
 		if err != nil {
 			log.Printf("Invalid post: %s", err)
 			return []OutMessage{&InvalidRequestErrorMessage{
@@ -115,10 +100,6 @@ func (msg *CreateThreadMessage) Process(db *sqlx.DB) []OutMessage {
 			}}
 		}
 	}
-	msg.Board = p.Board
-	msg.Topic = p.Topic
-	msg.Contents = p.Contents
-	msg.Attrs = p.Attrs
 
 	tx := db.MustBegin()
 	row = tx.QueryRowx(`INSERT INTO threads (board_id) VALUES ((SELECT id FROM boards WHERE name = $1)) RETURNING id;`, msg.Board)
@@ -138,19 +119,10 @@ func (msg *CreateThreadMessage) Process(db *sqlx.DB) []OutMessage {
 		// todo: return error
 	}
 
-	p.LocalId = msg.LocalId
-	p.ThreadId = msg.LocalId
-	p.Date = msg.Date
 	for _, pp := range EnabledPostProcessorsPost[msg.Board] {
-		_ = pp(msg.Client, &p)
+		_ = pp(msg.Client, &msg.Post)
 	}
-	msg.Board = p.Board
-	msg.Topic = p.Topic
-	msg.Contents = p.Contents
-	msg.Attrs = p.Attrs
 
-	//TODO: determine why the fuck this is needed
-	msg.ThreadId = thread_id
 	return []OutMessage{msg, &PostingSuccesfulMessage{
 		MessageBase{PostingSuccesfulMessageType, msg.Client},
 		msg.LocalId,
@@ -174,15 +146,7 @@ func (msg *CreateThreadMessage) GetDestination() Destination {
 // and notifying other clients on the board about those posts.
 type AddPostMessage struct {
 	MessageBase
-	Board    string
-	Topic    string
-	Contents string
-	Attrs    PostAttributes
-	Date     time.Time
-	// Parent thread id
-	ThreadLocalId int
-	// This post's id
-	AnswerLocalId int
+	Post
 }
 
 func (msg *AddPostMessage) FromClient(cl *Client, msgBytes []byte) error {
@@ -196,16 +160,9 @@ func (msg *AddPostMessage) FromClient(cl *Client, msgBytes []byte) error {
 // Process applies post processors to the new post and stores it in the database.
 func (msg *AddPostMessage) Process(db *sqlx.DB) []OutMessage {
 
-	p := Post{
-		Board:    msg.Board,
-		Topic:    msg.Topic,
-		Contents: msg.Contents,
-		Attrs:    msg.Attrs,
-		ThreadId: msg.ThreadLocalId,
-	}
 	var err error = nil
 	for _, pp := range EnabledPostProcessorsPre[msg.Board] {
-		err = pp(msg.Client, &p)
+		err = pp(msg.Client, &msg.Post)
 		if err != nil {
 			log.Printf("Invalid post: %s", err)
 			return []OutMessage{&InvalidRequestErrorMessage{
@@ -215,11 +172,6 @@ func (msg *AddPostMessage) Process(db *sqlx.DB) []OutMessage {
 			}}
 		}
 	}
-	msg.Board = p.Board
-	msg.Topic = p.Topic
-	msg.Contents = p.Contents
-	msg.Attrs = p.Attrs
-	msg.ThreadLocalId = p.ThreadId
 	const insertPostQuery = `INSERT INTO posts (user_id, thread_id, topic, contents, attrs, board_local_id) VALUES 
 		($1,
 		(SELECT threads.id FROM threads, boards, posts WHERE board_id = boards.id AND thread_id = threads.id AND boards.name = $2 AND posts.board_local_id = $3),
@@ -231,7 +183,7 @@ func (msg *AddPostMessage) Process(db *sqlx.DB) []OutMessage {
 
 	tx := db.MustBegin()
 	row := tx.QueryRowx(insertPostQuery, msg.Client.Id,
-		msg.Board, msg.ThreadLocalId, msg.Topic, msg.Contents, msg.Attrs)
+		msg.Board, msg.ThreadId, msg.Topic, msg.Contents, msg.Attrs)
 	var answerId int
 	var date time.Time
 	err = row.Scan(&answerId, &date)
@@ -242,20 +194,14 @@ func (msg *AddPostMessage) Process(db *sqlx.DB) []OutMessage {
 		return nil
 	}
 	tx.Commit()
-	msg.AnswerLocalId = answerId
+	msg.LocalId = answerId
 	msg.Date = date
-	p.LocalId = msg.AnswerLocalId
-	p.Date = msg.Date
 	for _, pp := range EnabledPostProcessorsPost[msg.Board] {
-		_ = pp(msg.Client, &p)
+		_ = pp(msg.Client, &msg.Post)
 	}
-	msg.Board = p.Board
-	msg.Topic = p.Topic
-	msg.Contents = p.Contents
-	msg.Attrs = p.Attrs
 	return []OutMessage{msg, &PostingSuccesfulMessage{
 		MessageBase{PostingSuccesfulMessageType, msg.Client},
-		msg.AnswerLocalId,
+		msg.LocalId,
 	},
 	}
 }

@@ -108,7 +108,7 @@ var GovnabaMessager = function(gvnb) {
             Board: board,
             Topic: topic,
             Contents: contents,
-            ThreadLocalId: thread,
+            ThreadId: thread,
             Attrs: attrs
         }));
     }
@@ -234,13 +234,7 @@ Govnaba = function() {
     }
 
     this.onNewPostMessage = function(msg) {
-        this.baseCont.displayNewPost({
-            Topic: msg.Topic,
-            Contents: msg.Contents,
-            LocalId: msg.AnswerLocalId,
-            Date: msg.Date,
-            Attrs: msg.Attrs
-        });
+        this.baseCont.displayNewPost(msg);
     }
 
     this.onPostSuccessfulMessage = function(msg) {
