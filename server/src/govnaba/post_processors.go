@@ -32,7 +32,7 @@ var EnabledPostProcessorsPost = map[string][]PostProcessor{
 
 // ImageProcessor limits attached to the post images to one.
 func ImageProcessor(cl *Client, p *Post) error {
-	imgsAttr, ok := p.Attrs["images"]
+	imgsAttr, ok := p.Attrs.Get("images")
 	if !ok {
 		return nil
 	}
@@ -43,7 +43,7 @@ func ImageProcessor(cl *Client, p *Post) error {
 		if !ok {
 			return errors.New(fmt.Sprintf("Invalid images attribute format in the message: %T", imgsAttr))
 		}
-		p.Attrs["images"] = []string{imgName}
+		p.Attrs.Put("images", []string{imgName})
 	default:
 		return errors.New(fmt.Sprintf("Invalid images attribute format in the message: %T", imgsAttr))
 	}
@@ -51,15 +51,15 @@ func ImageProcessor(cl *Client, p *Post) error {
 }
 
 func SageProcessorPre(cl *Client, p *Post) error {
-	_, saged := p.Attrs["sage"]
+	_, saged := p.Attrs.Get("sage")
 	if saged {
-		p.Attrs["sage"] = true
+		p.Attrs.Put("sage", true)
 	}
 	return nil
 }
 
 func SageProcessorPost(cl *Client, p *Post) error {
-	_, saged := p.Attrs["sage"]
+	_, saged := p.Attrs.Get("sage")
 	if !saged {
 		cl.db.Exec(`UPDATE threads SET last_bump_date = DEFAULT WHERE id = (SELECT thread_id FROM posts WHERE board_local_id = $1);`, p.ThreadId)
 	}
@@ -67,7 +67,7 @@ func SageProcessorPost(cl *Client, p *Post) error {
 }
 
 func OPProcessor(cl *Client, p *Post) error {
-	_, opCheck := p.Attrs["op"]
+	_, opCheck := p.Attrs.Get("op")
 	if opCheck {
 		var opId int
 		cl.db.Get(&opId, `SELECT users.id FROM 
@@ -77,11 +77,8 @@ func OPProcessor(cl *Client, p *Post) error {
 			WHERE boards.name = $1 AND posts.board_local_id = $2;`,
 			p.Board, p.ThreadId)
 		if cl.Id == opId {
-			p.Attrs["op"] = true
-		} else {
-			delete(p.Attrs, "op")
+			p.Attrs.Put("op", true)
 		}
-
 	}
 	return nil
 }
@@ -126,12 +123,13 @@ func AnswerLinksProcessor(cl *Client, p *Post) error {
 		}
 		refMap[strconv.Itoa(postId)] = threadId
 	}
-	p.Attrs["refs"] = refMap
+	p.Attrs.Put("refs", refMap)
 	return nil
 }
 
 func AnswerMapProcessor(cl *Client, p *Post) error {
-	refs, ok := p.Attrs["refs"].(map[string]int)
+	rawRefs, _ := p.Attrs.Get("refs")
+	refs, ok := rawRefs.(map[string]int)
 	if !ok || refs == nil {
 		log.Printf("Unsuitable refs type for %v", refs)
 		return nil
@@ -165,13 +163,14 @@ func AnswerMapProcessor(cl *Client, p *Post) error {
 				tx.Rollback()
 				return nil
 			}
-			answerMap, ok := pa["answers"].(map[string]interface{})
+			rawAnswerMap, _ := pa.Get("answers")
+			answerMap, ok := rawAnswerMap.(map[string]interface{})
 			if !ok || (answerMap == nil) {
-				log.Printf("Unsuitable answer map type for %v, got %T", pa["answers"], pa["answers"])
+				log.Printf("Unsuitable answer map type for %v, got %T", rawAnswerMap, rawAnswerMap)
 				answerMap = make(map[string]interface{})
 			}
 			answerMap[strconv.Itoa(p.LocalId)] = p.ThreadId
-			pa["answers"] = answerMap
+			pa.Put("answers", answerMap)
 			_, err = tx.Exec(`UPDATE posts SET attrs = $1
 				FROM threads WHERE thread_id = threads.id AND board_id = (SELECT id FROM boards WHERE name = $2)
 				AND board_local_id = $3;`, pa, p.Board, postId)
@@ -185,6 +184,7 @@ func AnswerMapProcessor(cl *Client, p *Post) error {
 				tx.Rollback()
 			}
 		}
+		i++
 	}
 	return nil
 }
@@ -195,7 +195,8 @@ func CaptchaProcessor(cl *Client, p *Post) error {
 		Id       string
 		Solution string
 	}
-	err := mapstructure.Decode(p.Attrs["captcha"], &capData)
+	val, _ := p.Attrs.Get("captcha")
+	err := mapstructure.Decode(val, &capData)
 	if err != nil {
 		log.Println(err)
 		return errMsgInvalid

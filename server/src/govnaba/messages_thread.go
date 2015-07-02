@@ -12,19 +12,46 @@ import (
 )
 
 // An utility type for unmarshallling attributes from the database.
-type PostAttributes map[string]interface{}
+type PostAttributes struct {
+	clientAttrs  map[string]interface{}
+	checkedAttrs map[string]interface{}
+}
 
-// Scan unmarshals JSON into a map[string]interface{}.
+func (pa *PostAttributes) Get(key string) (interface{}, bool) {
+	val, ok := pa.checkedAttrs[key]
+	if !ok {
+		val, ok = pa.clientAttrs[key]
+	}
+	return val, ok
+}
+
+func (pa *PostAttributes) Put(key string, value interface{}) {
+	pa.checkedAttrs[key] = value
+}
+
+// This is used for unmarshalling values from the client.
+func (pa *PostAttributes) UnmarshalJSON(buf []byte) error {
+	err := json.Unmarshal(buf, &pa.clientAttrs)
+	pa.checkedAttrs = make(map[string]interface{})
+	return err
+}
+
+// This is used for marshalling values sent to the client.
+func (pa *PostAttributes) MarshalJSON() ([]byte, error) {
+	return json.Marshal(pa.checkedAttrs)
+}
+
+// Scan unmarshals JSON from the database into a map[string]interface{}.
 // If the value is NULL then the result is a nil map.
 func (pa *PostAttributes) Scan(src interface{}) error {
 	switch src.(type) {
 	case []byte:
-		err := json.Unmarshal(src.([]byte), pa)
+		err := json.Unmarshal(src.([]byte), &pa.checkedAttrs)
 		if err != nil {
 			return errors.New(fmt.Sprintf("Invalid JSON: %s.", err))
 		}
 	case string:
-		err := json.Unmarshal([]byte(src.(string)), pa)
+		err := json.Unmarshal([]byte(src.(string)), &pa.checkedAttrs)
 		if err != nil {
 			return errors.New(fmt.Sprintf("Invalid JSON: %s.", err))
 		}
@@ -38,7 +65,7 @@ func (pa *PostAttributes) Scan(src interface{}) error {
 
 // Value marshals the map into JSON.
 func (pa PostAttributes) Value() (driver.Value, error) {
-	b, err := json.Marshal(pa)
+	b, err := json.Marshal(&pa)
 	if err != nil {
 		return []byte{}, errors.New(fmt.Sprintf("Can't marshal attributes to JSON: %s", err))
 	} else {
