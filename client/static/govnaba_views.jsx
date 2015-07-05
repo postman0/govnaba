@@ -257,7 +257,7 @@ var Post = React.createClass({
 					return (
 						<a href={"/static/uploads/"+imgName} target="_blank">
 							<img className="post-image img-thumbnail pull-left" src={"/static/uploads/thumb"+imgName}
-							 alt={imgName}></img>
+							 alt={imgName} onClick={gvnb.expandImage}></img>
 						</a>
 					)
 				})}

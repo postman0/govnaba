@@ -257,7 +257,7 @@ var Post = React.createClass({displayName: "Post",
 					return (
 						React.createElement("a", {href: "/static/uploads/"+imgName, target: "_blank"}, 
 							React.createElement("img", {className: "post-image img-thumbnail pull-left", src: "/static/uploads/thumb"+imgName, 
-							 alt: imgName})
+							 alt: imgName, onClick: gvnb.expandImage})
 						)
 					)
 				})

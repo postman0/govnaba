@@ -203,6 +203,21 @@ Govnaba = function() {
         }
     }
 
+    this.expandImage = function(evt) {
+        var restoreClbk = (function(prevSrc){
+            return function(evtNew) {
+                evtNew.target.src = prevSrc;
+                evtNew.target.onclick = gvnb.expandImage;
+                evtNew.stopPropagation();
+                evtNew.preventDefault();
+            }
+        })(evt.target.src);
+        evt.target.onclick = restoreClbk;
+        evt.target.src = evt.target.parentNode.href;
+        evt.stopPropagation();
+        evt.preventDefault();
+    }
+
     this.onBoardThreadsMessage = function(msg) {
         this.baseCont.displayBoard(msg);
         this.msgr.changeLocation("board", this.state.board);
