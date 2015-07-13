@@ -78,3 +78,12 @@
 	padding: 0.5em 1em;
 	margin: 0 0 0.5em;
 }
+
+.previews {
+	top: 0;
+	left: 0;
+	width: 100%;
+}
+.preview {
+	position: absolute;
+}

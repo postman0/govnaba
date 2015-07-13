@@ -218,6 +218,16 @@ Govnaba = function() {
         evt.preventDefault();
     }
 
+    this.showPostPreview = function(evt) {
+        if (evt.currentTarget.dataset.threadId == this.state.thread) {
+            this.baseCont.displayPreview(parseInt(evt.currentTarget.dataset.postId), 
+                evt.pageX, 
+                evt.pageY);
+        } else {
+            console.log('lel');
+        }
+    }
+
     this.onBoardThreadsMessage = function(msg) {
         this.baseCont.displayBoard(msg);
         this.msgr.changeLocation("board", this.state.board);

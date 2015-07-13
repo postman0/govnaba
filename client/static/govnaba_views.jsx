@@ -38,6 +38,12 @@ var Base = React.createClass({
 	displayCaptcha: function(base64img) {
 		this.setState({captcha: base64img});
 	},
+	displayPreview: function(postId, x, y) {
+		this.refs.previews.displayPreview({
+			postData: _.findWhere(this.state.posts, {LocalId: postId}),
+			ThreadId: this.state.curThread,
+			x: x, y: y});
+	},
 	render: function() {
 		var boardList, threads, posts;
 		if (this.state.ctx == ViewContext.MAINPAGE) {
@@ -70,6 +76,7 @@ var Base = React.createClass({
 		            	: null}
             	</div>
         	</div>
+        	<PostPreviews ref="previews" />
         </div>
 		);
 	}
@@ -214,7 +221,11 @@ var Post = React.createClass({
 		var attrs = this.props.postData.Attrs;
 		text = text.replace(/&gt;&gt;(\d+)/g, function(match, id) {
 			if (attrs && attrs.refs && attrs.refs[id]) {
-				return '<a href="' + gvnb.getThreadLink(attrs.refs[id], id) + '">' + match + '</a>';
+				return '<a href="' + gvnb.getThreadLink(attrs.refs[id], id) + 
+					'" class="post-reference" ' + 
+					'data-thread-id="'+ attrs.refs[id] + '" ' + 
+					'data-post-id="'+ id + '" ' + 
+					'>' + match + '</a>';
 			} else {
 				return match
 			}
@@ -276,8 +287,8 @@ var Post = React.createClass({
 			{
 				Object.keys(attrs.answers).map(function(answ){
 					return (
-						<a className="post-answer" href={gvnb.getThreadLink(attrs.answers[answ], answ)}
-							key={answ}>
+						<a className="post-answer post-reference" href={gvnb.getThreadLink(attrs.answers[answ], answ)}
+							data-thread-id={attrs.answers[answ]} data-post-id={answ} key={answ}>
 						#{answ}
 						</a>)
 				})
@@ -304,8 +315,49 @@ var Post = React.createClass({
 				</div>
 			</div>
 		)
+	},
+
+	componentDidMount: function() {
+		$(this.getDOMNode()).find('.post-reference').mouseover(gvnb.showPostPreview.bind(gvnb));
 	}
-})
+});
+
+var PostPreviews = React.createClass({
+	getInitialState: function() {
+		return {posts: []};
+	},
+	displayPreview: function(post) {
+		var posts = this.state.posts;
+		posts.push(post);
+		this.setState({posts: posts});
+	},
+	removePostPreview: function(evt) {
+		this.setState({
+			posts: _.reject(this.state.posts, 
+				function(p) { return (p.postData.LocalId == evt.currentTarget.dataset.postId) })
+		});
+	},
+	render: function() {
+		var mouseOutHandler = this.removePostPreview;
+		return (
+			<div className="previews">
+				{
+					this.state.posts.map(function(post) {
+						return (
+							<div className="preview" key={post.x.toString() + post.y.toString() + 
+								+ post.postData.LocalId.toString()}
+								data-post-id={post.postData.LocalId}
+								style={{left: post.x, top: post.y}} 
+								onMouseLeave={mouseOutHandler}>
+								<Post postData={post.postData} opPostId={post.ThreadId} />
+							</div>
+						)
+					})
+				}
+			</div>
+		)
+	}
+});
 
 var PostingForm = React.createClass({
 	render: function() {
@@ -376,7 +428,6 @@ var PostingForm = React.createClass({
 		);
 	}
 })
-
 
 var GovnabaViews = {
 	mountBaseContainer: function() {

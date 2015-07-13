@@ -38,6 +38,12 @@ var Base = React.createClass({displayName: "Base",
 	displayCaptcha: function(base64img) {
 		this.setState({captcha: base64img});
 	},
+	displayPreview: function(postId, x, y) {
+		this.refs.previews.displayPreview({
+			postData: _.findWhere(this.state.posts, {LocalId: postId}),
+			ThreadId: this.state.curThread,
+			x: x, y: y});
+	},
 	render: function() {
 		var boardList, threads, posts;
 		if (this.state.ctx == ViewContext.MAINPAGE) {
@@ -69,7 +75,8 @@ var Base = React.createClass({displayName: "Base",
 		            	React.createElement(PostingForm, {type: "thread", captcha: this.state.captcha}) 
 		            	: null
             	)
-        	)
+        	), 
+        	React.createElement(PostPreviews, {ref: "previews"})
         )
 		);
 	}
@@ -214,7 +221,11 @@ var Post = React.createClass({displayName: "Post",
 		var attrs = this.props.postData.Attrs;
 		text = text.replace(/&gt;&gt;(\d+)/g, function(match, id) {
 			if (attrs && attrs.refs && attrs.refs[id]) {
-				return '<a href="' + gvnb.getThreadLink(attrs.refs[id], id) + '">' + match + '</a>';
+				return '<a href="' + gvnb.getThreadLink(attrs.refs[id], id) + 
+					'" class="post-reference" ' + 
+					'data-thread-id="'+ attrs.refs[id] + '" ' + 
+					'data-post-id="'+ id + '" ' + 
+					'>' + match + '</a>';
 			} else {
 				return match
 			}
@@ -276,8 +287,8 @@ var Post = React.createClass({displayName: "Post",
 			
 				Object.keys(attrs.answers).map(function(answ){
 					return (
-						React.createElement("a", {className: "post-answer", href: gvnb.getThreadLink(attrs.answers[answ], answ), 
-							key: answ}, 
+						React.createElement("a", {className: "post-answer post-reference", href: gvnb.getThreadLink(attrs.answers[answ], answ), 
+							"data-thread-id": attrs.answers[answ], "data-post-id": answ, key: answ}, 
 						"#", answ
 						))
 				})
@@ -304,8 +315,49 @@ var Post = React.createClass({displayName: "Post",
 				)
 			)
 		)
+	},
+
+	componentDidMount: function() {
+		$(this.getDOMNode()).find('.post-reference').mouseover(gvnb.showPostPreview.bind(gvnb));
 	}
-})
+});
+
+var PostPreviews = React.createClass({displayName: "PostPreviews",
+	getInitialState: function() {
+		return {posts: []};
+	},
+	displayPreview: function(post) {
+		var posts = this.state.posts;
+		posts.push(post);
+		this.setState({posts: posts});
+	},
+	removePostPreview: function(evt) {
+		this.setState({
+			posts: _.reject(this.state.posts, 
+				function(p) { return (p.postData.LocalId == evt.currentTarget.dataset.postId) })
+		});
+	},
+	render: function() {
+		var mouseOutHandler = this.removePostPreview;
+		return (
+			React.createElement("div", {className: "previews"}, 
+				
+					this.state.posts.map(function(post) {
+						return (
+							React.createElement("div", {className: "preview", key: post.x.toString() + post.y.toString() + 
+								+ post.postData.LocalId.toString(), 
+								"data-post-id": post.postData.LocalId, 
+								style: {left: post.x, top: post.y}, 
+								onMouseLeave: mouseOutHandler}, 
+								React.createElement(Post, {postData: post.postData, opPostId: post.ThreadId})
+							)
+						)
+					})
+				
+			)
+		)
+	}
+});
 
 var PostingForm = React.createClass({displayName: "PostingForm",
 	render: function() {
@@ -376,7 +428,6 @@ var PostingForm = React.createClass({displayName: "PostingForm",
 		);
 	}
 })
-
 
 var GovnabaViews = {
 	mountBaseContainer: function() {
