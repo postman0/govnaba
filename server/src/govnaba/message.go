@@ -26,6 +26,7 @@ const (
 	PostingSuccesfulMessageType
 	UsersOnlineMessageType
 	GetCaptchaMessageType
+	GetSinglePostMessageType
 )
 
 // This type is used in reconstructing messages sent by clients.
@@ -56,6 +57,9 @@ var MessageConstructors = map[byte]MessageConstructor{
 	},
 	GetCaptchaMessageType: func(cl *Client) InMessage {
 		return &GetCaptchaMessage{MessageBase: MessageBase{GetCaptchaMessageType, cl}}
+	},
+	GetSinglePostMessageType: func(cl *Client) InMessage {
+		return &GetSinglePostMessage{MessageBase: MessageBase{GetSinglePostMessageType, cl}}
 	},
 }
 

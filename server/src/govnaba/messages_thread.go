@@ -316,3 +316,49 @@ func (msg *ThreadPostsMessage) ToClient() []byte {
 func (msg *ThreadPostsMessage) GetDestination() Destination {
 	return Destination{DestinationType: ClientDestination, Id: msg.Client.Id}
 }
+
+// This message is used for both requesting a single post from a board
+// and for sending requested post back to the client. The required
+// parameters are board and post's local id.
+type GetSinglePostMessage struct {
+	MessageBase
+	Post
+}
+
+func (msg *GetSinglePostMessage) FromClient(cl *Client, msgBytes []byte) error {
+	err := json.Unmarshal(msgBytes, msg)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (msg *GetSinglePostMessage) Process(db *sqlx.DB) []OutMessage {
+	const query = `
+	WITH post AS (
+	SELECT board_local_id AS localid, created_date AS date, thread_id AS tid, topic, contents, attrs FROM
+	posts INNER JOIN threads ON thread_id = threads.id
+	WHERE board_local_id = $1 AND threads.board_id = (SELECT id FROM boards WHERE name = $2)
+	)
+	SELECT post.localid, post.date, post.topic, post.contents, post.attrs, op.thread_id AS threadid
+	FROM post CROSS JOIN LATERAL (SELECT board_local_id as thread_id FROM posts WHERE thread_id = tid AND is_op = TRUE) AS op;
+	`
+	err := db.Get(&msg.Post, query, msg.LocalId, msg.Board)
+	if err != nil {
+		log.Printf("GetSinglePost processing error: %#v", err)
+		return nil
+	}
+	return []OutMessage{msg}
+}
+
+func (msg *GetSinglePostMessage) ToClient() []byte {
+	bytes, err := json.Marshal(msg)
+	if err != nil {
+		log.Println(err)
+	}
+	return bytes
+}
+
+func (msg *GetSinglePostMessage) GetDestination() Destination {
+	return Destination{DestinationType: ClientDestination, Id: msg.Client.Id}
+}
