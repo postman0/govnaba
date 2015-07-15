@@ -38,9 +38,14 @@ var Base = React.createClass({displayName: "Base",
 	displayCaptcha: function(base64img) {
 		this.setState({captcha: base64img});
 	},
-	displayPreview: function(postId, x, y) {
+	displayPreview: function(postId, x, y, postData) {
+		var pData;
+		if (postData)
+			pData = postData
+		else
+			pData = _.findWhere(this.state.posts, {LocalId: postId});
 		this.refs.previews.displayPreview({
-			postData: _.findWhere(this.state.posts, {LocalId: postId}),
+			postData: pData,
 			ThreadId: this.state.curThread,
 			x: x, y: y});
 	},
@@ -349,7 +354,7 @@ var PostPreviews = React.createClass({displayName: "PostPreviews",
 								"data-post-id": post.postData.LocalId, 
 								style: {left: post.x, top: post.y}, 
 								onMouseLeave: mouseOutHandler}, 
-								React.createElement(Post, {postData: post.postData, opPostId: post.ThreadId})
+								React.createElement(Post, {postData: post.postData, opPostId: post.postData.ThreadId})
 							)
 						)
 					})

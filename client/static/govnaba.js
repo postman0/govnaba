@@ -65,6 +65,9 @@ var GovnabaMessager = function(gvnb) {
                 gvnb.onCaptchaMessage(msg);
                 break;
             }
+            case 20: {
+                gvnb.onSinglePostMessage(msg);
+            }
         }
     }
     
@@ -136,6 +139,10 @@ var GovnabaMessager = function(gvnb) {
 
     this.getNewCaptcha = function() {
         this.socket.send(JSON.stringify({MessageType: 19}));
+    }
+
+    this.getSinglePost = function(localId, board) {
+        this.socket.send(JSON.stringify({MessageType: 20, Board: board, LocalId: localId}));
     }
 }
 
@@ -219,12 +226,21 @@ Govnaba = function() {
     }
 
     this.showPostPreview = function(evt) {
-        if (evt.currentTarget.dataset.threadId == this.state.thread) {
-            this.baseCont.displayPreview(parseInt(evt.currentTarget.dataset.postId), 
+        var postParams = evt.currentTarget.dataset;
+        if (postParams.threadId == this.state.thread) {
+            this.baseCont.displayPreview(parseInt(postParams.postId), 
                 evt.pageX, 
                 evt.pageY);
         } else {
-            console.log('lel');
+            if (!this.state.previewCallbacks)
+                this.state.previewCallbacks = {};
+            this.state.previewCallbacks[postParams.postId] = function(msg) {
+                this.baseCont.displayPreview(parseInt(postParams.postId),
+                    evt.pageX,
+                    evt.pageY,
+                    msg);
+            };
+            this.msgr.getSinglePost(parseInt(postParams.postId), this.state.board);
         }
     }
 
@@ -277,6 +293,10 @@ Govnaba = function() {
     this.onCaptchaMessage = function(msg) {
         localStorage["captcha_id"] = msg.CaptchaId;
         this.baseCont.displayCaptcha(msg.CaptchaImage);
+    }
+
+    this.onSinglePostMessage = function(msg) {
+        (this.state.previewCallbacks[msg.LocalId].bind(this))(msg);
     }
 
     this.onError = function(msg) {
