@@ -188,6 +188,15 @@ var Thread = React.createClass({
 	}
 })
 
+var ytTpl = _.template(
+	'<iframe class="post-embed" src="https://www.youtube.com/embed/<%- id %>" type="text/html" ' +
+	' width="480" height="270"></iframe>'
+	);
+var coubTpl = _.template(
+	'<iframe class="post-embed" src="https://coub.com/embed/<%- id %>" type="text/html" ' +
+	' width="480" height="270"></iframe>'
+	);
+
 var Post = React.createClass({
 	processMarkup: function(str) {
 		var tagsToReplace = {
@@ -244,10 +253,35 @@ var Post = React.createClass({
 		text = replaceMarkupTags(text, /%%/g, "post-body-spoiler");
 		text = replaceMarkupTags(text, /__/g, "post-body-underline");
 
+		var embedHandlers = {
+			youtube: function(link) {
+				var match = link.match(/https?\:\/\/(?:www\.)?youtube\.com\/.*v\=([^&]+)/i);
+				if (match) {
+					return ytTpl({id: match[1]});
+				}
+			},
+			coub: function(link) {
+				var match = link.match(/https?\:\/\/(?:www\.)?coub\.com\/view\/([^?]+)/i);
+				if (match) {
+					return coubTpl({id: match[1]});
+				}
+			}
+		};
+
 		text = text.replace(/\w(?:\w|\.|\-)*\:\S+/g, function(match) {
-			return '<a target="_blank" href="' + safeTagsReplace(match).replace(/"/g, "&quot;") + '">' + 
-				safeTagsReplace(match) + 
-			'</a>';
+			var result;
+			_.values(embedHandlers).map(function(handler) {
+				if (!result) {
+					result = handler(match);
+				}
+			});
+			if (!result) {
+				return '<a target="_blank" href="' + safeTagsReplace(match).replace(/"/g, "&quot;") + '">' + 
+					safeTagsReplace(match) + 
+				'</a>';
+			}
+			else
+				return result;
 		});
 
 		return {__html: text};

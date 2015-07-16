@@ -79,6 +79,11 @@
 	margin: 0 0 0.5em;
 }
 
+.post-embed {
+	display: block;
+	margin: 1em;
+}
+
 .previews {
 	top: 0;
 	left: 0;
