@@ -196,6 +196,10 @@ var coubTpl = _.template(
 	'<iframe class="post-embed" src="https://coub.com/embed/<%- id %>" type="text/html" ' +
 	' width="480" height="270"></iframe>'
 	);
+var vimeoTpl = _.template(
+	'<iframe class="post-embed" src="https://player.vimeo.com/video/<%- id %>" type="text/html" ' +
+	' width="480" height="270"></iframe>'
+	);
 
 var Post = React.createClass({
 	processMarkup: function(str) {
@@ -264,6 +268,12 @@ var Post = React.createClass({
 				var match = link.match(/https?\:\/\/(?:www\.)?coub\.com\/view\/([^?]+)/i);
 				if (match) {
 					return coubTpl({id: match[1]});
+				}
+			},
+			vimeo: function(link) {
+				var match = link.match(/https?\:\/\/(?:www\.)?vimeo\.com\/([^?]+)/i);
+				if (match) {
+					return vimeoTpl({id: match[1]});
 				}
 			}
 		};
