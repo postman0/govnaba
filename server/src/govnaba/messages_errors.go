@@ -26,7 +26,7 @@ func (msg *InvalidRequestErrorMessage) ToClient() []byte {
 }
 
 func (msg *InvalidRequestErrorMessage) GetDestination() Destination {
-	return Destination{DestinationType: ClientDestination, Id: msg.Client.Id}
+	return Destination{DestinationType: ResponseDestination}
 }
 
 type FileUploadErrorMessage struct {
@@ -42,7 +42,7 @@ func (msg *FileUploadErrorMessage) ToClient() []byte {
 }
 
 func (msg *FileUploadErrorMessage) GetDestination() Destination {
-	return Destination{DestinationType: ClientDestination, Id: msg.Client.Id}
+	return Destination{DestinationType: ResponseDestination}
 }
 
 // This message type is intended for notifying clients
@@ -60,5 +60,5 @@ func (msg *InternalServerErrorMessage) ToClient() []byte {
 }
 
 func (msg *InternalServerErrorMessage) GetDestination() Destination {
-	return Destination{DestinationType: ClientDestination, Id: msg.Client.Id}
+	return Destination{DestinationType: ResponseDestination}
 }

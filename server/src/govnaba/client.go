@@ -96,7 +96,11 @@ func (cl *Client) receiveLoop() {
 			log.Printf("%v", message)
 
 			for _, msg := range message.Process(cl.db) {
-				cl.broadcastChannel <- msg
+				if msg.GetDestination().DestinationType == ResponseDestination {
+					cl.WriteChannel <- msg
+				} else {
+					cl.broadcastChannel <- msg
+				}
 			}
 
 		} else if msgType == websocket.BinaryMessage {

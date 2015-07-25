@@ -89,12 +89,12 @@ type MessageBase struct {
 
 // Destination types.
 const (
-	// Send to one client
-	ClientDestination = iota
-	// Broadcast on single board
+	// Send to a user (to all clients)
+	UserDestination = iota
+	// Send to a single connected client who sent a request
+	ResponseDestination
+	// Broadcast on a single board
 	BoardDestination
-	// Not implemented
-	MainPageDestination
 )
 
 // Destination struct helps to determine where should the message be sent.

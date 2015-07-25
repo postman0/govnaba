@@ -30,21 +30,30 @@ var globalChannel chan govnaba.OutMessage
 
 var db *sqlx.DB
 
+// literally nothing
+type placeholder struct{}
+
 var newClientsChannel chan *govnaba.Client
-var clients map[int]*govnaba.Client
-var boardsClientsMap map[string]map[int]*govnaba.Client
+
+// a map of maps which contain clients as keys and nothing as values
+var clients map[int]map[*govnaba.Client]placeholder
+var boardsClientsMap map[string]map[*govnaba.Client]placeholder
 
 func sendMessage(msg govnaba.OutMessage) {
 	dest := msg.GetDestination()
-	if dest.DestinationType == govnaba.ClientDestination {
-		client, ok := clients[dest.Id]
-		if !ok || (client == nil) {
-			log.Println("bad client for msg %v", msg)
+	if dest.DestinationType == govnaba.UserDestination {
+		userClients, ok := clients[dest.Id]
+		if !ok || (userClients == nil) {
+			log.Println("no clients for msg %v", msg)
 		} else {
-			client.WriteChannel <- msg
+			for cl := range userClients {
+				if cl != nil {
+					cl.WriteChannel <- msg
+				}
+			}
 		}
 	} else if dest.DestinationType == govnaba.BoardDestination {
-		for _, client := range boardsClientsMap[dest.Board] {
+		for client := range boardsClientsMap[dest.Board] {
 			log.Printf("Sending message %v of type %T to client %v", msg, msg, *client)
 			client.WriteChannel <- msg
 		}
@@ -57,7 +66,14 @@ func HandleClients() {
 		select {
 		case cl := <-newClientsChannel:
 			{
-				clients[cl.Id] = cl
+				userClients, ok := clients[cl.Id]
+				if !ok {
+					clients[cl.Id] = map[*govnaba.Client]placeholder{
+						cl: placeholder{},
+					}
+				} else {
+					userClients[cl] = placeholder{}
+				}
 			}
 		case msg := <-globalChannel:
 			{
@@ -65,9 +81,12 @@ func HandleClients() {
 				case *govnaba.ClientDisconnectMessage:
 					{
 						close(m.Client.WriteChannel)
-						delete(clients, m.Client.Id)
+						delete(clients[m.Client.Id], m.Client)
+						if len(clients[m.Client.Id]) == 0 {
+							delete(clients, m.Client.Id)
+						}
 						for board, boardClients := range boardsClientsMap {
-							delete(boardClients, m.Client.Id)
+							delete(boardClients, m.Client)
 							sendMessage(govnaba.NewUsersOnlineMessage(board, len(boardClients)))
 						}
 					}
@@ -75,16 +94,16 @@ func HandleClients() {
 					{
 						log.Println(msg)
 						for board, boardClients := range boardsClientsMap {
-							delete(boardClients, m.Client.Id)
+							delete(boardClients, m.Client)
 							sendMessage(govnaba.NewUsersOnlineMessage(board, len(boardClients)))
 						}
 						if m.LocationType == govnaba.Board {
 							boardClients, ok := boardsClientsMap[m.NewLocation]
 							if ok {
-								boardClients[m.Client.Id] = clients[m.Client.Id]
+								boardClients[m.Client] = placeholder{}
 								sendMessage(govnaba.NewUsersOnlineMessage(m.NewLocation, len(boardClients)))
 							} else {
-								clients[m.Client.Id].WriteChannel <- &govnaba.InvalidRequestErrorMessage{
+								m.Client.WriteChannel <- &govnaba.InvalidRequestErrorMessage{
 									govnaba.MessageBase{govnaba.InvalidRequestErrorMessageType, m.Client},
 									govnaba.ResourceDoesntExist,
 									"Board doesn't exist",
@@ -150,8 +169,8 @@ func main() {
 	govnaba.SecureCookie = secureCookie
 	globalChannel = make(chan govnaba.OutMessage, 10)
 	newClientsChannel = make(chan *govnaba.Client, 10)
-	clients = make(map[int]*govnaba.Client)
-	boardsClientsMap = make(map[string]map[int]*govnaba.Client)
+	clients = make(map[int]map[*govnaba.Client]placeholder)
+	boardsClientsMap = make(map[string]map[*govnaba.Client]placeholder)
 	var err error
 	db, err = sqlx.Connect("postgres", fmt.Sprintf("user=%s password=%s dbname=%s host=%s port=%s connect_timeout=5",
 		*dbUser, *dbPassword, *dbName, *dbHost, *dbPort))
@@ -164,7 +183,7 @@ func main() {
 	for rows.Next() {
 		var boardName string
 		rows.Scan(&boardName)
-		boardsClientsMap[boardName] = make(map[int]*govnaba.Client)
+		boardsClientsMap[boardName] = make(map[*govnaba.Client]placeholder)
 	}
 	go HandleClients()
 

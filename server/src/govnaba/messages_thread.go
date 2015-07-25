@@ -259,7 +259,7 @@ func (msg *PostingSuccesfulMessage) ToClient() []byte {
 }
 
 func (msg *PostingSuccesfulMessage) GetDestination() Destination {
-	return Destination{DestinationType: ClientDestination, Id: msg.Client.Id}
+	return Destination{DestinationType: ResponseDestination}
 }
 
 // GetThreadMessage is used for requesting all posts of a thread.
@@ -314,7 +314,7 @@ func (msg *ThreadPostsMessage) ToClient() []byte {
 }
 
 func (msg *ThreadPostsMessage) GetDestination() Destination {
-	return Destination{DestinationType: ClientDestination, Id: msg.Client.Id}
+	return Destination{DestinationType: ResponseDestination}
 }
 
 // This message is used for both requesting a single post from a board
@@ -360,5 +360,5 @@ func (msg *GetSinglePostMessage) ToClient() []byte {
 }
 
 func (msg *GetSinglePostMessage) GetDestination() Destination {
-	return Destination{DestinationType: ClientDestination, Id: msg.Client.Id}
+	return Destination{DestinationType: ResponseDestination}
 }

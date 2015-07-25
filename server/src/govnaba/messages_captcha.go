@@ -46,5 +46,5 @@ func (msg *GetCaptchaMessage) ToClient() []byte {
 }
 
 func (msg *GetCaptchaMessage) GetDestination() Destination {
-	return Destination{DestinationType: ClientDestination, Id: msg.Client.Id}
+	return Destination{DestinationType: ResponseDestination}
 }

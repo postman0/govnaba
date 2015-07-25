@@ -45,7 +45,7 @@ func (msg *BoardListMessage) ToClient() []byte {
 }
 
 func (msg *BoardListMessage) GetDestination() Destination {
-	return Destination{DestinationType: ClientDestination, Id: msg.Client.Id}
+	return Destination{DestinationType: ResponseDestination}
 }
 
 // This message is used for requesting a set of threads from some board.
@@ -121,5 +121,5 @@ func (msg *BoardThreadListMessage) ToClient() []byte {
 }
 
 func (msg *BoardThreadListMessage) GetDestination() Destination {
-	return Destination{DestinationType: ClientDestination, Id: msg.Client.Id}
+	return Destination{DestinationType: ResponseDestination}
 }

@@ -72,7 +72,7 @@ func (msg *ProtocolErrorMessage) ToClient() []byte {
 }
 
 func (msg *ProtocolErrorMessage) GetDestination() Destination {
-	return Destination{ClientDestination, "", msg.Client.Id}
+	return Destination{DestinationType: ResponseDestination}
 }
 
 // Constants used in ChangeLocationMessage
@@ -121,7 +121,7 @@ type FileUploadSuccessfulMessage struct {
 }
 
 func (msg *FileUploadSuccessfulMessage) GetDestination() Destination {
-	return Destination{ClientDestination, "", msg.Client.Id}
+	return Destination{DestinationType: ResponseDestination}
 }
 
 func (msg *FileUploadSuccessfulMessage) ToClient() []byte {
@@ -188,7 +188,7 @@ func (msg *UserLoginMessage) Process(db *sqlx.DB) []OutMessage {
 }
 
 func (msg *UserLoginSuccessfulMessage) GetDestination() Destination {
-	return Destination{ClientDestination, "", msg.Client.Id}
+	return Destination{DestinationType: ResponseDestination}
 }
 
 func (msg *UserLoginSuccessfulMessage) ToClient() []byte {
