@@ -23,9 +23,20 @@ var Base = React.createClass({displayName: "Base",
 			curBoard: postsMsg.Board, curThread: postsMsg.Posts[0].LocalId});
 	},
 	displayNewPost: function(post) {
-		posts = this.state.posts;
-		posts.push(post);
-		this.setState({posts: posts});
+		if (this.state.ctx == ViewContext.THREAD) {
+			var posts = this.state.posts;
+			posts.push(post);
+			this.setState({posts: posts});
+		} else if (this.state.ctx == ViewContext.BOARD) {
+			var threads = this.state.threads;
+			var updatedThread = _.find(threads, function(t){
+				return t[0].LocalId == post.ThreadId; 
+			});
+			if (updatedThread) {
+				updatedThread.push(post);
+				this.setState({threads: threads});
+			}
+		}
 	},
 	displayNewThread: function(thread) {
 		threads = this.state.threads;
