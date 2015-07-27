@@ -1,14 +1,14 @@
 package main
 
 import (
-	_ "errors"
-	"flag"
 	"fmt"
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/websocket"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	"gopkg.in/yaml.v2"
 	"govnaba"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"runtime"
@@ -16,13 +16,23 @@ import (
 	"time"
 )
 
-var bindAddress = flag.String("address", "0.0.0.0:8080", "address and port for the server to listen on")
-var cookieHashKey = flag.String("secret", "sjnfi3wrv9	2j0edhwe7fhaerhgtewjfqhc3t0ewfsodc x nwhtrhyew9hw98fo", "secret key used for secure cookies")
-var dbHost = flag.String("dbhost", "localhost", "postgresql server address")
-var dbPort = flag.String("dbport", "5432", "postgresql server port")
-var dbName = flag.String("dbname", "govnaba", "postgresql database name")
-var dbUser = flag.String("dbuser", "postgres", "postgresql username")
-var dbPassword = flag.String("dbpassword", "postgres", "postgresql user password")
+type Config struct {
+	BindAddress     string
+	CookieSecretKey string
+	Database        struct {
+		Host     string
+		Port     string
+		Name     string
+		User     string
+		Password string
+	}
+	SiteName        string
+	MainPageContent string
+	RulesContent    string
+	BoardConfigs    map[string]govnaba.BoardConfig
+}
+
+var config Config
 
 var secureCookie *securecookie.SecureCookie
 
@@ -60,6 +70,18 @@ func sendMessage(msg govnaba.OutMessage) {
 	}
 }
 
+// Send website config to the client
+func sendConfig(cl *govnaba.Client) {
+	configMsg := &govnaba.SiteConfigMessage{
+		MessageBase:     govnaba.MessageBase{govnaba.SiteConfigMessageType, cl},
+		SiteName:        config.SiteName,
+		MainPageContent: config.MainPageContent,
+		RulesContent:    config.RulesContent,
+		BoardConfigs:    config.BoardConfigs,
+	}
+	cl.WriteChannel <- configMsg
+}
+
 // Handle broadcasts and new clients
 func HandleClients() {
 	for {
@@ -74,6 +96,7 @@ func HandleClients() {
 				} else {
 					userClients[cl] = placeholder{}
 				}
+				sendConfig(cl)
 			}
 		case msg := <-globalChannel:
 			{
@@ -151,10 +174,17 @@ func getUserFromIP(req *http.Request) (int, http.Header) {
 }
 
 func main() {
-	flag.Parse()
+	confBytes, err := ioutil.ReadFile("config.yml")
+	if err != nil {
+		log.Fatalf("Got an error while reading config file: %s", err)
+	}
+	err = yaml.Unmarshal(confBytes, &config)
+	if err != nil {
+		log.Fatalf("Error in config file: %s", err)
+	}
 
 	server := http.Server{
-		Addr:         *bindAddress,
+		Addr:         config.BindAddress,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 5 * time.Second,
 	}
@@ -165,17 +195,17 @@ func main() {
 		func(r *http.Request) bool { return true },
 	}
 
-	secureCookie = securecookie.New([]byte(*cookieHashKey), nil)
+	secureCookie = securecookie.New([]byte(config.CookieSecretKey), nil)
 	govnaba.SecureCookie = secureCookie
 	globalChannel = make(chan govnaba.OutMessage, 10)
 	newClientsChannel = make(chan *govnaba.Client, 10)
 	clients = make(map[int]map[*govnaba.Client]placeholder)
 	boardsClientsMap = make(map[string]map[*govnaba.Client]placeholder)
-	var err error
 	db, err = sqlx.Connect("postgres", fmt.Sprintf("user=%s password=%s dbname=%s host=%s port=%s connect_timeout=5",
-		*dbUser, *dbPassword, *dbName, *dbHost, *dbPort))
+		config.Database.User, config.Database.Password,
+		config.Database.Name, config.Database.Host, config.Database.Port))
 	if err != nil {
-		log.Fatalln("Couldn't connect to the database")
+		log.Fatalf("Couldn't connect to the database: %s", err)
 	}
 	db.Ping()
 

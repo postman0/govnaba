@@ -27,6 +27,7 @@ const (
 	UsersOnlineMessageType
 	GetCaptchaMessageType
 	GetSinglePostMessageType
+	SiteConfigMessageType
 )
 
 // This type is used in reconstructing messages sent by clients.
