@@ -363,6 +363,12 @@ var Post = React.createClass({
 			</div>
 		}
 
+		var country = null;
+		if (_.contains(gvnb.config.BoardConfigs[gvnb.state.board].EnabledFeatures, 'country') &&
+			attrs && attrs.country) {
+			country = <img className="post-header-country" src={"/static/flags/" + attrs.country + '.png'} alt={attrs.country}></img>
+		}
+
 		return (
 			<div id={"post-" + this.props.postData.LocalId} className="panel panel-default post-container">
 				<div className="panel-heading">
@@ -370,6 +376,7 @@ var Post = React.createClass({
 					href={gvnb.getThreadLink(this.props.opPostId, this.props.postData.LocalId)} 
 					className="post-header-id">#{this.props.postData.LocalId}</a>
 				{topic}
+				{ country }
 				{ (attrs && attrs.sage) ? <span className='label label-sage'>SAGE</span> : null}
 				{ (attrs && attrs.op) ? <span className='label label-primary'>OP</span> : null}
 				<span className="post-header-date">{datestr}</span>

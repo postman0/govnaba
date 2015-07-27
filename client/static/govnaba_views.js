@@ -363,6 +363,12 @@ var Post = React.createClass({displayName: "Post",
 			)
 		}
 
+		var country = null;
+		if (_.contains(gvnb.config.BoardConfigs[gvnb.state.board].EnabledFeatures, 'country') &&
+			attrs && attrs.country) {
+			country = React.createElement("img", {className: "post-header-country", src: "/static/flags/" + attrs.country + '.png', alt: attrs.country})
+		}
+
 		return (
 			React.createElement("div", {id: "post-" + this.props.postData.LocalId, className: "panel panel-default post-container"}, 
 				React.createElement("div", {className: "panel-heading"}, 
@@ -370,6 +376,7 @@ var Post = React.createClass({displayName: "Post",
 					href: gvnb.getThreadLink(this.props.opPostId, this.props.postData.LocalId), 
 					className: "post-header-id"}, "#", this.props.postData.LocalId), 
 				topic, 
+				country, 
 				 (attrs && attrs.sage) ? React.createElement("span", {className: "label label-sage"}, "SAGE") : null, 
 				 (attrs && attrs.op) ? React.createElement("span", {className: "label label-primary"}, "OP") : null, 
 				React.createElement("span", {className: "post-header-date"}, datestr)

@@ -7,10 +7,22 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 	"github.com/mitchellh/mapstructure"
+	"github.com/oschwald/geoip2-golang"
 	"log"
+	"net"
 	"regexp"
 	"strconv"
 )
+
+var geodb *geoip2.Reader
+
+func init() {
+	var err error
+	geodb, err = geoip2.Open("GeoLite2-Country.mmdb")
+	if err != nil {
+		log.Fatalf("Couldn't open GeoIP2 database: %s", err)
+	}
+}
 
 // Post processors are used for doing various processing of the new post
 // before and/or after it gets saved into the database.
@@ -25,6 +37,7 @@ var PostProcessorRegistry = map[string]PostProcessor{
 	"captcha": PostProcessor{CaptchaProcessor, NilProcessor},
 	"image":   PostProcessor{ImageProcessor, NilProcessor},
 	"answers": PostProcessor{AnswerLinksProcessor, AnswerMapProcessor},
+	"country": PostProcessor{CountryProcessor, NilProcessor},
 }
 
 // This shows what post processors are used for various boards.
@@ -228,6 +241,19 @@ func CaptchaProcessor(cl *Client, p *Post) error {
 	ok := captcha.VerifyString(capData.Id, capData.Solution)
 	if !ok {
 		return errors.New("Captcha has expired or solution is wrong.")
+	}
+	return nil
+}
+
+// Determines from which country the user is posting.
+func CountryProcessor(cl *Client, p *Post) error {
+	host, _, _ := net.SplitHostPort(cl.conn.RemoteAddr().String())
+	record, err := geodb.Country(net.ParseIP(host))
+	if err != nil || record.Country.IsoCode == "" {
+		log.Printf("Couldn't determine country for userid %d, ip %s: %s", cl.Id, host, err)
+		p.Attrs.Put("country", "_unknown")
+	} else {
+		p.Attrs.Put("country", record.Country.IsoCode)
 	}
 	return nil
 }
