@@ -12,7 +12,9 @@ var Base = React.createClass({displayName: "Base",
 		return {ctx: ViewContext.NONE}
 	},
 	displayMainPage: function(boardList) {
-		this.setState({ctx: ViewContext.MAINPAGE, boards: boardList, curBoard: null, curThread: null});
+		this.setState({ctx: ViewContext.MAINPAGE, 
+			boards: boardList, threads: null, posts: null, 
+			curBoard: null, curThread: null});
 	},
 	displayBoard: function(boardMsg) {
 		this.setState({ctx: ViewContext.BOARD, threads: boardMsg.Threads, 
@@ -455,16 +457,23 @@ var PostingForm = React.createClass({displayName: "PostingForm",
 				), 
 				React.createElement("div", {className: "form-group"}, 
 					React.createElement("div", {className: "col-sm-2 col-sm-offset-2"}, 
-						React.createElement("input", {id: "input_sage", type: "checkbox", name: "sage", className: "checkbox-inline", value: ""}, 
-							"SAGE"
-						), 
-						React.createElement("input", {id: "input_op", type: "checkbox", name: "op", className: "checkbox-inline", value: ""}, 
-							"OP"
-						)
+						 _.contains(gvnb.config.BoardConfigs[gvnb.state.board].EnabledFeatures, 'sage') ?
+							React.createElement("input", {id: "input_sage", type: "checkbox", name: "sage", className: "checkbox-inline", value: ""}, 
+								"SAGE"
+							)
+							: null, 
+						
+						 _.contains(gvnb.config.BoardConfigs[gvnb.state.board].EnabledFeatures, 'op') ?
+							React.createElement("input", {id: "input_op", type: "checkbox", name: "op", className: "checkbox-inline", value: ""}, 
+								"OP"
+							)
+							: null
+						
 					)
 				), 
 				
-					this.props.captcha ?
+					this.props.captcha && 
+					_.contains(gvnb.config.BoardConfigs[gvnb.state.board].EnabledFeatures, 'captcha') ?
 					React.createElement("div", {className: "form-group"}, 
 						React.createElement("label", {className: "control-label col-sm-2"}, "Капча"), 
 						React.createElement("div", {className: "col-sm-10"}, 
@@ -474,7 +483,8 @@ var PostingForm = React.createClass({displayName: "PostingForm",
 					: null, 
 				
 				
-					this.props.captcha ?
+					this.props.captcha &&
+					_.contains(gvnb.config.BoardConfigs[gvnb.state.board].EnabledFeatures, 'captcha') ?
 					React.createElement("div", {className: "form-group"}, 
 						React.createElement("label", {className: "control-label col-sm-2"}, "Ответ"), 
 						React.createElement("div", {className: "col-sm-10"}, 

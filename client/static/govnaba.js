@@ -179,7 +179,6 @@ Govnaba = function() {
         this.msgr.getBoards();
         this.msgr.changeLocation("mainPage", "");
         this.state = {};
-        this.baseCont.displayUserCount(null);
     }
 
     this.navBoardPage = function(ctx) {
@@ -260,6 +259,7 @@ Govnaba = function() {
 
     this.onBoardListMessage = function(msg) {
         this.baseCont.displayMainPage(msg.Boards.filter(function (name) { return name.length > 0 }));
+        this.baseCont.displayUserCount(null);
     }
 
     this.onThreadMessage = function(msg) {

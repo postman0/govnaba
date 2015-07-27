@@ -12,7 +12,9 @@ var Base = React.createClass({
 		return {ctx: ViewContext.NONE}
 	},
 	displayMainPage: function(boardList) {
-		this.setState({ctx: ViewContext.MAINPAGE, boards: boardList, curBoard: null, curThread: null});
+		this.setState({ctx: ViewContext.MAINPAGE, 
+			boards: boardList, threads: null, posts: null, 
+			curBoard: null, curThread: null});
 	},
 	displayBoard: function(boardMsg) {
 		this.setState({ctx: ViewContext.BOARD, threads: boardMsg.Threads, 
@@ -455,16 +457,23 @@ var PostingForm = React.createClass({
 				</div>
 				<div className="form-group">
 					<div className="col-sm-2 col-sm-offset-2">
-						<input id="input_sage" type="checkbox" name="sage" className="checkbox-inline" value="">
-							SAGE
-						</input>
-						<input id="input_op" type="checkbox" name="op" className="checkbox-inline" value="">
-							OP
-						</input>
+						{ _.contains(gvnb.config.BoardConfigs[gvnb.state.board].EnabledFeatures, 'sage') ?
+							<input id="input_sage" type="checkbox" name="sage" className="checkbox-inline" value="">
+								SAGE
+							</input>
+							: null
+						}
+						{ _.contains(gvnb.config.BoardConfigs[gvnb.state.board].EnabledFeatures, 'op') ?
+							<input id="input_op" type="checkbox" name="op" className="checkbox-inline" value="">
+								OP
+							</input>
+							: null
+						}
 					</div>
 				</div>
 				{
-					this.props.captcha ?
+					this.props.captcha && 
+					_.contains(gvnb.config.BoardConfigs[gvnb.state.board].EnabledFeatures, 'captcha') ?
 					<div className="form-group">
 						<label className="control-label col-sm-2">Капча</label>
 						<div className="col-sm-10">
@@ -474,7 +483,8 @@ var PostingForm = React.createClass({
 					: null
 				}
 				{
-					this.props.captcha ?
+					this.props.captcha &&
+					_.contains(gvnb.config.BoardConfigs[gvnb.state.board].EnabledFeatures, 'captcha') ?
 					<div className="form-group">
 						<label className="control-label col-sm-2">Ответ</label>
 						<div className="col-sm-10">
