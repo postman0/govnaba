@@ -1,15 +1,15 @@
----
-BindAddress: 0.0.0.0:8080
-CookieSecretKey: sjnfi3wrv9	2j0edhwe7fhaerhgtewjfqhc3t0ewfsodc x nwhtrhyew9hw98fo
-Database:
-  Host: localhost
-  Port: 5432
-  Name: govnaba
-  User: postgres
-  Password: postgres
-Sitename: Govnaba
-MainPageContent: >
+bindaddress: 0.0.0.0:8080
+cookiesecretkey: sjnfi3wrv9	2j0edhwe7fhaerhgtewjfqhc3t0ewfsodc x nwhtrhyew9hw98fo
+database:
+  host: localhost
+  port: 5432
+  name: govnaba
+  user: postgres
+  password: postgres
+sitename: Govnaba
+mainpagecontent: >
   <h1>It works!</h1>
-RulesContent:
-BoardConfigs:
-	test: ['sage', 'op', 'captcha', 'answers']
+rulescontent: 
+boardconfigs: 
+  test: 
+    enabledfeatures: ['sage', 'op', 'captcha', 'answers']
