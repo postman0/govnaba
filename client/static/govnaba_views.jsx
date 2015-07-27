@@ -82,6 +82,11 @@ var Base = React.createClass({
 	            	{boardList}
 	            </div>
 	            <div id="content-board" className="col-md-8">
+	            	{ this.state.ctx == ViewContext.MAINPAGE ?
+	            		<div dangerouslySetInnerHTML={{__html: gvnb.config.MainPageContent}}>
+	            		</div>
+	            		: null
+	            	}
 		            { this.state.ctx == ViewContext.BOARD ? 
 		            	<PostingForm type="board" captcha={this.state.captcha}/> 
 		            	: null}
@@ -103,7 +108,7 @@ var NavBar = React.createClass({
 		return (
 			<nav className="navbar navbar-default navbar-static-top">
 				<div className="navbar-header">
-					<a className="navbar-brand" href="/">Govnaba</a>
+					<a className="navbar-brand" href="/">{gvnb.config.SiteName}</a>
 				</div>
 				{ this.props.users ? 
 					<div className="navbar-users navbar-text">

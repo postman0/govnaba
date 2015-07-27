@@ -7,7 +7,6 @@ var GovnabaMessager = function(gvnb) {
 
     this.socket.onopen = function() {
         console.log("Connected.");
-        gvnb.initialize();
     }
 
     this.socket.onerror = function(e) {
@@ -67,6 +66,10 @@ var GovnabaMessager = function(gvnb) {
             }
             case 20: {
                 gvnb.onSinglePostMessage(msg);
+                break;
+            }
+            case 21: {
+                gvnb.onConfigMessage(msg);
             }
         }
     }
@@ -242,6 +245,11 @@ Govnaba = function() {
             };
             this.msgr.getSinglePost(parseInt(postParams.postId), this.state.board);
         }
+    }
+
+    this.onConfigMessage = function(msg) {
+        this.config = msg;
+        this.initialize();
     }
 
     this.onBoardThreadsMessage = function(msg) {

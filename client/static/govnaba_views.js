@@ -82,6 +82,11 @@ var Base = React.createClass({displayName: "Base",
 	            	boardList
 	            ), 
 	            React.createElement("div", {id: "content-board", className: "col-md-8"}, 
+	            	 this.state.ctx == ViewContext.MAINPAGE ?
+	            		React.createElement("div", {dangerouslySetInnerHTML: {__html: gvnb.config.MainPageContent}}
+	            		)
+	            		: null, 
+	            	
 		             this.state.ctx == ViewContext.BOARD ? 
 		            	React.createElement(PostingForm, {type: "board", captcha: this.state.captcha}) 
 		            	: null, 
@@ -103,7 +108,7 @@ var NavBar = React.createClass({displayName: "NavBar",
 		return (
 			React.createElement("nav", {className: "navbar navbar-default navbar-static-top"}, 
 				React.createElement("div", {className: "navbar-header"}, 
-					React.createElement("a", {className: "navbar-brand", href: "/"}, "Govnaba")
+					React.createElement("a", {className: "navbar-brand", href: "/"}, gvnb.config.SiteName)
 				), 
 				 this.props.users ? 
 					React.createElement("div", {className: "navbar-users navbar-text"}, 
