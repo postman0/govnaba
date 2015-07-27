@@ -330,15 +330,20 @@ Govnaba = function() {
         } else {
             var attrs = {};
             var topic = document.getElementById("input_topic").value;
-            var contents = document.getElementById("input_contents").value;
-            if (document.getElementById("input_sage").checked)
+            var contents = document.getElementById("input_contents").value; 
+            
+            if (_.contains(this.config.BoardConfigs[this.state.board].EnabledFeatures, 'sage') && 
+                document.getElementById("input_sage").checked)
                 attrs.sage = true;
-            if (document.getElementById("input_op").checked)
+            if (_.contains(this.config.BoardConfigs[this.state.board].EnabledFeatures, 'op') && 
+                document.getElementById("input_op").checked)
                 attrs.op = true;
-            attrs.captcha = {
-                id: localStorage["captcha_id"],
-                solution: document.getElementById("input_captcha").value
-            }
+            if (_.contains(this.config.BoardConfigs[this.state.board].EnabledFeatures, 'captcha')) {
+                attrs.captcha = {
+                        "Id": localStorage["captcha_id"],
+                        "Solution": document.getElementById("input_captcha").value
+                };
+            };
             if (this.baseCont.state.ctx == ViewContext.BOARD) {
                 this.msgr.createThread(this.state.board, topic, contents, attrs);
             }
@@ -363,14 +368,18 @@ Govnaba = function() {
         var topic = document.getElementById("input_topic").value;
         var contents = document.getElementById("input_contents").value;
         var attrs = {"images": [msg.Filename]}
-        if (document.getElementById("input_sage").checked)
+        if (_.contains(this.config.BoardConfigs[this.state.board].EnabledFeatures, 'sage') && 
+            document.getElementById("input_sage").checked)
             attrs.sage = true;
-        if (document.getElementById("input_op").checked)
+        if (_.contains(this.config.BoardConfigs[this.state.board].EnabledFeatures, 'op') && 
+            document.getElementById("input_op").checked)
             attrs.op = true;
-        attrs.captcha = {
-                "Id": localStorage["captcha_id"],
-                "Solution": document.getElementById("input_captcha").value
-        }
+        if (_.contains(this.config.BoardConfigs[this.state.board].EnabledFeatures, 'captcha')) {
+            attrs.captcha = {
+                    "Id": localStorage["captcha_id"],
+                    "Solution": document.getElementById("input_captcha").value
+            };
+        };
 
         if (this.baseCont.state.ctx == ViewContext.BOARD) {
             this.msgr.createThread(this.state.board, topic, contents, attrs);

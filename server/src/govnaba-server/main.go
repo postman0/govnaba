@@ -215,6 +215,7 @@ func main() {
 		rows.Scan(&boardName)
 		boardsClientsMap[boardName] = make(map[*govnaba.Client]placeholder)
 	}
+	govnaba.SetupPostProcessors(config.BoardConfigs)
 	go HandleClients()
 
 	http.DefaultServeMux.HandleFunc("/connect", func(rw http.ResponseWriter, req *http.Request) {

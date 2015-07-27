@@ -116,8 +116,8 @@ func (msg *CreateThreadMessage) Process(db *sqlx.DB) []OutMessage {
 		}}
 	}
 	var err error = nil
-	for _, pp := range EnabledPostProcessorsPre[msg.Board] {
-		err = pp(msg.Client, &msg.Post)
+	for _, pp := range EnabledPostProcessors[msg.Board] {
+		err = pp.Before(msg.Client, &msg.Post)
 		if err != nil {
 			log.Printf("Invalid post: %s", err)
 			return []OutMessage{&InvalidRequestErrorMessage{
@@ -146,8 +146,8 @@ func (msg *CreateThreadMessage) Process(db *sqlx.DB) []OutMessage {
 		// todo: return error
 	}
 
-	for _, pp := range EnabledPostProcessorsPost[msg.Board] {
-		_ = pp(msg.Client, &msg.Post)
+	for _, pp := range EnabledPostProcessors[msg.Board] {
+		_ = pp.After(msg.Client, &msg.Post)
 	}
 
 	return []OutMessage{msg, &PostingSuccesfulMessage{
@@ -188,8 +188,8 @@ func (msg *AddPostMessage) FromClient(cl *Client, msgBytes []byte) error {
 func (msg *AddPostMessage) Process(db *sqlx.DB) []OutMessage {
 
 	var err error = nil
-	for _, pp := range EnabledPostProcessorsPre[msg.Board] {
-		err = pp(msg.Client, &msg.Post)
+	for _, pp := range EnabledPostProcessors[msg.Board] {
+		err = pp.Before(msg.Client, &msg.Post)
 		if err != nil {
 			log.Printf("Invalid post: %s", err)
 			return []OutMessage{&InvalidRequestErrorMessage{
@@ -223,8 +223,8 @@ func (msg *AddPostMessage) Process(db *sqlx.DB) []OutMessage {
 	tx.Commit()
 	msg.LocalId = answerId
 	msg.Date = date
-	for _, pp := range EnabledPostProcessorsPost[msg.Board] {
-		_ = pp(msg.Client, &msg.Post)
+	for _, pp := range EnabledPostProcessors[msg.Board] {
+		_ = pp.After(msg.Client, &msg.Post)
 	}
 	return []OutMessage{msg, &PostingSuccesfulMessage{
 		MessageBase{PostingSuccesfulMessageType, msg.Client},

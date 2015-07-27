@@ -13,21 +13,44 @@ import (
 )
 
 // Post processors are used for doing various processing of the new post
-// before it gets saved into the database.
-type PostProcessor func(*Client, *Post) error
-
-// This shows what post processors are used for various boards
-// before uploading a post into the database.
-// Processors will be called in the order of their placement in the slice.
-var EnabledPostProcessorsPre = map[string][]PostProcessor{
-	"test": []PostProcessor{CaptchaProcessor, AnswerLinksProcessor, ImageProcessor, SageProcessorPre, OPProcessor},
+// before and/or after it gets saved into the database.
+type PostProcessor struct {
+	Before, After func(*Client, *Post) error
 }
 
-// Same as EnabledPostProcessorsPre but these are used
-// after putting the post into the database.
-// Errors are ignored.
-var EnabledPostProcessorsPost = map[string][]PostProcessor{
-	"test": []PostProcessor{SageProcessorPost, AnswerMapProcessor},
+// Contains all post processors.
+var PostProcessorRegistry = map[string]PostProcessor{
+	"sage":    PostProcessor{SageProcessorBefore, SageProcessorAfter},
+	"op":      PostProcessor{OPProcessor, NilProcessor},
+	"captcha": PostProcessor{CaptchaProcessor, NilProcessor},
+	"image":   PostProcessor{ImageProcessor, NilProcessor},
+	"answers": PostProcessor{AnswerLinksProcessor, AnswerMapProcessor},
+}
+
+// This shows what post processors are used for various boards.
+// Processors will be called in the order of their placement in the slice.
+var EnabledPostProcessors = map[string][]PostProcessor{}
+
+// This function must be called on application startup to set up
+// enabled post processors for each board.
+func SetupPostProcessors(boardConfigs map[string]BoardConfig) error {
+	for board, cfg := range boardConfigs {
+		procs := []PostProcessor{}
+		for _, procName := range cfg.EnabledFeatures {
+			if proc, ok := PostProcessorRegistry[procName]; ok {
+				procs = append(procs, proc)
+			} else {
+				return errors.New(fmt.Sprintf("There is no such post processor: %s", procName))
+			}
+		}
+		EnabledPostProcessors[board] = procs
+	}
+	return nil
+}
+
+// Does nothing.
+func NilProcessor(cl *Client, p *Post) error {
+	return nil
 }
 
 // ImageProcessor limits attached to the post images to one.
@@ -50,7 +73,7 @@ func ImageProcessor(cl *Client, p *Post) error {
 	return nil
 }
 
-func SageProcessorPre(cl *Client, p *Post) error {
+func SageProcessorBefore(cl *Client, p *Post) error {
 	_, saged := p.Attrs.Get("sage")
 	if saged {
 		p.Attrs.Put("sage", true)
@@ -58,7 +81,7 @@ func SageProcessorPre(cl *Client, p *Post) error {
 	return nil
 }
 
-func SageProcessorPost(cl *Client, p *Post) error {
+func SageProcessorAfter(cl *Client, p *Post) error {
 	_, saged := p.Attrs.Get("sage")
 	if !saged {
 		cl.db.Exec(`UPDATE threads SET last_bump_date = DEFAULT WHERE id = (SELECT thread_id FROM posts WHERE board_local_id = $1);`, p.ThreadId)
