@@ -483,7 +483,8 @@ var PostingForm = React.createClass({displayName: "PostingForm",
 				React.createElement("div", {className: "form-group"}, 
 					React.createElement("label", {className: "control-label col-sm-2"}, "Тема"), 
 					React.createElement("div", {className: "col-sm-10"}, 
-						React.createElement("input", {id: "input_topic", name: "topic", type: "text", className: "form-control"})
+						React.createElement("input", {id: "input_topic", name: "topic", type: "text", className: "form-control", 
+							autoComplete: "off"})
 					)
 				), 
 				React.createElement("div", {className: "form-group"}, 
@@ -532,7 +533,8 @@ var PostingForm = React.createClass({displayName: "PostingForm",
 					React.createElement("div", {className: "form-group"}, 
 						React.createElement("label", {className: "control-label col-sm-2"}, "Ответ"), 
 						React.createElement("div", {className: "col-sm-10"}, 
-							React.createElement("input", {id: "input_captcha", name: "captcha", type: "text", className: "form-control"})
+							React.createElement("input", {id: "input_captcha", name: "captcha", type: "text", className: "form-control", 
+								autoComplete: "off"})
 						)
 					)
 					: null, 

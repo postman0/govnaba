@@ -483,7 +483,8 @@ var PostingForm = React.createClass({
 				<div className="form-group">
 					<label className="control-label col-sm-2">Тема</label>
 					<div className="col-sm-10">
-						<input id="input_topic" name="topic" type="text" className="form-control"/>
+						<input id="input_topic" name="topic" type="text" className="form-control"
+							autoComplete='off' />
 					</div>
 				</div>
 				<div className="form-group">
@@ -532,7 +533,8 @@ var PostingForm = React.createClass({
 					<div className="form-group">
 						<label className="control-label col-sm-2">Ответ</label>
 						<div className="col-sm-10">
-							<input id="input_captcha" name="captcha" type="text" className="form-control"/>
+							<input id="input_captcha" name="captcha" type="text" className="form-control"
+								autoComplete='off' />
 						</div>
 					</div>
 					: null
