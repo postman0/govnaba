@@ -326,22 +326,31 @@ var Post = React.createClass({displayName: "Post",
 			minute: "numeric",
 			second: "numeric"});
 		datestr = datestr.charAt(0).toUpperCase() + datestr.slice(1);
-		var imgs = null;
 		attrs = this.props.postData.Attrs;
+		var imgs = null;
 		if (attrs && attrs.images) {
-			imgs = (
-				React.createElement("div", {className: "post-images"}, 
-				attrs.images.map(function(imgName){
+			imgs = attrs.images.map(function(imgName){
 					return (
-						React.createElement("a", {href: "/static/uploads/"+imgName, target: "_blank"}, 
+						React.createElement("a", {href: "/static/uploads/"+imgName, target: "_blank", key: imgName}, 
 							React.createElement("img", {className: "post-image img-thumbnail pull-left", src: "/static/uploads/thumb"+imgName, 
 							 alt: imgName, onClick: gvnb.expandImage})
 						)
 					)
-				})
-				)
-			);
+				});
+		};
+		var videos = null;
+		if (attrs && attrs.videos) {
+			videos = attrs.videos.map(function(vidName){
+				return (React.createElement(PostVideo, {videoName: vidName, key: vidName}));
+			});
 		}
+		var files = null;
+		if (imgs || videos)
+			files = (
+				React.createElement("div", {className: "post-files"}, 
+					imgs, 
+					videos
+				))
 		var topic = null;
 		if (this.props.postData.Topic) {
 			topic = React.createElement("span", {className: "post-header-topic"}, this.props.postData.Topic)
@@ -382,7 +391,7 @@ var Post = React.createClass({displayName: "Post",
 				React.createElement("span", {className: "post-header-date"}, datestr)
 				), 
 				React.createElement("div", {className: "panel-body"}, 
-					imgs, 
+					files, 
 					React.createElement("div", {className: "post-body", 
 						dangerouslySetInnerHTML: this.processMarkup(this.props.postData.Contents)}), 
 					answers
@@ -433,6 +442,34 @@ var PostPreviews = React.createClass({displayName: "PostPreviews",
 	}
 });
 
+var PostVideo = React.createClass({displayName: "PostVideo",
+	getInitialState: function() {
+		return {opened: false};
+	},
+	showPlayer: function() {
+		this.setState({opened: true});
+	},
+	render: function() {
+		if (this.state.opened) {
+			return React.createElement("video", {className: "post-video", autoPlay: true, controls: true, src: "/static/uploads/" + this.props.videoName}
+			);
+		} else {
+			var nameParts = this.props.videoName.split('.');
+			nameParts.pop();
+			var thumbnailName = nameParts.join('.') + '.jpg';
+			return (React.createElement("div", {className: "post-image post-video-thumb img-thumbnail pull-left"}, 
+				React.createElement("img", {src: "/static/uploads/thumb" + thumbnailName, 
+					alt: this.props.videoName, onClick: this.showPlayer}
+				), 
+				React.createElement("div", {className: "post-video-playicon"}, 
+					React.createElement("span", {className: "glyphicon glyphicon-play"}
+					)
+				)
+			));
+		}
+	}
+})
+
 var PostingForm = React.createClass({displayName: "PostingForm",
 	render: function() {
 		var submitCaption;
@@ -442,7 +479,7 @@ var PostingForm = React.createClass({displayName: "PostingForm",
 		};
 		return (
 			React.createElement("div", {className: "panel panel-default postform"}, 
-			React.createElement("form", {className: "form-horizontal panel-body", action: "#", role: "form", onSubmit: gvnb.sendPostingForm.bind(gvnb)}, 
+			React.createElement("form", {className: "form-horizontal panel-body", action: "#", role: "form", onSubmit: gvnb.attemptPosting.bind(gvnb)}, 
 				React.createElement("div", {className: "form-group"}, 
 					React.createElement("label", {className: "control-label col-sm-2"}, "Тема"), 
 					React.createElement("div", {className: "col-sm-10"}, 

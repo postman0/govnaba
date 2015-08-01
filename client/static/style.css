@@ -52,6 +52,26 @@
 	margin-bottom: 10px;
 }
 
+.post-video-thumb {
+	display: inline;
+	cursor: pointer;
+	position: relative;
+}
+
+.post-video-playicon {
+	font-size: 2em;
+	display: inline;
+	color: white;
+	background-color: black;
+	position: absolute;
+	bottom: 4px;
+	left: 4px;
+}
+
+.post-video {
+	width: 100%;
+}
+
 .post-body {
 	word-wrap: break-word;
 }

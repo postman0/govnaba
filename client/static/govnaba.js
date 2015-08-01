@@ -323,51 +323,12 @@ Govnaba = function() {
         gvnb.msgr.getNewCaptcha();
     }
 
-    this.sendPostingForm = function(evt) {
-        var fileList = document.getElementById("input_file").files;
-        if (fileList.length > 0) {
-            this.msgr.uploadFile(fileList[0]);
-        } else {
-            var attrs = {};
-            var topic = document.getElementById("input_topic").value;
-            var contents = document.getElementById("input_contents").value; 
-            
-            if (_.contains(this.config.BoardConfigs[this.state.board].EnabledFeatures, 'sage') && 
-                document.getElementById("input_sage").checked)
-                attrs.sage = true;
-            if (_.contains(this.config.BoardConfigs[this.state.board].EnabledFeatures, 'op') && 
-                document.getElementById("input_op").checked)
-                attrs.op = true;
-            if (_.contains(this.config.BoardConfigs[this.state.board].EnabledFeatures, 'captcha')) {
-                attrs.captcha = {
-                        "Id": localStorage["captcha_id"],
-                        "Solution": document.getElementById("input_captcha").value
-                };
-            };
-            if (this.baseCont.state.ctx == ViewContext.BOARD) {
-                this.msgr.createThread(this.state.board, topic, contents, attrs);
-            }
-            else if (this.baseCont.state.ctx == ViewContext.THREAD) {
-                this.msgr.addPost(this.state.board, topic, contents, this.state.thread, attrs);
-            }
-        }
-        evt.preventDefault();
-    }
-
-    this.sendLoginForm = function(evt) {
-        gvnb.msgr.attemptLogin($("#input_login_key")[0].value);
-        evt.preventDefault();
-    }
-
-    this.onLoginSuccessfulMessage = function(msg) {
-        document.cookie = "userid=" + msg.Cookie + "; expires=Fri, 31 Dec 9999 23:59:59 GMT; path=/";
-        location.reload();
-    }
-
-    this.onFileUploadSuccess = function(msg) {
+    this.sendPostingForm = function(files) {
         var topic = document.getElementById("input_topic").value;
         var contents = document.getElementById("input_contents").value;
-        var attrs = {"images": [msg.Filename]}
+        var attrs = {};
+        if (files)
+            attrs = _.extend(attrs, files);
         if (_.contains(this.config.BoardConfigs[this.state.board].EnabledFeatures, 'sage') && 
             document.getElementById("input_sage").checked)
             attrs.sage = true;
@@ -387,6 +348,35 @@ Govnaba = function() {
         else if (this.baseCont.state.ctx == ViewContext.THREAD) {
             this.msgr.addPost(this.state.board, topic, contents, this.state.thread, attrs);
         }
+    }
+
+    this.attemptPosting = function(evt) {
+        var fileList = document.getElementById("input_file").files;
+        if (fileList.length > 0) {
+            this.msgr.uploadFile(fileList[0]);
+        } else {
+            this.sendPostingForm(null);
+        }
+        evt.preventDefault();
+    }
+
+    this.sendLoginForm = function(evt) {
+        gvnb.msgr.attemptLogin($("#input_login_key")[0].value);
+        evt.preventDefault();
+    }
+
+    this.onLoginSuccessfulMessage = function(msg) {
+        document.cookie = "userid=" + msg.Cookie + "; expires=Fri, 31 Dec 9999 23:59:59 GMT; path=/";
+        location.reload();
+    }
+
+    this.onFileUploadSuccess = function(msg) {
+        var filename = msg.Filename;
+        var extension = filename.split('.').pop();
+        if (extension == 'webm')
+            this.sendPostingForm({'videos': [filename]})
+        else
+            this.sendPostingForm({'images': [filename]});
     }
 }
 

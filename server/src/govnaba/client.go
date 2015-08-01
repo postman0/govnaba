@@ -15,6 +15,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 	"time"
 )
 
@@ -44,6 +45,7 @@ var validFileTypes map[string]string = map[string]string{
 	"image/jpeg": "jpg",
 	"image/png":  "png",
 	"image/gif":  "gif",
+	"video/webm": "webm",
 }
 
 // receiveLoop listens on the websocket for incoming messages, processes them
@@ -120,15 +122,42 @@ func (cl *Client) writeLoop() {
 	}
 }
 
+func generateThumbnail(inputImage *os.File, thumbnailPath string, format string) error {
+	img, _, err := image.Decode(inputImage)
+	if err != nil {
+		return err
+	}
+	imgThumb := resize.Thumbnail(300, 200, img, resize.Bilinear)
+	fthumb, err := os.Create(thumbnailPath)
+	if err != nil {
+		return err
+	}
+	defer fthumb.Close()
+	switch format {
+	case "jpg":
+		err = jpeg.Encode(fthumb, imgThumb, &jpeg.Options{Quality: 100})
+	case "png":
+		err = png.Encode(fthumb, imgThumb)
+	case "gif":
+		err = gif.Encode(fthumb, imgThumb, &gif.Options{NumColors: 256})
+	}
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // This function is used for file uploading.
 func (cl *Client) handleFileUpload(rdr io.Reader) {
+	var err error
 	cmg, _ := cmagic.NewMagic(cmagic.MagicMimeType)
 	cmg.LoadDatabases(nil)
 	defer cmg.Close()
 	buf := make([]byte, 512)
 	readCount, _ := rdr.Read(buf)
 	if readCount > 0 {
-		mimetype, err := cmg.Buffer(buf)
+		var mimetype string
+		mimetype, err = cmg.Buffer(buf)
 		if err != nil {
 			log.Printf("File upload failed: %s", err)
 			cl.WriteChannel <- &InternalServerErrorMessage{MessageBase{InternalServerErrorMessageType, cl}}
@@ -137,7 +166,9 @@ func (cl *Client) handleFileUpload(rdr io.Reader) {
 		ext, allowed := validFileTypes[mimetype]
 		if allowed {
 			curTime := time.Now().UnixNano()
-			f, err := os.Create(fmt.Sprintf("%s/%d.%s", FileUploadPath, curTime, ext))
+			filePath := fmt.Sprintf("%s/%d.%s", FileUploadPath, curTime, ext)
+			var f *os.File
+			f, err = os.Create(filePath)
 			if err != nil {
 				log.Printf("File upload failed: %s", err)
 				cl.WriteChannel <- &InternalServerErrorMessage{MessageBase{InternalServerErrorMessageType, cl}}
@@ -152,43 +183,45 @@ func (cl *Client) handleFileUpload(rdr io.Reader) {
 				cl.WriteChannel <- &InternalServerErrorMessage{MessageBase{InternalServerErrorMessageType, cl}}
 				return
 			}
-			// thumbnail generation
-			f.Seek(0, 0)
-			img, _, err := image.Decode(f)
-			if err != nil {
-				log.Printf("Image decoding error: %s", err)
-				cl.WriteChannel <- &InternalServerErrorMessage{MessageBase{InternalServerErrorMessageType, cl}}
-				return
+			if ext != "webm" {
+				// image thumbnail generation
+				f.Seek(0, 0)
+				thumbPath := fmt.Sprintf("%s/thumb%d.%s", FileUploadPath, curTime, ext)
+				err = generateThumbnail(f, thumbPath, ext)
+				if err != nil {
+					goto error
+				}
+			} else {
+				// video thumbnail
+				tempFilePath := fmt.Sprintf("%s/temp%d.%s", FileUploadPath, curTime, "jpg")
+				ffmpegCmd := exec.Command("ffmpeg/ffmpeg", "-i", filePath, "-vframes", "1", "-q:v", "3", tempFilePath)
+				ffOut, err := ffmpegCmd.CombinedOutput()
+				if err != nil {
+					log.Printf("ffmpeg output:\n%s", string(ffOut))
+					goto error
+				}
+				tempFile, err := os.Open(tempFilePath)
+				if err != nil {
+					goto error
+				}
+				thumbPath := fmt.Sprintf("%s/thumb%d.%s", FileUploadPath, curTime, "jpg")
+				err = generateThumbnail(tempFile, thumbPath, "jpg")
+				if err != nil {
+					goto error
+				}
+				os.Remove(tempFilePath)
 			}
-			imgThumb := resize.Thumbnail(300, 200, img, resize.Bilinear)
-			fthumb, err := os.Create(fmt.Sprintf("%s/thumb%d.%s", FileUploadPath, curTime, ext))
-			if err != nil {
-				log.Printf("File upload failed: %s", err)
-				cl.WriteChannel <- &InternalServerErrorMessage{MessageBase{InternalServerErrorMessageType, cl}}
-				return
-			}
-			defer fthumb.Close()
-			switch ext {
-			case "jpg":
-				err = jpeg.Encode(fthumb, imgThumb, &jpeg.Options{Quality: 100})
-			case "png":
-				err = png.Encode(fthumb, imgThumb)
-			case "gif":
-				err = gif.Encode(fthumb, imgThumb, &gif.Options{NumColors: 256})
-			}
-			if err != nil {
-				log.Printf("Image encoding error: %s", err)
-				cl.WriteChannel <- &InternalServerErrorMessage{MessageBase{InternalServerErrorMessageType, cl}}
-				return
-			}
-
-			cl.broadcastChannel <- &FileUploadSuccessfulMessage{MessageBase{FileUploadSuccessfulMessageType, cl},
+			cl.WriteChannel <- &FileUploadSuccessfulMessage{MessageBase{FileUploadSuccessfulMessageType, cl},
 				fmt.Sprintf("%d.%s", curTime, ext)}
 		} else {
 			log.Printf("Illegal upload of %s file", mimetype)
 			cl.WriteChannel <- &FileUploadErrorMessage{MessageBase{FileUploadErrorMessageType, cl}}
 		}
 	}
+	return
+error:
+	log.Printf("File upload error from user %d, ip %s: %s", cl.Id, cl.conn.RemoteAddr(), err)
+	cl.WriteChannel <- &InternalServerErrorMessage{MessageBase{InternalServerErrorMessageType, cl}}
 }
 
 // A constructor for the Client structure.

@@ -36,6 +36,7 @@ var PostProcessorRegistry = map[string]PostProcessor{
 	"op":      PostProcessor{OPProcessor, NilProcessor},
 	"captcha": PostProcessor{CaptchaProcessor, NilProcessor},
 	"image":   PostProcessor{ImageProcessor, NilProcessor},
+	"video":   PostProcessor{VideoProcessor, NilProcessor},
 	"answers": PostProcessor{AnswerLinksProcessor, AnswerMapProcessor},
 	"country": PostProcessor{CountryProcessor, NilProcessor},
 }
@@ -82,6 +83,26 @@ func ImageProcessor(cl *Client, p *Post) error {
 		p.Attrs.Put("images", []string{imgName})
 	default:
 		return errors.New(fmt.Sprintf("Invalid images attribute format in the message: %T", imgsAttr))
+	}
+	return nil
+}
+
+// An identical copy of ImageProcessor for videos.
+func VideoProcessor(cl *Client, p *Post) error {
+	videosAttr, ok := p.Attrs.Get("videos")
+	if !ok {
+		return nil
+	}
+	switch videosAttr.(type) {
+	case []interface{}:
+		//trim video slice to first element, for example
+		vidName, ok := videosAttr.([]interface{})[0].(string)
+		if !ok {
+			return errors.New(fmt.Sprintf("Invalid videos attribute format in the message: %T", videosAttr))
+		}
+		p.Attrs.Put("videos", []string{vidName})
+	default:
+		return errors.New(fmt.Sprintf("Invalid videos attribute format in the message: %T", videosAttr))
 	}
 	return nil
 }

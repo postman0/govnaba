@@ -326,22 +326,31 @@ var Post = React.createClass({
 			minute: "numeric",
 			second: "numeric"});
 		datestr = datestr.charAt(0).toUpperCase() + datestr.slice(1);
-		var imgs = null;
 		attrs = this.props.postData.Attrs;
+		var imgs = null;
 		if (attrs && attrs.images) {
-			imgs = (
-				<div className="post-images">
-				{attrs.images.map(function(imgName){
+			imgs = attrs.images.map(function(imgName){
 					return (
-						<a href={"/static/uploads/"+imgName} target="_blank">
+						<a href={"/static/uploads/"+imgName} target="_blank" key={imgName} >
 							<img className="post-image img-thumbnail pull-left" src={"/static/uploads/thumb"+imgName}
 							 alt={imgName} onClick={gvnb.expandImage}></img>
 						</a>
 					)
-				})}
-				</div>
-			);
+				});
+		};
+		var videos = null;
+		if (attrs && attrs.videos) {
+			videos = attrs.videos.map(function(vidName){
+				return (<PostVideo videoName={vidName} key={vidName} />);
+			});
 		}
+		var files = null;
+		if (imgs || videos)
+			files = (
+				<div className="post-files">
+					{imgs}
+					{videos}
+				</div>)
 		var topic = null;
 		if (this.props.postData.Topic) {
 			topic = <span className="post-header-topic">{this.props.postData.Topic}</span>
@@ -382,7 +391,7 @@ var Post = React.createClass({
 				<span className="post-header-date">{datestr}</span>
 				</div>
 				<div className="panel-body">
-					{imgs}
+					{files}
 					<div className="post-body" 
 						dangerouslySetInnerHTML={this.processMarkup(this.props.postData.Contents)}></div>
 					{answers}
@@ -433,6 +442,34 @@ var PostPreviews = React.createClass({
 	}
 });
 
+var PostVideo = React.createClass({
+	getInitialState: function() {
+		return {opened: false};
+	},
+	showPlayer: function() {
+		this.setState({opened: true});
+	},
+	render: function() {
+		if (this.state.opened) {
+			return <video className="post-video" autoPlay controls src={"/static/uploads/" + this.props.videoName}>
+			</video>;
+		} else {
+			var nameParts = this.props.videoName.split('.');
+			nameParts.pop();
+			var thumbnailName = nameParts.join('.') + '.jpg';
+			return (<div className="post-image post-video-thumb img-thumbnail pull-left">
+				<img src={"/static/uploads/thumb" + thumbnailName}
+					alt={this.props.videoName} onClick={this.showPlayer}>
+				</img>
+				<div className="post-video-playicon">
+					<span className="glyphicon glyphicon-play">
+					</span>
+				</div>
+			</div>);
+		}
+	}
+})
+
 var PostingForm = React.createClass({
 	render: function() {
 		var submitCaption;
@@ -442,7 +479,7 @@ var PostingForm = React.createClass({
 		};
 		return (
 			<div className="panel panel-default postform">
-			<form className="form-horizontal panel-body" action="#" role="form" onSubmit={gvnb.sendPostingForm.bind(gvnb)}>
+			<form className="form-horizontal panel-body" action="#" role="form" onSubmit={gvnb.attemptPosting.bind(gvnb)}>
 				<div className="form-group">
 					<label className="control-label col-sm-2">Тема</label>
 					<div className="col-sm-10">
