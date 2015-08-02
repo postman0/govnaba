@@ -67,7 +67,7 @@ func NilProcessor(cl *Client, p *Post) error {
 	return nil
 }
 
-// ImageProcessor limits attached to the post images to one.
+// ImageProcessor limits attached to the post images to four.
 func ImageProcessor(cl *Client, p *Post) error {
 	imgsAttr, ok := p.Attrs.Get("images")
 	if !ok {
@@ -75,12 +75,11 @@ func ImageProcessor(cl *Client, p *Post) error {
 	}
 	switch imgsAttr.(type) {
 	case []interface{}:
-		//trim image slice to first element, for example
-		imgName, ok := imgsAttr.([]interface{})[0].(string)
-		if !ok {
-			return errors.New(fmt.Sprintf("Invalid images attribute format in the message: %T", imgsAttr))
+		imgs := imgsAttr.([]interface{})
+		if len(imgs) > 4 {
+			return errors.New(fmt.Sprintf("Too many images: %T", imgsAttr))
 		}
-		p.Attrs.Put("images", []string{imgName})
+		p.Attrs.Put("images", imgs)
 	default:
 		return errors.New(fmt.Sprintf("Invalid images attribute format in the message: %T", imgsAttr))
 	}
@@ -95,12 +94,11 @@ func VideoProcessor(cl *Client, p *Post) error {
 	}
 	switch videosAttr.(type) {
 	case []interface{}:
-		//trim video slice to first element, for example
-		vidName, ok := videosAttr.([]interface{})[0].(string)
-		if !ok {
-			return errors.New(fmt.Sprintf("Invalid videos attribute format in the message: %T", videosAttr))
+		vids := videosAttr.([]interface{})
+		if len(vids) > 4 {
+			return errors.New(fmt.Sprintf("Too many videos: %T", videosAttr))
 		}
-		p.Attrs.Put("videos", []string{vidName})
+		p.Attrs.Put("videos", vids)
 	default:
 		return errors.New(fmt.Sprintf("Invalid videos attribute format in the message: %T", videosAttr))
 	}

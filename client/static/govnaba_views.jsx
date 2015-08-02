@@ -497,7 +497,7 @@ var PostingForm = React.createClass({
 				<div className="form-group">
 					<label className="control-label col-sm-2">Файл</label>
 					<div className="col-sm-10">
-						<input id="input_file" name="file" type="file"/>
+						<input id="input_file" name="file" type="file" multiple />
 					</div>
 				</div>
 				<div className="form-group">

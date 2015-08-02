@@ -497,7 +497,7 @@ var PostingForm = React.createClass({displayName: "PostingForm",
 				React.createElement("div", {className: "form-group"}, 
 					React.createElement("label", {className: "control-label col-sm-2"}, "Файл"), 
 					React.createElement("div", {className: "col-sm-10"}, 
-						React.createElement("input", {id: "input_file", name: "file", type: "file"})
+						React.createElement("input", {id: "input_file", name: "file", type: "file", multiple: true})
 					)
 				), 
 				React.createElement("div", {className: "form-group"}, 

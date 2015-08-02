@@ -1,6 +1,7 @@
 
 var GovnabaMessager = function(gvnb) {
 
+    var self = this;
     this.gvnb = gvnb;
     this.hostname = document.domain + ":8080"
     this.socket = new WebSocket("ws://" + this.hostname + "/connect");
@@ -39,7 +40,7 @@ var GovnabaMessager = function(gvnb) {
                 break;
             }
             case 11: {
-                gvnb.onFileUploadSuccess(msg);
+                self.onFileUploadSuccess(msg).bind(self);
                 break;
             }
             case 12:
@@ -128,9 +129,26 @@ var GovnabaMessager = function(gvnb) {
             NewLocation: loc
         }));
     }
+    this.uploadFiles = function(fileList) {
+        this.pendingFiles = fileList;
+        this.completedFiles = [];
+        this.uploadFile();
+    }
 
     this.uploadFile = function(file) {
-        this.socket.send(file)
+        var file = this.pendingFiles.pop();
+        this.socket.send(file);
+    }
+
+    this.onFileUploadSuccess = function(msg) {
+        this.completedFiles.push(msg.Filename);
+        if (this.pendingFiles.length > 0)
+            this.uploadFile();
+        else {
+            var files = this.completedFiles;
+            this.completedFiles = [];
+            gvnb.onFilesUploadSuccess(files);
+        }
     }
 
     this.attemptLogin = function(key) {
@@ -353,7 +371,7 @@ Govnaba = function() {
     this.attemptPosting = function(evt) {
         var fileList = document.getElementById("input_file").files;
         if (fileList.length > 0) {
-            this.msgr.uploadFile(fileList[0]);
+            this.msgr.uploadFiles(_.toArray(fileList));
         } else {
             this.sendPostingForm(null);
         }
@@ -370,13 +388,16 @@ Govnaba = function() {
         location.reload();
     }
 
-    this.onFileUploadSuccess = function(msg) {
-        var filename = msg.Filename;
-        var extension = filename.split('.').pop();
-        if (extension == 'webm')
-            this.sendPostingForm({'videos': [filename]})
-        else
-            this.sendPostingForm({'images': [filename]});
+    this.onFilesUploadSuccess = function(files) {
+        var filesObj = {videos: [], images: []};
+        _.each(files, function(filename) {
+            var extension = filename.split('.').pop();
+            if (extension == 'webm')
+                filesObj.videos.push(filename)
+            else
+                filesObj.images.push(filename);
+        });
+        this.sendPostingForm(filesObj);
     }
 }
 
