@@ -47,13 +47,17 @@
 	color: white;
 }
 
+.post-files-many {
+	width: 100%;
+}
+
 .post-image {
 	margin-right: 10px;
 	margin-bottom: 10px;
 }
 
 .post-video-thumb {
-	display: inline;
+	display: inline-block;
 	cursor: pointer;
 	position: relative;
 }
@@ -74,6 +78,7 @@
 
 .post-body {
 	word-wrap: break-word;
+	min-width: 50%;
 }
 .post-body-bold {
 	font-weight: bold;

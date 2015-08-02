@@ -332,7 +332,7 @@ var Post = React.createClass({
 			imgs = attrs.images.map(function(imgName){
 					return (
 						<a href={"/static/uploads/"+imgName} target="_blank" key={imgName} >
-							<img className="post-image img-thumbnail pull-left" src={"/static/uploads/thumb"+imgName}
+							<img className="post-image img-thumbnail" src={"/static/uploads/thumb"+imgName}
 							 alt={imgName} onClick={gvnb.expandImage}></img>
 						</a>
 					)
@@ -345,12 +345,18 @@ var Post = React.createClass({
 			});
 		}
 		var files = null;
-		if (imgs || videos)
+		if (imgs || videos) {
+			var length = 0;
+			if (imgs)
+				length += imgs.length;
+			if (videos)
+				length += videos.length;
 			files = (
-				<div className="post-files">
+				<div className={"post-files " + (length > 1 ? "post-files-many" : "pull-left")}>
 					{imgs}
 					{videos}
 				</div>)
+		}
 		var topic = null;
 		if (this.props.postData.Topic) {
 			topic = <span className="post-header-topic">{this.props.postData.Topic}</span>
@@ -447,8 +453,10 @@ var PostVideo = React.createClass({
 		return {opened: false};
 	},
 	showPlayer: function(evt) {
-		if (evt.button == 0)
+		if (evt.button == 0) {
 			this.setState({opened: true});
+			evt.preventDefault();
+		}
 	},
 	render: function() {
 		if (this.state.opened) {
@@ -458,9 +466,9 @@ var PostVideo = React.createClass({
 			var nameParts = this.props.videoName.split('.');
 			nameParts.pop();
 			var thumbnailName = nameParts.join('.') + '.jpg';
-			return (<a className="post-image post-video-thumb img-thumbnail pull-left"
+			return (<a className="post-image post-video-thumb"
 					href={"/static/uploads/" + this.props.videoName} >
-				<img src={"/static/uploads/thumb" + thumbnailName}
+				<img src={"/static/uploads/thumb" + thumbnailName} className="img-thumbnail"
 					alt={this.props.videoName} onClick={this.showPlayer}>
 				</img>
 				<div className="post-video-playicon">

@@ -332,7 +332,7 @@ var Post = React.createClass({displayName: "Post",
 			imgs = attrs.images.map(function(imgName){
 					return (
 						React.createElement("a", {href: "/static/uploads/"+imgName, target: "_blank", key: imgName}, 
-							React.createElement("img", {className: "post-image img-thumbnail pull-left", src: "/static/uploads/thumb"+imgName, 
+							React.createElement("img", {className: "post-image img-thumbnail", src: "/static/uploads/thumb"+imgName, 
 							 alt: imgName, onClick: gvnb.expandImage})
 						)
 					)
@@ -345,12 +345,18 @@ var Post = React.createClass({displayName: "Post",
 			});
 		}
 		var files = null;
-		if (imgs || videos)
+		if (imgs || videos) {
+			var length = 0;
+			if (imgs)
+				length += imgs.length;
+			if (videos)
+				length += videos.length;
 			files = (
-				React.createElement("div", {className: "post-files"}, 
+				React.createElement("div", {className: "post-files " + (length > 1 ? "post-files-many" : "pull-left")}, 
 					imgs, 
 					videos
 				))
+		}
 		var topic = null;
 		if (this.props.postData.Topic) {
 			topic = React.createElement("span", {className: "post-header-topic"}, this.props.postData.Topic)
@@ -447,8 +453,10 @@ var PostVideo = React.createClass({displayName: "PostVideo",
 		return {opened: false};
 	},
 	showPlayer: function(evt) {
-		if (evt.button == 0)
+		if (evt.button == 0) {
 			this.setState({opened: true});
+			evt.preventDefault();
+		}
 	},
 	render: function() {
 		if (this.state.opened) {
@@ -458,9 +466,9 @@ var PostVideo = React.createClass({displayName: "PostVideo",
 			var nameParts = this.props.videoName.split('.');
 			nameParts.pop();
 			var thumbnailName = nameParts.join('.') + '.jpg';
-			return (React.createElement("a", {className: "post-image post-video-thumb img-thumbnail pull-left", 
+			return (React.createElement("a", {className: "post-image post-video-thumb", 
 					href: "/static/uploads/" + this.props.videoName}, 
-				React.createElement("img", {src: "/static/uploads/thumb" + thumbnailName, 
+				React.createElement("img", {src: "/static/uploads/thumb" + thumbnailName, className: "img-thumbnail", 
 					alt: this.props.videoName, onClick: this.showPlayer}
 				), 
 				React.createElement("div", {className: "post-video-playicon"}, 
