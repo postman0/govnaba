@@ -446,8 +446,9 @@ var PostVideo = React.createClass({
 	getInitialState: function() {
 		return {opened: false};
 	},
-	showPlayer: function() {
-		this.setState({opened: true});
+	showPlayer: function(evt) {
+		if (evt.button == 0)
+			this.setState({opened: true});
 	},
 	render: function() {
 		if (this.state.opened) {
@@ -457,7 +458,8 @@ var PostVideo = React.createClass({
 			var nameParts = this.props.videoName.split('.');
 			nameParts.pop();
 			var thumbnailName = nameParts.join('.') + '.jpg';
-			return (<div className="post-image post-video-thumb img-thumbnail pull-left">
+			return (<a className="post-image post-video-thumb img-thumbnail pull-left"
+					href={"/static/uploads/" + this.props.videoName} >
 				<img src={"/static/uploads/thumb" + thumbnailName}
 					alt={this.props.videoName} onClick={this.showPlayer}>
 				</img>
@@ -465,7 +467,7 @@ var PostVideo = React.createClass({
 					<span className="glyphicon glyphicon-play">
 					</span>
 				</div>
-			</div>);
+			</a>);
 		}
 	}
 })
