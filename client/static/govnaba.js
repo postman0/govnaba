@@ -129,6 +129,15 @@ var GovnabaMessager = function(gvnb) {
             NewLocation: loc
         }));
     }
+
+    this.deletePost = function(board, id) {
+        console.log(arguments);
+        this.socket.send(JSON.stringify({
+            MessageType: 22,
+            Board: board,
+            LocalId: id
+        }));
+    } 
     this.uploadFiles = function(fileList) {
         this.pendingFiles = fileList;
         this.completedFiles = [];
@@ -262,6 +271,10 @@ Govnaba = function() {
             };
             this.msgr.getSinglePost(parseInt(postParams.postId), this.state.board);
         }
+    }
+
+    this.deletePost = function(board, id) {
+        this.msgr.deletePost(board, id);
     }
 
     this.onConfigMessage = function(msg) {

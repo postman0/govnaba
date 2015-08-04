@@ -28,6 +28,7 @@ const (
 	GetCaptchaMessageType
 	GetSinglePostMessageType
 	SiteConfigMessageType
+	DeletePostMessageType
 )
 
 // This type is used in reconstructing messages sent by clients.
@@ -61,6 +62,9 @@ var MessageConstructors = map[byte]MessageConstructor{
 	},
 	GetSinglePostMessageType: func(cl *Client) InMessage {
 		return &GetSinglePostMessage{MessageBase: MessageBase{GetSinglePostMessageType, cl}}
+	},
+	DeletePostMessageType: func(cl *Client) InMessage {
+		return &DeletePostMessage{MessageBase: MessageBase{DeletePostMessageType, cl}}
 	},
 }
 

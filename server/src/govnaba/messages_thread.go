@@ -79,7 +79,9 @@ type Post struct {
 	// Parent thread's id on the board
 	ThreadId int
 	// Post's id on the board
-	LocalId  int
+	LocalId int
+	// Author's userid
+	UserId   int `json:"-"`
 	Topic    string
 	Contents string
 	Date     time.Time
@@ -287,7 +289,7 @@ func (msg *GetThreadMessage) FromClient(cl *Client, msgBytes []byte) error {
 
 func (msg *GetThreadMessage) Process(db *sqlx.DB) []OutMessage {
 	const query = `
-	SELECT board_local_id AS localid, created_date AS date, topic, contents, attrs  FROM posts
+	SELECT board_local_id AS localid, created_date AS date, user_id AS userid, topic, contents, attrs  FROM posts
 	WHERE thread_id =
 		(SELECT thread_id FROM posts, threads, boards WHERE board_local_id = $1 AND thread_id = threads.id AND board_id = boards.id AND boards.name = $2)
 	ORDER BY board_local_id ASC;
@@ -301,6 +303,11 @@ func (msg *GetThreadMessage) Process(db *sqlx.DB) []OutMessage {
 	if err != nil {
 		log.Printf("%#v", err)
 		return nil
+	}
+	for _, p := range answer.Posts {
+		if p.UserId == msg.Client.Id {
+			p.Attrs.Put("own", true)
+		}
 	}
 	return []OutMessage{&answer}
 }
@@ -336,11 +343,11 @@ func (msg *GetSinglePostMessage) FromClient(cl *Client, msgBytes []byte) error {
 func (msg *GetSinglePostMessage) Process(db *sqlx.DB) []OutMessage {
 	const query = `
 	WITH post AS (
-	SELECT board_local_id AS localid, created_date AS date, thread_id AS tid, topic, contents, attrs FROM
+	SELECT board_local_id AS localid, created_date AS date, user_id AS userid, thread_id AS tid, topic, contents, attrs FROM
 	posts INNER JOIN threads ON thread_id = threads.id
 	WHERE board_local_id = $1 AND threads.board_id = (SELECT id FROM boards WHERE name = $2)
 	)
-	SELECT post.localid, post.date, post.topic, post.contents, post.attrs, op.thread_id AS threadid
+	SELECT post.localid, post.date, post.userid, post.topic, post.contents, post.attrs, op.thread_id AS threadid
 	FROM post CROSS JOIN LATERAL (SELECT board_local_id as thread_id FROM posts WHERE thread_id = tid AND is_op = TRUE) AS op;
 	`
 	err := db.Get(&msg.Post, query, msg.LocalId, msg.Board)
@@ -360,5 +367,86 @@ func (msg *GetSinglePostMessage) ToClient() []byte {
 }
 
 func (msg *GetSinglePostMessage) GetDestination() Destination {
+	return Destination{DestinationType: ResponseDestination}
+}
+
+type DeletePostMessage struct {
+	MessageBase
+	Board   string
+	LocalId int
+}
+
+func (msg *DeletePostMessage) FromClient(cl *Client, msgBytes []byte) error {
+	err := json.Unmarshal(msgBytes, msg)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (msg *DeletePostMessage) Process(db *sqlx.DB) []OutMessage {
+	const getPostQuery = `
+	WITH post AS (
+	SELECT board_local_id AS localid, created_date AS date, user_id AS userid, thread_id AS tid, topic, contents, attrs FROM
+	posts INNER JOIN threads ON thread_id = threads.id
+	WHERE board_local_id = $1 AND threads.board_id = (SELECT id FROM boards WHERE name = $2)
+	)
+	SELECT post.localid, post.date, post.userid, post.topic, post.contents, post.attrs, op.thread_id AS threadid
+	FROM post CROSS JOIN LATERAL (SELECT board_local_id as thread_id FROM posts WHERE thread_id = tid AND is_op = TRUE) AS op;
+	`
+	const updatePostQuery = `
+		UPDATE posts SET contents = '', attrs = $1
+		WHERE board_local_id = $2
+			AND thread_id IN (SELECT threads.id FROM threads INNER JOIN boards ON board_id = boards.id 
+				WHERE boards.name = $3);
+	`
+retry:
+	tx, err := db.Beginx()
+	if err != nil {
+		log.Println(err)
+		return []OutMessage{&InternalServerErrorMessage{MessageBase{InternalServerErrorMessageType, msg.Client}}}
+	}
+	var p Post
+	tx.Exec(`SET TRANSACTION ISOLATION LEVEL REPEATABLE READ`)
+	err = tx.Get(&p, getPostQuery, msg.LocalId, msg.Board)
+	if err != nil {
+		log.Printf("%#v", err)
+		return []OutMessage{&InternalServerErrorMessage{MessageBase{InternalServerErrorMessageType, msg.Client}}}
+	}
+	var answer OutMessage
+	if p.UserId == msg.Client.Id {
+		p.Attrs.Put("deleted", true)
+		r, err := tx.Exec(updatePostQuery, p.Attrs, p.LocalId, msg.Board)
+		log.Printf("%#v", r)
+		if err != nil {
+			log.Printf("%#v", err)
+		}
+		err = tx.Commit()
+		if err != nil {
+			log.Printf("%#v", err)
+			tx.Rollback()
+			goto retry
+		} else {
+			answer = msg
+		}
+	} else {
+		answer = &InvalidRequestErrorMessage{
+			MessageBase{InvalidRequestErrorMessageType, msg.Client},
+			InvalidArguments,
+			"You don't own this post.",
+		}
+	}
+	return []OutMessage{answer}
+}
+
+func (msg *DeletePostMessage) ToClient() []byte {
+	bytes, err := json.Marshal(msg)
+	if err != nil {
+		log.Println(err)
+	}
+	return bytes
+}
+
+func (msg *DeletePostMessage) GetDestination() Destination {
 	return Destination{DestinationType: ResponseDestination}
 }

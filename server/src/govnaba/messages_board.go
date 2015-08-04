@@ -78,7 +78,7 @@ func (msg *GetBoardThreadsMessage) Process(db *sqlx.DB) []OutMessage {
 	// dats a bigass query
 	// probably slow as fuck
 	const query = `
-	SELECT thread_id AS threadid, board_local_id AS localid, created_date AS date, topic, contents, attrs
+	SELECT thread_id AS threadid, board_local_id AS localid, created_date AS date, user_id AS userid, topic, contents, attrs
 	FROM (SELECT *, row_number() OVER (PARTITION BY thread_id ORDER BY is_op DESC, board_local_id DESC) AS rnum FROM 
 			(SELECT id, last_bump_date FROM threads where board_id = (SELECT id FROM boards WHERE name = $1) ORDER BY last_bump_date DESC LIMIT $2 OFFSET $3 * $2::integer) AS top_threads
 			INNER JOIN
@@ -102,6 +102,9 @@ func (msg *GetBoardThreadsMessage) Process(db *sqlx.DB) []OutMessage {
 	currThreadId := -1
 	thrIndex := -1
 	for _, post := range posts {
+		if post.UserId == msg.Client.Id {
+			post.Attrs.Put("own", true)
+		}
 		if currThreadId != post.ThreadId {
 			answer.Threads = append(answer.Threads, []Post{})
 			thrIndex++

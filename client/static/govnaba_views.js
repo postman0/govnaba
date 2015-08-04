@@ -360,7 +360,7 @@ var Post = React.createClass({displayName: "Post",
 			});
 		}
 		var files = null;
-		if (imgs || videos) {
+		if ((imgs || videos) && !attrs.deleted) {
 			var length = 0;
 			if (imgs)
 				length += imgs.length;
@@ -376,6 +376,17 @@ var Post = React.createClass({displayName: "Post",
 		if (this.props.postData.Topic) {
 			topic = React.createElement("span", {className: "post-header-topic"}, this.props.postData.Topic)
 		}
+
+		var deleteButton = null;
+		var argBoard = gvnb.state.board;
+		var argId = this.props.postData.LocalId;
+		if (attrs && attrs.own) {
+			deleteButton = React.createElement("a", {className: "post-delete-button", href: "#", title: "Удалить пост", 
+				onClick: function(evt){gvnb.deletePost(argBoard, argId);
+					evt.preventDefault();}}, 
+				React.createElement("span", {className: "glyphicon glyphicon-remove"})
+			) 
+		};
 
 		var answers = null;
 		if (attrs && attrs.answers) {
@@ -400,7 +411,8 @@ var Post = React.createClass({displayName: "Post",
 		}
 
 		return (
-			React.createElement("div", {id: "post-" + this.props.postData.LocalId, className: "panel panel-default post-container"}, 
+			React.createElement("div", {id: "post-" + this.props.postData.LocalId, 
+				className: "panel panel-default post-container " + ((attrs && attrs.deleted) ? "post-deleted" : "")}, 
 				React.createElement("div", {className: "panel-heading"}, 
 				React.createElement("a", {
 					href: gvnb.getThreadLink(this.props.opPostId, this.props.postData.LocalId), 
@@ -413,9 +425,14 @@ var Post = React.createClass({displayName: "Post",
 				), 
 				React.createElement("div", {className: "panel-body"}, 
 					files, 
-					React.createElement("div", {className: "post-body", 
-						dangerouslySetInnerHTML: this.processMarkup(this.props.postData.Contents)}), 
-					answers
+					 (attrs && attrs.deleted) ? 
+						React.createElement("span", {className: "post-deleted-body"}, "Пост удален.")
+						 : (React.createElement("div", {className: "post-body", 
+							dangerouslySetInnerHTML: this.processMarkup(this.props.postData.Contents)}
+						)), 
+					
+					answers, 
+					deleteButton
 				)
 			)
 		)
