@@ -15,14 +15,26 @@ var Base = React.createClass({displayName: "Base",
 		this.setState({ctx: ViewContext.MAINPAGE, 
 			boards: boardList, threads: null, posts: null, 
 			curBoard: null, curThread: null});
+		this.setPageTitle(gvnb.config.SiteName);
 	},
 	displayBoard: function(boardMsg) {
 		this.setState({ctx: ViewContext.BOARD, threads: boardMsg.Threads, 
 			curBoard: boardMsg.Board, curThread: null});
+		this.setPageTitle('/' + boardMsg.Board + '/ — ' + gvnb.config.SiteName);
 	},
 	displayThread: function(postsMsg) {
+		var threadId = postsMsg.Posts[0].LocalId;
 		this.setState({ctx: ViewContext.THREAD, posts: postsMsg.Posts,
-			curBoard: postsMsg.Board, curThread: postsMsg.Posts[0].LocalId});
+			curBoard: postsMsg.Board, curThread: threadId});
+		var threadTopic = postsMsg.Posts[0].Topic;
+		if (threadTopic != '')
+			this.setPageTitle(threadTopic + ' — ' + gvnb.config.SiteName)
+		else
+			this.setPageTitle(_.template("/<%= board %>/ #<%= tid %> — <%= site %>")({
+				board: postsMsg.Board,
+				tid: threadId,
+				site: gvnb.config.SiteName
+			}))
 	},
 	displayNewPost: function(post) {
 		if (this.state.ctx == ViewContext.THREAD) {
@@ -61,6 +73,9 @@ var Base = React.createClass({displayName: "Base",
 			postData: pData,
 			ThreadId: this.state.curThread,
 			x: x, y: y});
+	},
+	setPageTitle: function(title) {
+		document.title = title;
 	},
 	render: function() {
 		var boardList, threads, posts;
