@@ -410,6 +410,20 @@ var Post = React.createClass({
 			country = <img className="post-header-country" src={"/static/flags/" + attrs.country + '.png'} alt={attrs.country}></img>
 		}
 
+		var ipIdent = null;
+		if (_.contains(gvnb.config.BoardConfigs[gvnb.state.board].EnabledFeatures, 'ipIdent') &&
+			attrs && attrs.ipIdent) {
+			var elems = [];
+			for (var i = 0; i < 8; i++) {
+				var colours = attrs.ipIdent.slice(i*4, i*4+4);
+				var colourValue = {"background-color": "rgb(" + colours[0] +"," + colours[1] +"," + colours[2] +");"};
+				elems.push(<span className="post-ip-ident-elem" style={colourValue}>
+					{colours[3]}
+					</span>);
+			}
+			ipIdent = <span className="post-ip-ident">{elems}</span>;
+		}
+
 		return (
 			<div id={"post-" + this.props.postData.LocalId}
 				className={"panel panel-default post-container " + ((attrs && attrs.deleted) ? "post-deleted" : "")} >
@@ -418,6 +432,7 @@ var Post = React.createClass({
 					href={gvnb.getThreadLink(this.props.opPostId, this.props.postData.LocalId)} 
 					className="post-header-id">#{this.props.postData.LocalId}</a>
 				{topic}
+				{ipIdent}
 				{ country }
 				{ (attrs && attrs.sage) ? <span className='label label-sage'>SAGE</span> : null}
 				{ (attrs && attrs.op) ? <span className='label label-primary'>OP</span> : null}

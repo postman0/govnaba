@@ -10,6 +10,29 @@ type BoardConfig struct {
 	EnabledFeatures []string
 }
 
+type Config struct {
+	BindAddress     string
+	CookieSecretKey string
+	Database        struct {
+		Host     string
+		Port     string
+		Name     string
+		User     string
+		Password string
+	}
+	SiteName        string
+	MainPageContent string
+	RulesContent    string
+	BoardConfigs    map[string]BoardConfig
+}
+
+var config Config
+
+func SetupGovnaba(cfg Config) error {
+	config = cfg
+	return setupPostProcessors(cfg.BoardConfigs)
+}
+
 type SiteConfigMessage struct {
 	MessageBase
 	SiteName        string

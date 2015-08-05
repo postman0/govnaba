@@ -1,6 +1,7 @@
 package govnaba
 
 import (
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"github.com/dchest/captcha"
@@ -39,6 +40,7 @@ var PostProcessorRegistry = map[string]PostProcessor{
 	"video":   PostProcessor{VideoProcessor, NilProcessor},
 	"answers": PostProcessor{AnswerLinksProcessor, AnswerMapProcessor},
 	"country": PostProcessor{CountryProcessor, NilProcessor},
+	"ipIdent": PostProcessor{IPIdentProcessor, NilProcessor},
 }
 
 // This shows what post processors are used for various boards.
@@ -47,7 +49,7 @@ var EnabledPostProcessors = map[string][]PostProcessor{}
 
 // This function must be called on application startup to set up
 // enabled post processors for each board.
-func SetupPostProcessors(boardConfigs map[string]BoardConfig) error {
+func setupPostProcessors(boardConfigs map[string]BoardConfig) error {
 	for board, cfg := range boardConfigs {
 		procs := []PostProcessor{}
 		for _, procName := range cfg.EnabledFeatures {
@@ -274,5 +276,12 @@ func CountryProcessor(cl *Client, p *Post) error {
 	} else {
 		p.Attrs.Put("country", record.Country.IsoCode)
 	}
+	return nil
+}
+
+func IPIdentProcessor(cl *Client, p *Post) error {
+	host, _, _ := net.SplitHostPort(cl.conn.RemoteAddr().String())
+	hash := sha256.Sum224([]byte(host + config.CookieSecretKey))
+	p.Attrs.Put("ipIdent", hash)
 	return nil
 }

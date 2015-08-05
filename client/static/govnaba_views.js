@@ -410,6 +410,20 @@ var Post = React.createClass({displayName: "Post",
 			country = React.createElement("img", {className: "post-header-country", src: "/static/flags/" + attrs.country + '.png', alt: attrs.country})
 		}
 
+		var ipIdent = null;
+		if (_.contains(gvnb.config.BoardConfigs[gvnb.state.board].EnabledFeatures, 'ipIdent') &&
+			attrs && attrs.ipIdent) {
+			var elems = [];
+			for (var i = 0; i < 8; i++) {
+				var colours = attrs.ipIdent.slice(i*4, i*4+4);
+				var colourValue = {"background-color": "rgb(" + colours[0] +"," + colours[1] +"," + colours[2] +");"};
+				elems.push(React.createElement("span", {className: "post-ip-ident-elem", style: colourValue}, 
+					colours[3]
+					));
+			}
+			ipIdent = React.createElement("span", {className: "post-ip-ident"}, elems);
+		}
+
 		return (
 			React.createElement("div", {id: "post-" + this.props.postData.LocalId, 
 				className: "panel panel-default post-container " + ((attrs && attrs.deleted) ? "post-deleted" : "")}, 
@@ -418,6 +432,7 @@ var Post = React.createClass({displayName: "Post",
 					href: gvnb.getThreadLink(this.props.opPostId, this.props.postData.LocalId), 
 					className: "post-header-id"}, "#", this.props.postData.LocalId), 
 				topic, 
+				ipIdent, 
 				country, 
 				 (attrs && attrs.sage) ? React.createElement("span", {className: "label label-sage"}, "SAGE") : null, 
 				 (attrs && attrs.op) ? React.createElement("span", {className: "label label-primary"}, "OP") : null, 

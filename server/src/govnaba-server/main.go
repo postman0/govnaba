@@ -16,23 +16,7 @@ import (
 	"time"
 )
 
-type Config struct {
-	BindAddress     string
-	CookieSecretKey string
-	Database        struct {
-		Host     string
-		Port     string
-		Name     string
-		User     string
-		Password string
-	}
-	SiteName        string
-	MainPageContent string
-	RulesContent    string
-	BoardConfigs    map[string]govnaba.BoardConfig
-}
-
-var config Config
+var config govnaba.Config
 
 var secureCookie *securecookie.SecureCookie
 
@@ -215,7 +199,7 @@ func main() {
 		rows.Scan(&boardName)
 		boardsClientsMap[boardName] = make(map[*govnaba.Client]placeholder)
 	}
-	err = govnaba.SetupPostProcessors(config.BoardConfigs)
+	err = govnaba.SetupGovnaba(config)
 	if err != nil {
 		log.Fatalln(err)
 	}
