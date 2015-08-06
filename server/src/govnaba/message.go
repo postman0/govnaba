@@ -29,6 +29,8 @@ const (
 	GetSinglePostMessageType
 	SiteConfigMessageType
 	DeletePostMessageType
+	PinThreadMessageType
+	LockThreadMessageType
 )
 
 // This type is used in reconstructing messages sent by clients.
@@ -65,6 +67,12 @@ var MessageConstructors = map[byte]MessageConstructor{
 	},
 	DeletePostMessageType: func(cl *Client) InMessage {
 		return &DeletePostMessage{MessageBase: MessageBase{DeletePostMessageType, cl}}
+	},
+	PinThreadMessageType: func(cl *Client) InMessage {
+		return &PinThreadMessage{MessageBase: MessageBase{PinThreadMessageType, cl}}
+	},
+	LockThreadMessageType: func(cl *Client) InMessage {
+		return &LockThreadMessage{MessageBase: MessageBase{LockThreadMessageType, cl}}
 	},
 }
 

@@ -8,6 +8,7 @@ import (
 const (
 	ResourceDoesntExist = iota
 	InvalidArguments
+	InsufficientRights
 )
 
 // These messages are intended for signaling client's errors to themselves.

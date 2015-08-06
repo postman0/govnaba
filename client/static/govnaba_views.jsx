@@ -377,9 +377,20 @@ var Post = React.createClass({
 			topic = <span className="post-header-topic">{this.props.postData.Topic}</span>
 		}
 
-		var deleteButton = null;
+		var locked = null, pinned = null;
+		if (this.props.postData.LocalId == this.props.opPostId) {
+			if (this.props.postData.IsLocked) {
+				locked = <span className="post-thread-attrs glyphicon glyphicon-lock"></span>
+			};
+			if (this.props.postData.IsPinned) {
+				pinned = <span className="post-thread-attrs glyphicon glyphicon-pushpin"></span>
+			};
+		}
+
 		var argBoard = gvnb.state.board;
 		var argId = this.props.postData.LocalId;
+
+		var deleteButton = null;
 		if (attrs && attrs.own) {
 			deleteButton = <a className="post-delete-button" href='#' title="Удалить пост"
 				onClick={function(evt){gvnb.deletePost(argBoard, argId);
@@ -387,6 +398,21 @@ var Post = React.createClass({
 				<span className="glyphicon glyphicon-remove"></span>
 			</a> 
 		};
+
+		var self = this;
+		var lockButton = null, pinButton = null;
+		if (gvnb.hasModRights() && this.props.postData.LocalId == this.props.opPostId) {
+			lockButton = <a className="post-lock-button" href='#' title="Закрыть тред"
+				onClick={function(evt){gvnb.lockThread(argBoard, argId, !self.props.postData.IsLocked);
+					evt.preventDefault();}} >
+				<span className="glyphicon glyphicon-lock"></span>
+			</a>;
+			pinButton = <a className="post-pin-button" href='#' title="Закрепить тред"
+				onClick={function(evt){gvnb.pinThread(argBoard, argId, !self.props.postData.IsPinned);
+					evt.preventDefault();}} >
+				<span className="glyphicon glyphicon-pushpin"></span>
+			</a>;
+		}
 
 		var answers = null;
 		if (attrs && attrs.answers) {
@@ -431,6 +457,8 @@ var Post = React.createClass({
 				<a 
 					href={gvnb.getThreadLink(this.props.opPostId, this.props.postData.LocalId)} 
 					className="post-header-id">#{this.props.postData.LocalId}</a>
+				{pinned}
+				{locked}
 				{topic}
 				{ipIdent}
 				{ country }
@@ -447,7 +475,9 @@ var Post = React.createClass({
 						</div>)
 					}
 					{answers}
-					{deleteButton}
+					<span className="post-actions">
+					{pinButton}{lockButton}{deleteButton}
+					</span>
 				</div>
 			</div>
 		)

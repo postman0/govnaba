@@ -131,13 +131,31 @@ var GovnabaMessager = function(gvnb) {
     }
 
     this.deletePost = function(board, id) {
-        console.log(arguments);
         this.socket.send(JSON.stringify({
             MessageType: 22,
             Board: board,
             LocalId: id
         }));
-    } 
+    }
+
+    this.pinThread = function(board, id, state) {
+        this.socket.send(JSON.stringify({
+            MessageType: 23,
+            Board: board,
+            LocalId: id,
+            State: state
+        }));
+    }
+
+    this.lockThread = function(board, id, state) {
+        this.socket.send(JSON.stringify({
+            MessageType: 24,
+            Board: board,
+            LocalId: id,
+            State: state
+        }));
+    }
+
     this.uploadFiles = function(fileList) {
         this.pendingFiles = fileList;
         this.completedFiles = [];
@@ -275,6 +293,19 @@ Govnaba = function() {
 
     this.deletePost = function(board, id) {
         this.msgr.deletePost(board, id);
+    }
+
+    this.pinThread = function(board, id, state) {
+        this.msgr.pinThread(board, id, state);
+    }
+
+    this.lockThread = function(board, id, state) {
+        this.msgr.lockThread(board, id, state);
+    }
+
+    this.hasModRights = function() {
+        return this.config.IsAdmin || 
+        (this.config.ModeratedBoards && this.config.ModeratedBoards.indexOf(this.state.board) != -1)
     }
 
     this.onConfigMessage = function(msg) {

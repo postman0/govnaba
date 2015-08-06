@@ -25,9 +25,6 @@
 	margin-bottom: 3em;
 }
 
-.post-ip-ident {
-	margin-right: 0.5em;
-}
 
 .post-ip-ident-elem {
 	font-size: 0.8em;
@@ -42,7 +39,7 @@
 	margin-right: 0.5em;
 }
 
-.post-header-country {
+.post-header-country, .post-answer, .post-ip-ident, .post-thread-attrs {
 	margin-right: 0.5em;
 }
 
@@ -58,10 +55,6 @@
 .post-answers {
 	font-size: 0.9em;
 	margin-top: 1em;
-}
-
-.post-answer {
-	margin-left: 0.5em;
 }
 
 .label-sage {
@@ -130,10 +123,14 @@
 	margin: 0 0 0.5em;
 }
 
-.post-delete-button {
+.post-actions {
 	position: absolute;
 	right: 0;
 	bottom: 0;
+}
+
+.post-actions > a {
+	margin-right: 0.5em;
 }
 
 .post-embed {

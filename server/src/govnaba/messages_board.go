@@ -78,20 +78,21 @@ func (msg *GetBoardThreadsMessage) Process(db *sqlx.DB) []OutMessage {
 	// dats a bigass query
 	// probably slow as fuck
 	const query = `
-	SELECT thread_id AS threadid, board_local_id AS localid, created_date AS date, user_id AS userid, topic, contents, attrs
+	SELECT thread_id AS threadid, board_local_id AS localid, created_date AS date, user_id AS userid, 
+		is_locked AS islocked, is_pinned AS ispinned, topic, contents, attrs
 	FROM (SELECT *, row_number() OVER (PARTITION BY thread_id ORDER BY is_op DESC, board_local_id DESC) AS rnum FROM 
-			(SELECT id, last_bump_date FROM threads where board_id = (SELECT id FROM boards WHERE name = $1) ORDER BY last_bump_date DESC LIMIT $2 OFFSET $3 * $2::integer) AS top_threads
+			(SELECT id, last_bump_date, is_pinned, is_locked FROM threads where board_id = (SELECT id FROM boards WHERE name = $1) ORDER BY is_pinned DESC, last_bump_date DESC LIMIT $2 OFFSET $3 * $2::integer) AS top_threads
 			INNER JOIN
 			posts
 			ON thread_id = top_threads.id) AS posts_rnum
 	WHERE rnum <= 6
-	ORDER BY last_bump_date DESC, board_local_id ASC;`
+	ORDER BY is_pinned DESC, last_bump_date DESC, board_local_id ASC;`
 
 	posts := []Post{}
 	err := db.Select(&posts, query, msg.Board, msg.Count, msg.SkipBatches)
 	if err != nil {
 		// this never fails, it returns empty results instead
-		log.Printf("%v", err)
+		log.Printf("%#v", err)
 		return nil
 	}
 	answer := BoardThreadListMessage{

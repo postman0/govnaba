@@ -78,6 +78,10 @@ type Post struct {
 	Board string
 	// Parent thread's id on the board
 	ThreadId int
+	// Is parent thread locked?
+	IsLocked bool
+	// Is parent thread pinned?
+	IsPinned bool
 	// Post's id on the board
 	LocalId int
 	// Author's userid
@@ -203,7 +207,9 @@ func (msg *AddPostMessage) Process(db *sqlx.DB) []OutMessage {
 	}
 	const insertPostQuery = `INSERT INTO posts (user_id, thread_id, topic, contents, attrs, board_local_id) VALUES 
 		($1,
-		(SELECT threads.id FROM threads, boards, posts WHERE board_id = boards.id AND thread_id = threads.id AND boards.name = $2 AND posts.board_local_id = $3),
+		(SELECT threads.id FROM threads, boards, posts 
+			WHERE board_id = boards.id AND thread_id = threads.id AND boards.name = $2 AND posts.board_local_id = $3
+			AND is_locked = FALSE),
 		$4,
 		$5,
 		$6,
@@ -219,8 +225,11 @@ func (msg *AddPostMessage) Process(db *sqlx.DB) []OutMessage {
 	if err != nil {
 		tx.Rollback()
 		log.Printf("%#v", err)
-		// todo: return error
-		return nil
+		return []OutMessage{&InvalidRequestErrorMessage{
+			MessageBase{InvalidRequestErrorMessageType, msg.Client},
+			InvalidArguments,
+			"Thread doesn't exist or has been locked.",
+		}}
 	}
 	tx.Commit()
 	msg.LocalId = answerId
