@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/websocket"
@@ -54,6 +55,15 @@ func sendMessage(msg govnaba.OutMessage) {
 	}
 }
 
+func stringIsInSlice(needle string, haystack []string) bool {
+	for _, val := range haystack {
+		if val == needle {
+			return true
+		}
+	}
+	return false
+}
+
 // Send website config to the client
 func sendConfig(cl *govnaba.Client) {
 	configMsg := &govnaba.SiteConfigMessage{
@@ -62,6 +72,18 @@ func sendConfig(cl *govnaba.Client) {
 		MainPageContent: config.MainPageContent,
 		RulesContent:    config.RulesContent,
 		BoardConfigs:    config.BoardConfigs,
+	}
+	var clientKey sql.NullString
+	db.Get(&clientKey, `SELECT key FROM users WHERE id = $1;`, cl.Id)
+	if clientKey.Valid {
+		if stringIsInSlice(clientKey.String, config.AdministratorsKeys) {
+			configMsg.IsAdmin = true
+		}
+		for board, cfg := range config.BoardConfigs {
+			if stringIsInSlice(clientKey.String, cfg.ModeratorsKeys) {
+				configMsg.ModeratedBoards = append(configMsg.ModeratedBoards, board)
+			}
+		}
 	}
 	cl.WriteChannel <- configMsg
 }

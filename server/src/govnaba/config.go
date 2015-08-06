@@ -7,6 +7,7 @@ import (
 )
 
 type BoardConfig struct {
+	ModeratorsKeys  []string `json:"-"`
 	EnabledFeatures []string
 }
 
@@ -20,10 +21,11 @@ type Config struct {
 		User     string
 		Password string
 	}
-	SiteName        string
-	MainPageContent string
-	RulesContent    string
-	BoardConfigs    map[string]BoardConfig
+	SiteName           string
+	MainPageContent    string
+	RulesContent       string
+	AdministratorsKeys []string
+	BoardConfigs       map[string]BoardConfig
 }
 
 var config Config
@@ -38,6 +40,8 @@ type SiteConfigMessage struct {
 	SiteName        string
 	MainPageContent string
 	RulesContent    string
+	IsAdmin         bool
+	ModeratedBoards []string
 	BoardConfigs    map[string]BoardConfig
 }
 
