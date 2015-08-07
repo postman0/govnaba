@@ -391,7 +391,7 @@ var Post = React.createClass({displayName: "Post",
 		var argId = this.props.postData.LocalId;
 
 		var deleteButton = null;
-		if (attrs && attrs.own) {
+		if (attrs && attrs.own || gvnb.hasModRights()) {
 			deleteButton = React.createElement("a", {className: "post-delete-button", href: "#", title: "Удалить пост", 
 				onClick: function(evt){gvnb.deletePost(argBoard, argId);
 					evt.preventDefault();}}, 
@@ -450,9 +450,21 @@ var Post = React.createClass({displayName: "Post",
 			ipIdent = React.createElement("span", {className: "post-ip-ident"}, elems);
 		}
 
+		var bodyContent = null;
+		if (attrs && attrs.deleted) {
+			bodyContent = React.createElement("span", {className: "post-deleted-body"}, "Пост удален.")
+		} else if (attrs && attrs.deletedMod) {
+			bodyContent = React.createElement("span", {className: "post-deleted-body"}, "Пост удален модератором.")
+		} else {
+			bodyContent = React.createElement("div", {className: "post-body", 
+				dangerouslySetInnerHTML: this.processMarkup(this.props.postData.Contents)}
+			)
+		};
+
 		return (
 			React.createElement("div", {id: "post-" + this.props.postData.LocalId, 
-				className: "panel panel-default post-container " + ((attrs && attrs.deleted) ? "post-deleted" : "")}, 
+				className: "panel panel-default post-container " + 
+					((attrs && (attrs.deleted || attrs.deletedMod)) ? "post-deleted" : "")}, 
 				React.createElement("div", {className: "panel-heading"}, 
 				React.createElement("a", {
 					href: gvnb.getThreadLink(this.props.opPostId, this.props.postData.LocalId), 
@@ -468,15 +480,10 @@ var Post = React.createClass({displayName: "Post",
 				), 
 				React.createElement("div", {className: "panel-body"}, 
 					files, 
-					 (attrs && attrs.deleted) ? 
-						React.createElement("span", {className: "post-deleted-body"}, "Пост удален.")
-						 : (React.createElement("div", {className: "post-body", 
-							dangerouslySetInnerHTML: this.processMarkup(this.props.postData.Contents)}
-						)), 
-					
+					bodyContent, 
 					answers, 
 					React.createElement("span", {className: "post-actions"}, 
-					pinButton, lockButton, deleteButton
+						pinButton, lockButton, deleteButton
 					)
 				)
 			)

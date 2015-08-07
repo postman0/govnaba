@@ -2,6 +2,7 @@ package govnaba
 
 import (
 	"cmagic"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
@@ -46,6 +47,16 @@ var validFileTypes map[string]string = map[string]string{
 	"image/png":  "png",
 	"image/gif":  "gif",
 	"video/webm": "webm",
+}
+
+func (cl *Client) IsModeratorOn(board string) bool {
+	var clientKey sql.NullString
+	cl.db.Get(&clientKey, `SELECT key FROM users WHERE id = $1;`, cl.Id)
+	if clientKey.Valid {
+		return stringIsInSlice(clientKey.String, config.AdministratorsKeys) ||
+			stringIsInSlice(clientKey.String, config.BoardConfigs[board].ModeratorsKeys)
+	}
+	return false
 }
 
 // receiveLoop listens on the websocket for incoming messages, processes them

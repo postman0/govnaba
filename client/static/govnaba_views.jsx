@@ -391,7 +391,7 @@ var Post = React.createClass({
 		var argId = this.props.postData.LocalId;
 
 		var deleteButton = null;
-		if (attrs && attrs.own) {
+		if (attrs && attrs.own || gvnb.hasModRights()) {
 			deleteButton = <a className="post-delete-button" href='#' title="Удалить пост"
 				onClick={function(evt){gvnb.deletePost(argBoard, argId);
 					evt.preventDefault();}} >
@@ -450,9 +450,21 @@ var Post = React.createClass({
 			ipIdent = <span className="post-ip-ident">{elems}</span>;
 		}
 
+		var bodyContent = null;
+		if (attrs && attrs.deleted) {
+			bodyContent = <span className="post-deleted-body">Пост удален.</span>
+		} else if (attrs && attrs.deletedMod) {
+			bodyContent = <span className="post-deleted-body">Пост удален модератором.</span>
+		} else {
+			bodyContent = <div className="post-body" 
+				dangerouslySetInnerHTML={this.processMarkup(this.props.postData.Contents)}>
+			</div>
+		};
+
 		return (
 			<div id={"post-" + this.props.postData.LocalId}
-				className={"panel panel-default post-container " + ((attrs && attrs.deleted) ? "post-deleted" : "")} >
+				className={"panel panel-default post-container " + 
+					((attrs && (attrs.deleted || attrs.deletedMod)) ? "post-deleted" : "")} >
 				<div className="panel-heading">
 				<a 
 					href={gvnb.getThreadLink(this.props.opPostId, this.props.postData.LocalId)} 
@@ -468,15 +480,10 @@ var Post = React.createClass({
 				</div>
 				<div className="panel-body">
 					{files}
-					{ (attrs && attrs.deleted) ? 
-						<span className="post-deleted-body">Пост удален.</span>
-						 : (<div className="post-body" 
-							dangerouslySetInnerHTML={this.processMarkup(this.props.postData.Contents)}>
-						</div>)
-					}
+					{bodyContent}
 					{answers}
 					<span className="post-actions">
-					{pinButton}{lockButton}{deleteButton}
+						{pinButton}{lockButton}{deleteButton}
 					</span>
 				</div>
 			</div>

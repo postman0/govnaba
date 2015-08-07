@@ -423,8 +423,13 @@ retry:
 		return []OutMessage{&InternalServerErrorMessage{MessageBase{InternalServerErrorMessageType, msg.Client}}}
 	}
 	var answer OutMessage
-	if p.UserId == msg.Client.Id {
-		p.Attrs.Put("deleted", true)
+	isMod := msg.Client.IsModeratorOn(msg.Board)
+	if p.UserId == msg.Client.Id || isMod {
+		if isMod {
+			p.Attrs.Put("deletedMod", true)
+		} else {
+			p.Attrs.Put("deleted", true)
+		}
 		r, err := tx.Exec(updatePostQuery, p.Attrs, p.LocalId, msg.Board)
 		log.Printf("%#v", r)
 		if err != nil {
