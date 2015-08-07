@@ -291,6 +291,10 @@ Govnaba = function() {
         }
     }
 
+    this.isBoardFeatureEnabled = function(feature) {
+        return _.contains(gvnb.config.BoardConfigs[gvnb.state.board].EnabledFeatures, feature)
+    }
+
     this.deletePost = function(board, id) {
         this.msgr.deletePost(board, id);
     }

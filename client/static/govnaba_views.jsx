@@ -431,14 +431,12 @@ var Post = React.createClass({
 		}
 
 		var country = null;
-		if (_.contains(gvnb.config.BoardConfigs[gvnb.state.board].EnabledFeatures, 'country') &&
-			attrs && attrs.country) {
+		if (gvnb.isBoardFeatureEnabled('country') && attrs && attrs.country) {
 			country = <img className="post-header-country" src={"/static/flags/" + attrs.country + '.png'} alt={attrs.country}></img>
 		}
 
 		var ipIdent = null;
-		if (_.contains(gvnb.config.BoardConfigs[gvnb.state.board].EnabledFeatures, 'ipIdent') &&
-			attrs && attrs.ipIdent) {
+		if (gvnb.isBoardFeatureEnabled('ipident') && attrs && attrs.ipIdent) {
 			var elems = [];
 			for (var i = 0; i < 8; i++) {
 				var colours = attrs.ipIdent.slice(i*4, i*4+4);
