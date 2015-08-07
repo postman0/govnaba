@@ -360,7 +360,7 @@ var Post = React.createClass({
 			});
 		}
 		var files = null;
-		if ((imgs || videos) && !attrs.deleted) {
+		if ((imgs || videos) && !attrs.deleted && !attrs.deletedMod) {
 			var length = 0;
 			if (imgs)
 				length += imgs.length;
