@@ -436,7 +436,7 @@ var Post = React.createClass({displayName: "Post",
 		}
 
 		var ipIdent = null;
-		if (gvnb.isBoardFeatureEnabled('ipident') && attrs && attrs.ipIdent) {
+		if (gvnb.isBoardFeatureEnabled('ipIdent') && attrs && attrs.ipIdent) {
 			var elems = [];
 			for (var i = 0; i < 8; i++) {
 				var colours = attrs.ipIdent.slice(i*4, i*4+4);
