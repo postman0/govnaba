@@ -26,6 +26,9 @@ func (pa *PostAttributes) Get(key string) (interface{}, bool) {
 }
 
 func (pa *PostAttributes) Put(key string, value interface{}) {
+	if pa.checkedAttrs == nil {
+		pa.checkedAttrs = make(map[string]interface{})
+	}
 	pa.checkedAttrs[key] = value
 }
 
