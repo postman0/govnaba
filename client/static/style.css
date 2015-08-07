@@ -62,6 +62,10 @@
 	color: white;
 }
 
+.label-admin {
+	background-color: purple;
+}
+
 .post-files-many {
 	width: 100%;
 }

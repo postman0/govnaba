@@ -33,14 +33,15 @@ type PostProcessor struct {
 
 // Contains all post processors.
 var PostProcessorRegistry = map[string]PostProcessor{
-	"sage":    PostProcessor{SageProcessorBefore, SageProcessorAfter},
-	"op":      PostProcessor{OPProcessor, NilProcessor},
-	"captcha": PostProcessor{CaptchaProcessor, NilProcessor},
-	"image":   PostProcessor{ImageProcessor, NilProcessor},
-	"video":   PostProcessor{VideoProcessor, NilProcessor},
-	"answers": PostProcessor{AnswerLinksProcessor, AnswerMapProcessor},
-	"country": PostProcessor{CountryProcessor, NilProcessor},
-	"ipIdent": PostProcessor{IPIdentProcessor, NilProcessor},
+	"sage":      PostProcessor{SageProcessorBefore, SageProcessorAfter},
+	"op":        PostProcessor{OPProcessor, NilProcessor},
+	"captcha":   PostProcessor{CaptchaProcessor, NilProcessor},
+	"image":     PostProcessor{ImageProcessor, NilProcessor},
+	"video":     PostProcessor{VideoProcessor, NilProcessor},
+	"answers":   PostProcessor{AnswerLinksProcessor, AnswerMapProcessor},
+	"country":   PostProcessor{CountryProcessor, NilProcessor},
+	"ipIdent":   PostProcessor{IPIdentProcessor, NilProcessor},
+	"modLabels": PostProcessor{ModLabelProcessor, NilProcessor},
 }
 
 // This shows what post processors are used for various boards.
@@ -283,5 +284,19 @@ func IPIdentProcessor(cl *Client, p *Post) error {
 	host, _, _ := net.SplitHostPort(cl.conn.RemoteAddr().String())
 	hash := sha256.Sum224([]byte(host + config.CookieSecretKey))
 	p.Attrs.Put("ipIdent", hash)
+	return nil
+}
+
+func ModLabelProcessor(cl *Client, p *Post) error {
+	log.Printf("%#v", *p)
+	_, hasAdmAttr := p.Attrs.Get("adminLabel")
+	if hasAdmAttr && cl.IsAdmin() {
+		p.Attrs.Put("adminLabel", true)
+	}
+	_, hasModAttr := p.Attrs.Get("modLabel")
+	if hasModAttr && cl.IsModeratorOn(p.Board) {
+		p.Attrs.Put("modLabel", true)
+	}
+	log.Printf("%#v", *p)
 	return nil
 }

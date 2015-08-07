@@ -474,6 +474,8 @@ var Post = React.createClass({displayName: "Post",
 				country, 
 				 (attrs && attrs.sage) ? React.createElement("span", {className: "label label-sage"}, "SAGE") : null, 
 				 (attrs && attrs.op) ? React.createElement("span", {className: "label label-primary"}, "OP") : null, 
+				 (attrs && attrs.adminLabel) ? React.createElement("span", {className: "label label-admin"}, "ADMIN") : null, 
+				 (attrs && attrs.modLabel) ? React.createElement("span", {className: "label label-success"}, "MOD") : null, 
 				React.createElement("span", {className: "post-header-date"}, datestr)
 				), 
 				React.createElement("div", {className: "panel-body"}, 
@@ -593,24 +595,35 @@ var PostingForm = React.createClass({displayName: "PostingForm",
 					)
 				), 
 				React.createElement("div", {className: "form-group"}, 
-					React.createElement("div", {className: "col-sm-2 col-sm-offset-2"}, 
-						 _.contains(gvnb.config.BoardConfigs[gvnb.state.board].EnabledFeatures, 'sage') ?
-							React.createElement("input", {id: "input_sage", type: "checkbox", name: "sage", className: "checkbox-inline", value: ""}, 
+					React.createElement("div", {className: "col-sm-4 col-sm-offset-2"}, 
+						 gvnb.isBoardFeatureEnabled("sage") ?
+							React.createElement("input", {id: "sage", type: "checkbox", name: "sage", className: "input-attr checkbox-inline", value: ""}, 
 								"SAGE"
 							)
 							: null, 
 						
-						 _.contains(gvnb.config.BoardConfigs[gvnb.state.board].EnabledFeatures, 'op') ?
-							React.createElement("input", {id: "input_op", type: "checkbox", name: "op", className: "checkbox-inline", value: ""}, 
+						 gvnb.isBoardFeatureEnabled("op") ?
+							React.createElement("input", {id: "op", type: "checkbox", name: "op", className: "input-attr checkbox-inline", value: ""}, 
 								"OP"
+							)
+							: null, 
+						
+						 gvnb.isBoardFeatureEnabled("modLabels") && gvnb.hasModRights() ?
+							React.createElement("input", {id: "modLabel", type: "checkbox", name: "modLabel", className: "input-attr checkbox-inline", value: ""}, 
+								"MOD"
+							)
+							: null, 
+						
+						 gvnb.isBoardFeatureEnabled("modLabels") && gvnb.isAdmin() ?
+							React.createElement("input", {id: "adminLabel", type: "checkbox", name: "adminLabel", className: "input-attr checkbox-inline", value: ""}, 
+								"ADMIN"
 							)
 							: null
 						
 					)
 				), 
 				
-					this.props.captcha && 
-					_.contains(gvnb.config.BoardConfigs[gvnb.state.board].EnabledFeatures, 'captcha') ?
+					this.props.captcha && gvnb.isBoardFeatureEnabled('captcha') ?
 					React.createElement("div", {className: "form-group"}, 
 						React.createElement("label", {className: "control-label col-sm-2"}, "Капча"), 
 						React.createElement("div", {className: "col-sm-10"}, 
@@ -620,8 +633,7 @@ var PostingForm = React.createClass({displayName: "PostingForm",
 					: null, 
 				
 				
-					this.props.captcha &&
-					_.contains(gvnb.config.BoardConfigs[gvnb.state.board].EnabledFeatures, 'captcha') ?
+					this.props.captcha && gvnb.isBoardFeatureEnabled('captcha') ?
 					React.createElement("div", {className: "form-group"}, 
 						React.createElement("label", {className: "control-label col-sm-2"}, "Ответ"), 
 						React.createElement("div", {className: "col-sm-10"}, 

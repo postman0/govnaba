@@ -474,6 +474,8 @@ var Post = React.createClass({
 				{ country }
 				{ (attrs && attrs.sage) ? <span className='label label-sage'>SAGE</span> : null}
 				{ (attrs && attrs.op) ? <span className='label label-primary'>OP</span> : null}
+				{ (attrs && attrs.adminLabel) ? <span className='label label-admin'>ADMIN</span> : null}
+				{ (attrs && attrs.modLabel) ? <span className='label label-success'>MOD</span> : null}
 				<span className="post-header-date">{datestr}</span>
 				</div>
 				<div className="panel-body">
@@ -593,24 +595,35 @@ var PostingForm = React.createClass({
 					</div>
 				</div>
 				<div className="form-group">
-					<div className="col-sm-2 col-sm-offset-2">
-						{ _.contains(gvnb.config.BoardConfigs[gvnb.state.board].EnabledFeatures, 'sage') ?
-							<input id="input_sage" type="checkbox" name="sage" className="checkbox-inline" value="">
+					<div className="col-sm-4 col-sm-offset-2">
+						{ gvnb.isBoardFeatureEnabled("sage") ?
+							<input id="sage" type="checkbox" name="sage" className="input-attr checkbox-inline" value="">
 								SAGE
 							</input>
 							: null
 						}
-						{ _.contains(gvnb.config.BoardConfigs[gvnb.state.board].EnabledFeatures, 'op') ?
-							<input id="input_op" type="checkbox" name="op" className="checkbox-inline" value="">
+						{ gvnb.isBoardFeatureEnabled("op") ?
+							<input id="op" type="checkbox" name="op" className="input-attr checkbox-inline" value="">
 								OP
+							</input>
+							: null
+						}
+						{ gvnb.isBoardFeatureEnabled("modLabels") && gvnb.hasModRights() ?
+							<input id="modLabel" type="checkbox" name="modLabel" className="input-attr checkbox-inline" value="">
+								MOD
+							</input>
+							: null
+						}
+						{ gvnb.isBoardFeatureEnabled("modLabels") && gvnb.isAdmin() ?
+							<input id="adminLabel" type="checkbox" name="adminLabel" className="input-attr checkbox-inline" value="">
+								ADMIN
 							</input>
 							: null
 						}
 					</div>
 				</div>
 				{
-					this.props.captcha && 
-					_.contains(gvnb.config.BoardConfigs[gvnb.state.board].EnabledFeatures, 'captcha') ?
+					this.props.captcha && gvnb.isBoardFeatureEnabled('captcha') ?
 					<div className="form-group">
 						<label className="control-label col-sm-2">Капча</label>
 						<div className="col-sm-10">
@@ -620,8 +633,7 @@ var PostingForm = React.createClass({
 					: null
 				}
 				{
-					this.props.captcha &&
-					_.contains(gvnb.config.BoardConfigs[gvnb.state.board].EnabledFeatures, 'captcha') ?
+					this.props.captcha && gvnb.isBoardFeatureEnabled('captcha') ?
 					<div className="form-group">
 						<label className="control-label col-sm-2">Ответ</label>
 						<div className="col-sm-10">

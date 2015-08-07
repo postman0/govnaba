@@ -59,6 +59,15 @@ func (cl *Client) IsModeratorOn(board string) bool {
 	return false
 }
 
+func (cl *Client) IsAdmin() bool {
+	var clientKey sql.NullString
+	cl.db.Get(&clientKey, `SELECT key FROM users WHERE id = $1;`, cl.Id)
+	if clientKey.Valid {
+		return stringIsInSlice(clientKey.String, config.AdministratorsKeys)
+	}
+	return false
+}
+
 // receiveLoop listens on the websocket for incoming messages, processes them
 // and handles the results to the global broadcast thread.
 func (cl *Client) receiveLoop() {

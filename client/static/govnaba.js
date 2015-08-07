@@ -309,7 +309,11 @@ Govnaba = function() {
 
     this.hasModRights = function() {
         return this.config.IsAdmin || 
-        (this.config.ModeratedBoards && this.config.ModeratedBoards.indexOf(this.state.board) != -1)
+        (this.config.ModeratedBoards && this.config.ModeratedBoards.indexOf(this.state.board) != -1);
+    }
+
+    this.isAdmin = function() {
+        return this.config.IsAdmin;
     }
 
     this.onConfigMessage = function(msg) {
@@ -395,13 +399,13 @@ Govnaba = function() {
         var attrs = {};
         if (files)
             attrs = _.extend(attrs, files);
-        if (_.contains(this.config.BoardConfigs[this.state.board].EnabledFeatures, 'sage') && 
-            document.getElementById("input_sage").checked)
-            attrs.sage = true;
-        if (_.contains(this.config.BoardConfigs[this.state.board].EnabledFeatures, 'op') && 
-            document.getElementById("input_op").checked)
-            attrs.op = true;
-        if (_.contains(this.config.BoardConfigs[this.state.board].EnabledFeatures, 'captcha')) {
+        // process checkbox attrs
+        $('.input-attr').each(function(index, elem) {
+            if (elem.checked) {
+                attrs[elem.id] = true
+            }
+        })
+        if (gvnb.isBoardFeatureEnabled('captcha')) {
             attrs.captcha = {
                     "Id": localStorage["captcha_id"],
                     "Solution": document.getElementById("input_captcha").value
