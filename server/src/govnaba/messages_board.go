@@ -58,12 +58,17 @@ type GetBoardThreadsMessage struct {
 	SkipBatches int
 }
 
+type PostWithNum struct {
+	Post
+	PostNum int
+}
+
 // This is used for sending requested threads to the client.
 type BoardThreadListMessage struct {
 	MessageBase
 	Board string
 	// A slice of threads where each thread is a slice of Post's.
-	Threads [][]Post
+	Threads [][]PostWithNum
 }
 
 func (msg *GetBoardThreadsMessage) FromClient(cl *Client, msgBytes []byte) error {
@@ -79,8 +84,9 @@ func (msg *GetBoardThreadsMessage) Process(db *sqlx.DB) []OutMessage {
 	// probably slow as fuck
 	const query = `
 	SELECT thread_id AS threadid, board_local_id AS localid, created_date AS date, user_id AS userid, 
-		is_locked AS islocked, is_pinned AS ispinned, topic, contents, attrs
-	FROM (SELECT *, row_number() OVER (PARTITION BY thread_id ORDER BY is_op DESC, board_local_id DESC) AS rnum FROM 
+		is_locked AS islocked, is_pinned AS ispinned, topic, contents, attrs, postnum
+	FROM (SELECT *, row_number() OVER (PARTITION BY thread_id ORDER BY is_op DESC, board_local_id DESC) AS rnum,
+			row_number() OVER (PARTITION BY thread_id ORDER BY is_op DESC, board_local_id ASC) as postnum FROM 
 			(SELECT id, last_bump_date, is_pinned, is_locked FROM threads where board_id = (SELECT id FROM boards WHERE name = $1) ORDER BY is_pinned DESC, last_bump_date DESC LIMIT $2 OFFSET $3 * $2::integer) AS top_threads
 			INNER JOIN
 			posts
@@ -88,7 +94,7 @@ func (msg *GetBoardThreadsMessage) Process(db *sqlx.DB) []OutMessage {
 	WHERE rnum <= 6
 	ORDER BY is_pinned DESC, last_bump_date DESC, board_local_id ASC;`
 
-	posts := []Post{}
+	posts := []PostWithNum{}
 	err := db.Select(&posts, query, msg.Board, msg.Count, msg.SkipBatches)
 	if err != nil {
 		// this never fails, it returns empty results instead
@@ -98,7 +104,7 @@ func (msg *GetBoardThreadsMessage) Process(db *sqlx.DB) []OutMessage {
 	answer := BoardThreadListMessage{
 		MessageBase: MessageBase{BoardThreadListMessageType, msg.Client},
 		Board:       msg.Board,
-		Threads:     [][]Post{},
+		Threads:     [][]PostWithNum{},
 	}
 	currThreadId := -1
 	thrIndex := -1
@@ -107,7 +113,7 @@ func (msg *GetBoardThreadsMessage) Process(db *sqlx.DB) []OutMessage {
 			post.Attrs.Put("own", true)
 		}
 		if currThreadId != post.ThreadId {
-			answer.Threads = append(answer.Threads, []Post{})
+			answer.Threads = append(answer.Threads, []PostWithNum{})
 			thrIndex++
 			currThreadId = post.ThreadId
 		}

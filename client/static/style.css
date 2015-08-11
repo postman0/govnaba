@@ -25,6 +25,17 @@
 	margin-bottom: 3em;
 }
 
+.thread-skipped {
+	text-align: center;
+}
+
+.thread-skipped-count {
+	display: inline-block;
+	margin: 0 auto;
+	font-size: 0.8em;
+	font-style: italic;
+	color: gray;
+}
 
 .post-ip-ident-elem {
 	font-size: 0.8em;

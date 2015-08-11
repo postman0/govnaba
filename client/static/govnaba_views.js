@@ -210,7 +210,24 @@ var Board = React.createClass({displayName: "Board",
 var Thread = React.createClass({displayName: "Thread",
 	render: function() {
 		var opId = this.props.posts[0].LocalId;
-		return (
+		var posts = this.props.posts;
+		if (posts.length > 1 && posts[1].PostNum > 2) {
+			return (
+			React.createElement("div", {className: "thread-container"}, 
+				React.createElement(Post, {postData: posts[0], opPostId: opId, key: opId}), 
+				React.createElement("div", {className: "thread-skipped"}, 
+					React.createElement("span", {className: "thread-skipped-count"}, 
+						"Пропущено ", posts[1].PostNum - 2, " постов."
+					)
+				), 
+				this.props.posts.slice(1).map(function(val) {
+					return (
+						React.createElement(Post, {postData: val, opPostId: opId, key: val.LocalId})
+					)
+				})
+			)
+		)
+		} else return (
 			React.createElement("div", {className: "thread-container"}, 
 				this.props.posts.map(function(val) {
 					return (
