@@ -74,6 +74,9 @@ var Base = React.createClass({displayName: "Base",
 			ThreadId: this.state.curThread,
 			x: x, y: y});
 	},
+	displayNotification: function(str) {
+		this.refs.notifArea.addNotification(str);
+	},
 	setPageTitle: function(title) {
 		document.title = title;
 	},
@@ -114,7 +117,8 @@ var Base = React.createClass({displayName: "Base",
 		            	: null
             	)
         	), 
-        	React.createElement(PostPreviews, {ref: "previews"})
+        	React.createElement(PostPreviews, {ref: "previews"}), 
+        	React.createElement(NotificationArea, {ref: "notifArea"})
         )
 		);
 	}
@@ -652,10 +656,41 @@ var PostingForm = React.createClass({displayName: "PostingForm",
 			)
 		);
 	}
-})
+});
+
+var ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
+
+var NotificationArea = React.createClass({displayName: "NotificationArea",
+	getInitialState: function() {
+		return {items: {}};
+	},
+	addNotification: function(str) {
+		var items = this.state.items;
+		var key = new Date();
+		items[key] = str;
+		this.setState({items: items});
+		var self = this;
+		setTimeout(function() {
+			var items = self.state.items;
+			delete items[key]
+			self.setState({items: items});
+		}, 3000);
+	},
+	render: function() {
+		return React.createElement(ReactCSSTransitionGroup, {component: "ul", className: "notifications list-group", 
+		transitionName: "notification"}, 
+			 _.mapObject(this.state.items, function(val, key) {
+				return React.createElement("div", {className: "list-group-item", key: key}, 
+					val
+				)
+			})
+			
+			)
+	}
+});
 
 var GovnabaViews = {
 	mountBaseContainer: function() {
 		return React.render(React.createElement(Base, null), document.getElementsByTagName("body")[0]);
 	}
-}
+};

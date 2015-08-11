@@ -150,3 +150,30 @@
 .preview {
 	position: absolute;
 }
+
+.notifications {
+	position: fixed;
+	right: 0;
+	bottom: 0;
+	text-align: right;
+}
+
+.notification-enter {
+	margin-right: -10em;
+	opacity: 0.01;
+}
+
+.notification-enter.notification-enter-active {
+	margin-right: 0;
+	opacity: 1;
+	transition: margin-right 0.5s ease-in, opacity 0.5s ease-in;
+}
+
+.notification-leave {
+ 	opacity: 1;
+}
+
+.notification-leave.notification-leave-active {
+	opacity: 0.01;
+	transition: opacity 0.5s ease-in;
+}

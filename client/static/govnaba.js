@@ -45,8 +45,11 @@ var GovnabaMessager = function(gvnb) {
             }
             case 12:
             case 13:
-            case 14: {
-                gvnb.onError(msg);
+            case 14:
+            case 22:
+            case 23:
+            case 24: {
+                gvnb.showNotification(msg);
                 break;
             }
             case 16: {
@@ -377,19 +380,20 @@ Govnaba = function() {
         (this.state.previewCallbacks[msg.LocalId].bind(this))(msg);
     }
 
-    this.onError = function(msg) {
-        $('.postform > form').append('\
-            <div class="form-group">\
-                <div class="form-error alert alert-danger col-sm-offset-2 col-sm-10">' +
-                    function() {if (msg.ErrorMessage) {
-                        return msg.ErrorMessage
-                    } else if (msg.MessageType == 13) {
-                        return "Загрузка файла не удалась."
-                    } else if (msg.MessageType == 14) {
-                        return "Внутренняя ошибка сервера."
-                    }}() +
-                '</div>\
-            </div>');
+    this.showNotification = function(msg) {
+        if (msg.ErrorMessage) {
+            gvnb.baseCont.displayNotification(msg.ErrorMessage)
+        } else if (msg.MessageType == 13) {
+            gvnb.baseCont.displayNotification("Загрузка файла не удалась.")
+        } else if (msg.MessageType == 14) {
+            gvnb.baseCont.displayNotification("Внутренняя ошибка сервера.")
+        } else if (msg.MessageType == 22) {
+            gvnb.baseCont.displayNotification("Пост " + msg.LocalId + " удален.");
+        } else if (msg.MessageType == 23) {
+            gvnb.baseCont.displayNotification("Пост " + msg.LocalId + (msg.State ? " за" : " от") + "креплен.");
+        } else if (msg.MessageType == 24) {
+            gvnb.baseCont.displayNotification("Пост " + msg.LocalId + (msg.State ? " за" : " от") + "крыт.");
+        };
         gvnb.msgr.getNewCaptcha();
     }
 

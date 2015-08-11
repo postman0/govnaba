@@ -74,6 +74,9 @@ var Base = React.createClass({
 			ThreadId: this.state.curThread,
 			x: x, y: y});
 	},
+	displayNotification: function(str) {
+		this.refs.notifArea.addNotification(str);
+	},
 	setPageTitle: function(title) {
 		document.title = title;
 	},
@@ -115,6 +118,7 @@ var Base = React.createClass({
             	</div>
         	</div>
         	<PostPreviews ref="previews" />
+        	<NotificationArea ref="notifArea" />
         </div>
 		);
 	}
@@ -652,10 +656,41 @@ var PostingForm = React.createClass({
 			</div>
 		);
 	}
-})
+});
+
+var ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
+
+var NotificationArea = React.createClass({
+	getInitialState: function() {
+		return {items: {}};
+	},
+	addNotification: function(str) {
+		var items = this.state.items;
+		var key = new Date();
+		items[key] = str;
+		this.setState({items: items});
+		var self = this;
+		setTimeout(function() {
+			var items = self.state.items;
+			delete items[key]
+			self.setState({items: items});
+		}, 3000);
+	},
+	render: function() {
+		return <ReactCSSTransitionGroup component="ul" className="notifications list-group"
+		transitionName="notification">
+			{ _.mapObject(this.state.items, function(val, key) {
+				return <div className="list-group-item" key={key}>
+					{val}
+				</div>
+			})
+			}
+			</ReactCSSTransitionGroup>
+	}
+});
 
 var GovnabaViews = {
 	mountBaseContainer: function() {
 		return React.render(<Base />, document.getElementsByTagName("body")[0]);
 	}
-}
+};
