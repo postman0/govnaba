@@ -301,7 +301,9 @@ func (msg *GetThreadMessage) FromClient(cl *Client, msgBytes []byte) error {
 
 func (msg *GetThreadMessage) Process(db *sqlx.DB) []OutMessage {
 	const query = `
-	SELECT board_local_id AS localid, created_date AS date, user_id AS userid, topic, contents, attrs  FROM posts
+	SELECT board_local_id AS localid, created_date AS date, user_id AS userid, topic, contents, attrs,
+	is_locked AS islocked, is_pinned AS ispinned
+	FROM posts INNER JOIN threads ON thread_id = threads.id
 	WHERE thread_id =
 		(SELECT thread_id FROM posts, threads, boards WHERE board_local_id = $1 AND thread_id = threads.id AND board_id = boards.id AND boards.name = $2)
 	ORDER BY board_local_id ASC;
