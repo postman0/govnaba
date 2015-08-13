@@ -6,7 +6,12 @@ ViewContext = {
 	THREAD: 3
 }
 
+var IntlMixin = ReactIntl.IntlMixin;
+var FormattedRelative = ReactIntl.FormattedRelative;
+var FormattedMessage = ReactIntl.FormattedMessage;
+
 var Base = React.createClass({
+	mixins: [IntlMixin],
 
 	getInitialState: function() {
 		return {ctx: ViewContext.NONE}
@@ -125,6 +130,7 @@ var Base = React.createClass({
 })
 
 var NavBar = React.createClass({
+	mixins: [IntlMixin],
 	render: function() {
 		return (
 			<nav className="navbar navbar-default navbar-static-top">
@@ -141,8 +147,10 @@ var NavBar = React.createClass({
 				<div className="collapse navbar-collapse">
 					<div className="navbar-form navbar-right">
 						<form className="form-inline" action="#" onSubmit={gvnb.sendLoginForm.bind(gvnb)}>
-							<input id="input_login_key" type="text" className="form-control" placeholder="Ключ"></input>
-							<input id="input_login_submit" type="submit" className="form-control" value="Вход"></input>
+							<input id="input_login_key" type="text" className="form-control" 
+								placeholder={this.getIntlMessage("navbar.key")}></input>
+							<input id="input_login_submit" type="submit" className="form-control" 
+								value={this.getIntlMessage("navbar.submit")}></input>
 						</form>
 					</div>
 				</div>
@@ -152,17 +160,21 @@ var NavBar = React.createClass({
 })
 
 var NavBreadCrumbs = React.createClass({
+	mixins: [IntlMixin],
 	render: function() {
 		var board = null;
 		if(this.props.board)
 			board = <li><a href={"/"+this.props.board+"/"}>{"/"+this.props.board+"/"}</a></li>
 		var thread = null;
 		if(this.props.thread)
-			thread = <li><a href={"/"+this.props.board+"/"+this.props.thread}>{"Тред #"+this.props.thread}</a></li>
+			thread = (<li><a href={"/"+this.props.board+"/"+this.props.thread}>
+				<FormattedMessage message={this.getIntlMessage("navbreadcrumbs.thread")}
+					thread={this.props.thread} />
+		</a></li>)
 		return (
 			<div className="col-md-12">
 				<ol className="breadcrumb breadcrumb-navbar">
-					<li><a href="/">Главная</a></li>
+					<li><a href="/">{this.getIntlMessage("navbreadcrumbs.main")}</a></li>
 					{board}
 					{thread}
 				</ol>
@@ -173,6 +185,7 @@ var NavBreadCrumbs = React.createClass({
 
 
 var BoardList = React.createClass({
+	mixins: [IntlMixin],
 	render: function() {
 		var boards = this.props.boards.map(function(board) {
 			return (
@@ -188,6 +201,7 @@ var BoardList = React.createClass({
 })
 
 var Board = React.createClass({
+	mixins: [IntlMixin],
 	render: function() {
 		return (
 			<div className="board">
@@ -198,8 +212,12 @@ var Board = React.createClass({
 				})}
 				<nav>
 					<ul className="pager">
-						<li><a href={"/" + gvnb.state.board + "?page=" + (gvnb.state.page-1)}>Назад</a></li>
-						<li><a href={"/" + gvnb.state.board + "?page=" + (gvnb.state.page+1)}>Вперед</a></li>
+						<li><a href={"/" + gvnb.state.board + "?page=" + (gvnb.state.page-1)}>
+							{this.getIntlMessage("pager.back")}
+						</a></li>
+						<li><a href={"/" + gvnb.state.board + "?page=" + (gvnb.state.page+1)}>
+							{this.getIntlMessage("pager.forward")}
+						</a></li>
 					</ul>
 				</nav>
 			</div>
@@ -208,6 +226,7 @@ var Board = React.createClass({
 })
 
 var Thread = React.createClass({
+	mixins: [IntlMixin],
 	render: function() {
 		var opId = this.props.posts[0].LocalId;
 		var posts = this.props.posts;
@@ -217,7 +236,8 @@ var Thread = React.createClass({
 				<Post postData={posts[0]} opPostId={opId} key={opId} />
 				<div className="thread-skipped">
 					<span className="thread-skipped-count">
-						Пропущено {posts[1].PostNum - 2} постов.
+						<FormattedMessage message={this.getIntlMessage("thread.skippedcount")} 
+							count={posts[1].PostNum - 2} />
 					</span>
 				</div>
 				{this.props.posts.slice(1).map(function(val) {
@@ -256,6 +276,7 @@ var vimeoTpl = _.template(
 	);
 
 var Post = React.createClass({
+	mixins: [IntlMixin],
 	processMarkup: function(str) {
 		var tagsToReplace = {
 		    '&': '&amp;',
@@ -352,6 +373,7 @@ var Post = React.createClass({
 	},
 
 	render: function() {
+		var date = <FormattedRelative value={this.props.postData.Date} />;
 		var datestr = new Date(this.props.postData.Date).toLocaleString({}, {
 			hour12: false,
 			weekday: "long",
@@ -413,7 +435,7 @@ var Post = React.createClass({
 
 		var deleteButton = null;
 		if (attrs && attrs.own || gvnb.hasModRights()) {
-			deleteButton = <a className="post-delete-button" href='#' title="Удалить пост"
+			deleteButton = <a className="post-delete-button" href='#' title={this.getIntlMessage("post.delete")}
 				onClick={function(evt){gvnb.deletePost(argBoard, argId);
 					evt.preventDefault();}} >
 				<span className="glyphicon glyphicon-remove"></span>
@@ -423,12 +445,12 @@ var Post = React.createClass({
 		var self = this;
 		var lockButton = null, pinButton = null;
 		if (gvnb.hasModRights() && this.props.postData.LocalId == this.props.opPostId) {
-			lockButton = <a className="post-lock-button" href='#' title="Закрыть тред"
+			lockButton = <a className="post-lock-button" href='#' title={this.getIntlMessage("post.lock")}
 				onClick={function(evt){gvnb.lockThread(argBoard, argId, !self.props.postData.IsLocked);
 					evt.preventDefault();}} >
 				<span className="glyphicon glyphicon-lock"></span>
 			</a>;
-			pinButton = <a className="post-pin-button" href='#' title="Закрепить тред"
+			pinButton = <a className="post-pin-button" href='#' title={this.getIntlMessage("post.pin")}
 				onClick={function(evt){gvnb.pinThread(argBoard, argId, !self.props.postData.IsPinned);
 					evt.preventDefault();}} >
 				<span className="glyphicon glyphicon-pushpin"></span>
@@ -438,7 +460,7 @@ var Post = React.createClass({
 		var answers = null;
 		if (attrs && attrs.answers) {
 			answers = <div className="post-answers">
-			Ответы: 
+			{this.getIntlMessage("post.answers")}
 			{
 				Object.keys(attrs.answers).map(function(answ){
 					return (
@@ -471,9 +493,9 @@ var Post = React.createClass({
 
 		var bodyContent = null;
 		if (attrs && attrs.deleted) {
-			bodyContent = <span className="post-deleted-body">Пост удален.</span>
+			bodyContent = <span className="post-deleted-body">{this.getIntlMessage("post.deleted")}</span>
 		} else if (attrs && attrs.deletedMod) {
-			bodyContent = <span className="post-deleted-body">Пост удален модератором.</span>
+			bodyContent = <span className="post-deleted-body">{this.getIntlMessage("post.deletedmod")}</span>
 		} else {
 			bodyContent = <div className="post-body" 
 				dangerouslySetInnerHTML={this.processMarkup(this.props.postData.Contents)}>
@@ -497,7 +519,7 @@ var Post = React.createClass({
 				{ (attrs && attrs.op) ? <span className='label label-primary'>OP</span> : null}
 				{ (attrs && attrs.adminLabel) ? <span className='label label-admin'>ADMIN</span> : null}
 				{ (attrs && attrs.modLabel) ? <span className='label label-success'>MOD</span> : null}
-				<span className="post-header-date">{datestr}</span>
+				<span className="post-header-date" title={datestr}>{date}</span>
 				</div>
 				<div className="panel-body">
 					{files}
@@ -517,6 +539,7 @@ var Post = React.createClass({
 });
 
 var PostPreviews = React.createClass({
+	mixins: [IntlMixin],
 	getInitialState: function() {
 		return {posts: []};
 	},
@@ -586,31 +609,32 @@ var PostVideo = React.createClass({
 })
 
 var PostingForm = React.createClass({
+	mixins: [IntlMixin],
 	render: function() {
 		var submitCaption;
 		switch (this.props.type) {
-			case "thread": submitCaption = "Ответить"; break;
-			case "board":  submitCaption = "Создать тред"; break;
+			case "thread": submitCaption = this.getIntlMessage("postingform.submit.thread"); break;
+			case "board":  submitCaption = this.getIntlMessage("postingform.submit.board"); break;
 		};
 		return (
 			<div className="panel panel-default postform">
 			<form className="form-horizontal panel-body" action="#" role="form" onSubmit={gvnb.attemptPosting.bind(gvnb)}>
 				<div className="form-group">
-					<label className="control-label col-sm-2">Тема</label>
+					<label className="control-label col-sm-2">{this.getIntlMessage("postingform.topic")}</label>
 					<div className="col-sm-10">
 						<input id="input_topic" name="topic" type="text" className="form-control"
 							autoComplete='off' />
 					</div>
 				</div>
 				<div className="form-group">
-					<label className="control-label col-sm-2">Текст</label>
+					<label className="control-label col-sm-2">{this.getIntlMessage("postingform.contents")}</label>
 					<div className="col-sm-10">
 						<textarea id="input_contents" name="contents" className="form-control" required>
 						</textarea>
 					</div>
 				</div>
 				<div className="form-group">
-					<label className="control-label col-sm-2">Файл</label>
+					<label className="control-label col-sm-2">{this.getIntlMessage("postingform.file")}</label>
 					<div className="col-sm-10">
 						<input id="input_file" name="file" type="file" multiple />
 					</div>
@@ -646,7 +670,7 @@ var PostingForm = React.createClass({
 				{
 					this.props.captcha && gvnb.isBoardFeatureEnabled('captcha') ?
 					<div className="form-group">
-						<label className="control-label col-sm-2">Капча</label>
+						<label className="control-label col-sm-2">{this.getIntlMessage("postingform.captcha")}</label>
 						<div className="col-sm-10">
 							<img src={"data:image/png;base64," + this.props.captcha}></img>
 						</div>
@@ -656,7 +680,7 @@ var PostingForm = React.createClass({
 				{
 					this.props.captcha && gvnb.isBoardFeatureEnabled('captcha') ?
 					<div className="form-group">
-						<label className="control-label col-sm-2">Ответ</label>
+						<label className="control-label col-sm-2">{this.getIntlMessage("postingform.solution")}</label>
 						<div className="col-sm-10">
 							<input id="input_captcha" name="captcha" type="text" className="form-control"
 								autoComplete='off' />
@@ -678,6 +702,7 @@ var PostingForm = React.createClass({
 var ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
 
 var NotificationArea = React.createClass({
+	mixins: [IntlMixin],
 	getInitialState: function() {
 		return {items: {}};
 	},
@@ -708,6 +733,8 @@ var NotificationArea = React.createClass({
 
 var GovnabaViews = {
 	mountBaseContainer: function() {
-		return React.render(<Base />, document.getElementsByTagName("body")[0]);
+		var locale = _.contains(intlData.locales, navigator.language) ? navigator.language : "en-US";
+		return React.render(<Base locales={[locale]} messages={intlData.messages[locale]} />, 
+			document.getElementsByTagName("body")[0]);
 	}
 };

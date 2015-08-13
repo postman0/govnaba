@@ -250,7 +250,6 @@ Govnaba = function() {
     }
 
     this.performScroll = function() {
-        console.log(this.state.scrollTo);
         if(this.state.scrollTo) {
             var where = "#post-" + this.state.scrollTo;
             this.state.scrollTo = null;

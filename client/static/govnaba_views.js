@@ -6,7 +6,12 @@ ViewContext = {
 	THREAD: 3
 }
 
+var IntlMixin = ReactIntl.IntlMixin;
+var FormattedRelative = ReactIntl.FormattedRelative;
+var FormattedMessage = ReactIntl.FormattedMessage;
+
 var Base = React.createClass({displayName: "Base",
+	mixins: [IntlMixin],
 
 	getInitialState: function() {
 		return {ctx: ViewContext.NONE}
@@ -125,6 +130,7 @@ var Base = React.createClass({displayName: "Base",
 })
 
 var NavBar = React.createClass({displayName: "NavBar",
+	mixins: [IntlMixin],
 	render: function() {
 		return (
 			React.createElement("nav", {className: "navbar navbar-default navbar-static-top"}, 
@@ -141,8 +147,10 @@ var NavBar = React.createClass({displayName: "NavBar",
 				React.createElement("div", {className: "collapse navbar-collapse"}, 
 					React.createElement("div", {className: "navbar-form navbar-right"}, 
 						React.createElement("form", {className: "form-inline", action: "#", onSubmit: gvnb.sendLoginForm.bind(gvnb)}, 
-							React.createElement("input", {id: "input_login_key", type: "text", className: "form-control", placeholder: "Ключ"}), 
-							React.createElement("input", {id: "input_login_submit", type: "submit", className: "form-control", value: "Вход"})
+							React.createElement("input", {id: "input_login_key", type: "text", className: "form-control", 
+								placeholder: this.getIntlMessage("navbar.key")}), 
+							React.createElement("input", {id: "input_login_submit", type: "submit", className: "form-control", 
+								value: this.getIntlMessage("navbar.submit")})
 						)
 					)
 				)
@@ -152,17 +160,21 @@ var NavBar = React.createClass({displayName: "NavBar",
 })
 
 var NavBreadCrumbs = React.createClass({displayName: "NavBreadCrumbs",
+	mixins: [IntlMixin],
 	render: function() {
 		var board = null;
 		if(this.props.board)
 			board = React.createElement("li", null, React.createElement("a", {href: "/"+this.props.board+"/"}, "/"+this.props.board+"/"))
 		var thread = null;
 		if(this.props.thread)
-			thread = React.createElement("li", null, React.createElement("a", {href: "/"+this.props.board+"/"+this.props.thread}, "Тред #"+this.props.thread))
+			thread = (React.createElement("li", null, React.createElement("a", {href: "/"+this.props.board+"/"+this.props.thread}, 
+				React.createElement(FormattedMessage, {message: this.getIntlMessage("navbreadcrumbs.thread"), 
+					thread: this.props.thread})
+		)))
 		return (
 			React.createElement("div", {className: "col-md-12"}, 
 				React.createElement("ol", {className: "breadcrumb breadcrumb-navbar"}, 
-					React.createElement("li", null, React.createElement("a", {href: "/"}, "Главная")), 
+					React.createElement("li", null, React.createElement("a", {href: "/"}, this.getIntlMessage("navbreadcrumbs.main"))), 
 					board, 
 					thread
 				)
@@ -173,6 +185,7 @@ var NavBreadCrumbs = React.createClass({displayName: "NavBreadCrumbs",
 
 
 var BoardList = React.createClass({displayName: "BoardList",
+	mixins: [IntlMixin],
 	render: function() {
 		var boards = this.props.boards.map(function(board) {
 			return (
@@ -188,6 +201,7 @@ var BoardList = React.createClass({displayName: "BoardList",
 })
 
 var Board = React.createClass({displayName: "Board",
+	mixins: [IntlMixin],
 	render: function() {
 		return (
 			React.createElement("div", {className: "board"}, 
@@ -198,8 +212,12 @@ var Board = React.createClass({displayName: "Board",
 				}), 
 				React.createElement("nav", null, 
 					React.createElement("ul", {className: "pager"}, 
-						React.createElement("li", null, React.createElement("a", {href: "/" + gvnb.state.board + "?page=" + (gvnb.state.page-1)}, "Назад")), 
-						React.createElement("li", null, React.createElement("a", {href: "/" + gvnb.state.board + "?page=" + (gvnb.state.page+1)}, "Вперед"))
+						React.createElement("li", null, React.createElement("a", {href: "/" + gvnb.state.board + "?page=" + (gvnb.state.page-1)}, 
+							this.getIntlMessage("pager.back")
+						)), 
+						React.createElement("li", null, React.createElement("a", {href: "/" + gvnb.state.board + "?page=" + (gvnb.state.page+1)}, 
+							this.getIntlMessage("pager.forward")
+						))
 					)
 				)
 			)
@@ -208,6 +226,7 @@ var Board = React.createClass({displayName: "Board",
 })
 
 var Thread = React.createClass({displayName: "Thread",
+	mixins: [IntlMixin],
 	render: function() {
 		var opId = this.props.posts[0].LocalId;
 		var posts = this.props.posts;
@@ -217,7 +236,8 @@ var Thread = React.createClass({displayName: "Thread",
 				React.createElement(Post, {postData: posts[0], opPostId: opId, key: opId}), 
 				React.createElement("div", {className: "thread-skipped"}, 
 					React.createElement("span", {className: "thread-skipped-count"}, 
-						"Пропущено ", posts[1].PostNum - 2, " постов."
+						React.createElement(FormattedMessage, {message: this.getIntlMessage("thread.skippedcount"), 
+							count: posts[1].PostNum - 2})
 					)
 				), 
 				this.props.posts.slice(1).map(function(val) {
@@ -256,6 +276,7 @@ var vimeoTpl = _.template(
 	);
 
 var Post = React.createClass({displayName: "Post",
+	mixins: [IntlMixin],
 	processMarkup: function(str) {
 		var tagsToReplace = {
 		    '&': '&amp;',
@@ -352,6 +373,7 @@ var Post = React.createClass({displayName: "Post",
 	},
 
 	render: function() {
+		var date = React.createElement(FormattedRelative, {value: this.props.postData.Date});
 		var datestr = new Date(this.props.postData.Date).toLocaleString({}, {
 			hour12: false,
 			weekday: "long",
@@ -413,7 +435,7 @@ var Post = React.createClass({displayName: "Post",
 
 		var deleteButton = null;
 		if (attrs && attrs.own || gvnb.hasModRights()) {
-			deleteButton = React.createElement("a", {className: "post-delete-button", href: "#", title: "Удалить пост", 
+			deleteButton = React.createElement("a", {className: "post-delete-button", href: "#", title: this.getIntlMessage("post.delete"), 
 				onClick: function(evt){gvnb.deletePost(argBoard, argId);
 					evt.preventDefault();}}, 
 				React.createElement("span", {className: "glyphicon glyphicon-remove"})
@@ -423,12 +445,12 @@ var Post = React.createClass({displayName: "Post",
 		var self = this;
 		var lockButton = null, pinButton = null;
 		if (gvnb.hasModRights() && this.props.postData.LocalId == this.props.opPostId) {
-			lockButton = React.createElement("a", {className: "post-lock-button", href: "#", title: "Закрыть тред", 
+			lockButton = React.createElement("a", {className: "post-lock-button", href: "#", title: this.getIntlMessage("post.lock"), 
 				onClick: function(evt){gvnb.lockThread(argBoard, argId, !self.props.postData.IsLocked);
 					evt.preventDefault();}}, 
 				React.createElement("span", {className: "glyphicon glyphicon-lock"})
 			);
-			pinButton = React.createElement("a", {className: "post-pin-button", href: "#", title: "Закрепить тред", 
+			pinButton = React.createElement("a", {className: "post-pin-button", href: "#", title: this.getIntlMessage("post.pin"), 
 				onClick: function(evt){gvnb.pinThread(argBoard, argId, !self.props.postData.IsPinned);
 					evt.preventDefault();}}, 
 				React.createElement("span", {className: "glyphicon glyphicon-pushpin"})
@@ -438,7 +460,7 @@ var Post = React.createClass({displayName: "Post",
 		var answers = null;
 		if (attrs && attrs.answers) {
 			answers = React.createElement("div", {className: "post-answers"}, 
-			"Ответы:",  
+			this.getIntlMessage("post.answers"), 
 			
 				Object.keys(attrs.answers).map(function(answ){
 					return (
@@ -471,9 +493,9 @@ var Post = React.createClass({displayName: "Post",
 
 		var bodyContent = null;
 		if (attrs && attrs.deleted) {
-			bodyContent = React.createElement("span", {className: "post-deleted-body"}, "Пост удален.")
+			bodyContent = React.createElement("span", {className: "post-deleted-body"}, this.getIntlMessage("post.deleted"))
 		} else if (attrs && attrs.deletedMod) {
-			bodyContent = React.createElement("span", {className: "post-deleted-body"}, "Пост удален модератором.")
+			bodyContent = React.createElement("span", {className: "post-deleted-body"}, this.getIntlMessage("post.deletedmod"))
 		} else {
 			bodyContent = React.createElement("div", {className: "post-body", 
 				dangerouslySetInnerHTML: this.processMarkup(this.props.postData.Contents)}
@@ -497,7 +519,7 @@ var Post = React.createClass({displayName: "Post",
 				 (attrs && attrs.op) ? React.createElement("span", {className: "label label-primary"}, "OP") : null, 
 				 (attrs && attrs.adminLabel) ? React.createElement("span", {className: "label label-admin"}, "ADMIN") : null, 
 				 (attrs && attrs.modLabel) ? React.createElement("span", {className: "label label-success"}, "MOD") : null, 
-				React.createElement("span", {className: "post-header-date"}, datestr)
+				React.createElement("span", {className: "post-header-date", title: datestr}, date)
 				), 
 				React.createElement("div", {className: "panel-body"}, 
 					files, 
@@ -517,6 +539,7 @@ var Post = React.createClass({displayName: "Post",
 });
 
 var PostPreviews = React.createClass({displayName: "PostPreviews",
+	mixins: [IntlMixin],
 	getInitialState: function() {
 		return {posts: []};
 	},
@@ -586,31 +609,32 @@ var PostVideo = React.createClass({displayName: "PostVideo",
 })
 
 var PostingForm = React.createClass({displayName: "PostingForm",
+	mixins: [IntlMixin],
 	render: function() {
 		var submitCaption;
 		switch (this.props.type) {
-			case "thread": submitCaption = "Ответить"; break;
-			case "board":  submitCaption = "Создать тред"; break;
+			case "thread": submitCaption = this.getIntlMessage("postingform.submit.thread"); break;
+			case "board":  submitCaption = this.getIntlMessage("postingform.submit.board"); break;
 		};
 		return (
 			React.createElement("div", {className: "panel panel-default postform"}, 
 			React.createElement("form", {className: "form-horizontal panel-body", action: "#", role: "form", onSubmit: gvnb.attemptPosting.bind(gvnb)}, 
 				React.createElement("div", {className: "form-group"}, 
-					React.createElement("label", {className: "control-label col-sm-2"}, "Тема"), 
+					React.createElement("label", {className: "control-label col-sm-2"}, this.getIntlMessage("postingform.topic")), 
 					React.createElement("div", {className: "col-sm-10"}, 
 						React.createElement("input", {id: "input_topic", name: "topic", type: "text", className: "form-control", 
 							autoComplete: "off"})
 					)
 				), 
 				React.createElement("div", {className: "form-group"}, 
-					React.createElement("label", {className: "control-label col-sm-2"}, "Текст"), 
+					React.createElement("label", {className: "control-label col-sm-2"}, this.getIntlMessage("postingform.contents")), 
 					React.createElement("div", {className: "col-sm-10"}, 
 						React.createElement("textarea", {id: "input_contents", name: "contents", className: "form-control", required: true}
 						)
 					)
 				), 
 				React.createElement("div", {className: "form-group"}, 
-					React.createElement("label", {className: "control-label col-sm-2"}, "Файл"), 
+					React.createElement("label", {className: "control-label col-sm-2"}, this.getIntlMessage("postingform.file")), 
 					React.createElement("div", {className: "col-sm-10"}, 
 						React.createElement("input", {id: "input_file", name: "file", type: "file", multiple: true})
 					)
@@ -646,7 +670,7 @@ var PostingForm = React.createClass({displayName: "PostingForm",
 				
 					this.props.captcha && gvnb.isBoardFeatureEnabled('captcha') ?
 					React.createElement("div", {className: "form-group"}, 
-						React.createElement("label", {className: "control-label col-sm-2"}, "Капча"), 
+						React.createElement("label", {className: "control-label col-sm-2"}, this.getIntlMessage("postingform.captcha")), 
 						React.createElement("div", {className: "col-sm-10"}, 
 							React.createElement("img", {src: "data:image/png;base64," + this.props.captcha})
 						)
@@ -656,7 +680,7 @@ var PostingForm = React.createClass({displayName: "PostingForm",
 				
 					this.props.captcha && gvnb.isBoardFeatureEnabled('captcha') ?
 					React.createElement("div", {className: "form-group"}, 
-						React.createElement("label", {className: "control-label col-sm-2"}, "Ответ"), 
+						React.createElement("label", {className: "control-label col-sm-2"}, this.getIntlMessage("postingform.solution")), 
 						React.createElement("div", {className: "col-sm-10"}, 
 							React.createElement("input", {id: "input_captcha", name: "captcha", type: "text", className: "form-control", 
 								autoComplete: "off"})
@@ -678,6 +702,7 @@ var PostingForm = React.createClass({displayName: "PostingForm",
 var ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
 
 var NotificationArea = React.createClass({displayName: "NotificationArea",
+	mixins: [IntlMixin],
 	getInitialState: function() {
 		return {items: {}};
 	},
@@ -708,6 +733,8 @@ var NotificationArea = React.createClass({displayName: "NotificationArea",
 
 var GovnabaViews = {
 	mountBaseContainer: function() {
-		return React.render(React.createElement(Base, null), document.getElementsByTagName("body")[0]);
+		var locale = _.contains(intlData.locales, navigator.language) ? navigator.language : "en-US";
+		return React.render(React.createElement(Base, {locales: [locale], messages: intlData.messages[locale]}), 
+			document.getElementsByTagName("body")[0]);
 	}
 };
