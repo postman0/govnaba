@@ -519,7 +519,8 @@ var Post = React.createClass({displayName: "Post",
 				 (attrs && attrs.op) ? React.createElement("span", {className: "label label-primary"}, "OP") : null, 
 				 (attrs && attrs.adminLabel) ? React.createElement("span", {className: "label label-admin"}, "ADMIN") : null, 
 				 (attrs && attrs.modLabel) ? React.createElement("span", {className: "label label-success"}, "MOD") : null, 
-				React.createElement("span", {className: "post-header-date", title: datestr}, date)
+				React.createElement("span", {className: "post-header-date", title: datestr}, date), 
+				React.createElement("span", {className: "clearfix"})
 				), 
 				React.createElement("div", {className: "panel-body"}, 
 					files, 

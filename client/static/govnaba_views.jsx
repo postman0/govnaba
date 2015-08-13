@@ -520,6 +520,7 @@ var Post = React.createClass({
 				{ (attrs && attrs.adminLabel) ? <span className='label label-admin'>ADMIN</span> : null}
 				{ (attrs && attrs.modLabel) ? <span className='label label-success'>MOD</span> : null}
 				<span className="post-header-date" title={datestr}>{date}</span>
+				<span className="clearfix" />
 				</div>
 				<div className="panel-body">
 					{files}
