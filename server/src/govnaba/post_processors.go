@@ -119,7 +119,9 @@ func SageProcessorBefore(cl *Client, p *Post) error {
 func SageProcessorAfter(cl *Client, p *Post) error {
 	_, saged := p.Attrs.Get("sage")
 	if !saged {
-		cl.db.Exec(`UPDATE threads SET last_bump_date = DEFAULT WHERE id = (SELECT thread_id FROM posts WHERE board_local_id = $1);`, p.ThreadId)
+		cl.db.Exec(`UPDATE threads SET last_bump_date = DEFAULT 
+			WHERE id = (SELECT thread_id FROM posts WHERE board_local_id = $1)
+			AND board_id = (SELECT id FROM boards WHERE name = $2);`, p.ThreadId, p.Board)
 	}
 	return nil
 }
