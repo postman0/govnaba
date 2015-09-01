@@ -20,12 +20,12 @@ var Base = React.createClass({
 		this.setState({ctx: ViewContext.MAINPAGE, 
 			boards: boardList, threads: null, posts: null, 
 			curBoard: null, curThread: null});
-		this.setPageTitle(gvnb.config.SiteName);
+		this.setPageTitle(this.getIntlMessage("config.sitename"));
 	},
 	displayBoard: function(boardMsg) {
 		this.setState({ctx: ViewContext.BOARD, threads: boardMsg.Threads, 
 			curBoard: boardMsg.Board, curThread: null});
-		this.setPageTitle('/' + boardMsg.Board + '/ — ' + gvnb.config.SiteName);
+		this.setPageTitle('/' + boardMsg.Board + '/ — ' + this.getIntlMessage("config.sitename"));
 	},
 	displayThread: function(postsMsg) {
 		var threadId = postsMsg.Posts[0].LocalId;
@@ -33,12 +33,12 @@ var Base = React.createClass({
 			curBoard: postsMsg.Board, curThread: threadId});
 		var threadTopic = postsMsg.Posts[0].Topic;
 		if (threadTopic != '')
-			this.setPageTitle(threadTopic + ' — ' + gvnb.config.SiteName)
+			this.setPageTitle(threadTopic + ' — ' + this.getIntlMessage("config.sitename"))
 		else
 			this.setPageTitle(_.template("/<%= board %>/ #<%= tid %> — <%= site %>")({
 				board: postsMsg.Board,
 				tid: threadId,
-				site: gvnb.config.SiteName
+				site: this.getIntlMessage("config.sitename")
 			}))
 	},
 	displayNewPost: function(post) {
@@ -108,7 +108,9 @@ var Base = React.createClass({
 	            </div>
 	            <div id="content-board" className="col-md-8">
 	            	{ this.state.ctx == ViewContext.MAINPAGE ?
-	            		<div dangerouslySetInnerHTML={{__html: gvnb.config.MainPageContent}}>
+	            		<div className="main-page-container">
+		            		<h2 className="main-page-title">{this.getIntlMessage("config.mainpagetitle")}</h2>
+		            		<h4 className="main-page-subtitle">{this.getIntlMessage("config.mainpagesubtitle")}</h4>
 	            		</div>
 	            		: null
 	            	}
@@ -135,7 +137,7 @@ var NavBar = React.createClass({
 		return (
 			<nav className="navbar navbar-default navbar-static-top">
 				<div className="navbar-header">
-					<a className="navbar-brand" href="/">{gvnb.config.SiteName}</a>
+					<a className="navbar-brand" href="/">{this.getIntlMessage("config.sitename")}</a>
 				</div>
 				{ this.props.users ? 
 					<div className="navbar-users navbar-text">

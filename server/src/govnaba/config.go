@@ -21,9 +21,6 @@ type Config struct {
 		User     string
 		Password string
 	}
-	SiteName           string
-	MainPageContent    string
-	RulesContent       string
 	AdministratorsKeys []string
 	BoardConfigs       map[string]BoardConfig
 }
@@ -37,9 +34,6 @@ func SetupGovnaba(cfg Config) error {
 
 type SiteConfigMessage struct {
 	MessageBase
-	SiteName        string
-	MainPageContent string
-	RulesContent    string
 	IsAdmin         bool
 	ModeratedBoards []string
 	BoardConfigs    map[string]BoardConfig

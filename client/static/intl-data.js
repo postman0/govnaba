@@ -36,6 +36,11 @@ var intlData = {
 					board: "Create thread"
 				}
 			},
+			config: {
+				sitename: "Govnaba",
+				mainpagetitle: "Govnaba",
+				mainpagesubtitle: 'Govnaba is a new imageboard engine focused on preserving traditions while embracing new web technologies.'
+			},
 		},
 		"ru": {
 			navbar: {
@@ -70,6 +75,11 @@ var intlData = {
 					thread: "Ответить в тред",
 					board: "Создать тред"
 				}
+			},
+			config: {
+				sitename: "Govnaba",
+				mainpagetitle: "Govnaba",
+				mainpagesubtitle: 'Govnaba - новый движок имиджборд, старающийся сохранить их традиции, в то же время используя новые Web-технологии.'
 			},
 		}
 	}

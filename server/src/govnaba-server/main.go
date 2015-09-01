@@ -67,11 +67,8 @@ func stringIsInSlice(needle string, haystack []string) bool {
 // Send website config to the client
 func sendConfig(cl *govnaba.Client) {
 	configMsg := &govnaba.SiteConfigMessage{
-		MessageBase:     govnaba.MessageBase{govnaba.SiteConfigMessageType, cl},
-		SiteName:        config.SiteName,
-		MainPageContent: config.MainPageContent,
-		RulesContent:    config.RulesContent,
-		BoardConfigs:    config.BoardConfigs,
+		MessageBase:  govnaba.MessageBase{govnaba.SiteConfigMessageType, cl},
+		BoardConfigs: config.BoardConfigs,
 	}
 	var clientKey sql.NullString
 	db.Get(&clientKey, `SELECT key FROM users WHERE id = $1;`, cl.Id)
