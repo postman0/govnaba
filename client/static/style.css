@@ -11,6 +11,11 @@
 	text-align: center;
 }
 
+.main-page-threads-container {
+	margin-top: 2em;
+	text-align: left;
+}
+
 .post-container {
 	margin-top: 0.5em;
 	margin-bottom: 0.5em;

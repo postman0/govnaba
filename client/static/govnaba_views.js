@@ -22,6 +22,9 @@ var Base = React.createClass({displayName: "Base",
 			curBoard: null, curThread: null});
 		this.setPageTitle(this.getIntlMessage("config.sitename"));
 	},
+	displayTopThreads: function(msg) {
+		this.setState({newThreads: msg.NewThreads, mostAnsweredThreads: msg.MostAnsweredThreads});
+	},
 	displayBoard: function(boardMsg) {
 		this.setState({ctx: ViewContext.BOARD, threads: boardMsg.Threads, 
 			curBoard: boardMsg.Board, curThread: null});
@@ -106,11 +109,34 @@ var Base = React.createClass({displayName: "Base",
 	            React.createElement("div", {id: "board-list", className: "col-md-2"}, 
 	            	boardList
 	            ), 
-	            React.createElement("div", {id: "content-board", className: "col-md-8"}, 
+	            React.createElement("div", {id: "content-board", className: this.state.ctx == ViewContext.MAINPAGE ? "col-md-10" : "col-md-8"}, 
 	            	 this.state.ctx == ViewContext.MAINPAGE ?
 	            		React.createElement("div", {className: "main-page-container"}, 
 		            		React.createElement("h2", {className: "main-page-title"}, this.getIntlMessage("config.mainpagetitle")), 
-		            		React.createElement("h4", {className: "main-page-subtitle"}, this.getIntlMessage("config.mainpagesubtitle"))
+		            		React.createElement("h4", {className: "main-page-subtitle"}, this.getIntlMessage("config.mainpagesubtitle")), 
+	            			 (this.state.newThreads && this.state.mostAnsweredThreads) ?
+	            			React.createElement("div", {className: "row main-page-threads-container"}, 
+	            				React.createElement("div", {className: "col-md-6"}, 
+	            					React.createElement("h4", null, this.getIntlMessage("mainpage.newthreads")), 
+	      							React.createElement("ul", {className: "list-group"}, 
+	      							
+	            						this.state.newThreads.map(function(val){
+	            							return React.createElement(TopThread, {post: val})
+	            						})
+	            					
+	            					)
+	            				), 
+	            				React.createElement("div", {className: "col-md-6"}, 
+	            					React.createElement("h4", null, this.getIntlMessage("mainpage.mostansweredthreads")), 
+	            					
+	            						this.state.mostAnsweredThreads.map(function(val){
+	            							return React.createElement(TopThread, {post: val})
+	            						})
+	            					
+	            				)
+	            			)
+	            			: null
+	            			
 	            		)
 	            		: null, 
 	            	
@@ -128,6 +154,18 @@ var Base = React.createClass({displayName: "Base",
         	React.createElement(NotificationArea, {ref: "notifArea"})
         )
 		);
+	}
+})
+
+var TopThread = React.createClass({displayName: "TopThread",
+	mixins: [IntlMixin],
+	render: function() {
+		var data = this.props.post;
+		return React.createElement("a", {href: "/" + data.Board + "/" + data.LocalId, 
+				className: "list-group-item"}, 
+			React.createElement("h5", {className: "list-group-item-heading"}, "#", data.LocalId, " ", data.Topic ? ("- " + data.Topic) : null), 
+			React.createElement("p", {className: "list-group-item-text"}, data.Contents)
+		)
 	}
 })
 

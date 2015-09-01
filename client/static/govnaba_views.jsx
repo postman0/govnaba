@@ -22,6 +22,9 @@ var Base = React.createClass({
 			curBoard: null, curThread: null});
 		this.setPageTitle(this.getIntlMessage("config.sitename"));
 	},
+	displayTopThreads: function(msg) {
+		this.setState({newThreads: msg.NewThreads, mostAnsweredThreads: msg.MostAnsweredThreads});
+	},
 	displayBoard: function(boardMsg) {
 		this.setState({ctx: ViewContext.BOARD, threads: boardMsg.Threads, 
 			curBoard: boardMsg.Board, curThread: null});
@@ -106,11 +109,34 @@ var Base = React.createClass({
 	            <div id="board-list" className="col-md-2">
 	            	{boardList}
 	            </div>
-	            <div id="content-board" className="col-md-8">
+	            <div id="content-board" className={this.state.ctx == ViewContext.MAINPAGE ? "col-md-10" : "col-md-8"}>
 	            	{ this.state.ctx == ViewContext.MAINPAGE ?
 	            		<div className="main-page-container">
 		            		<h2 className="main-page-title">{this.getIntlMessage("config.mainpagetitle")}</h2>
 		            		<h4 className="main-page-subtitle">{this.getIntlMessage("config.mainpagesubtitle")}</h4>
+	            			{ (this.state.newThreads && this.state.mostAnsweredThreads) ?
+	            			<div className="row main-page-threads-container">
+	            				<div className="col-md-6">
+	            					<h4>{this.getIntlMessage("mainpage.newthreads")}</h4>
+	      							<ul className="list-group">
+	      							{
+	            						this.state.newThreads.map(function(val){
+	            							return <TopThread post={val} />
+	            						})
+	            					}
+	            					</ul>
+	            				</div>
+	            				<div className="col-md-6">
+	            					<h4>{this.getIntlMessage("mainpage.mostansweredthreads")}</h4>
+	            					{
+	            						this.state.mostAnsweredThreads.map(function(val){
+	            							return <TopThread post={val} />
+	            						})
+	            					}
+	            				</div>
+	            			</div>
+	            			: null 
+	            			}
 	            		</div>
 	            		: null
 	            	}
@@ -128,6 +154,18 @@ var Base = React.createClass({
         	<NotificationArea ref="notifArea" />
         </div>
 		);
+	}
+})
+
+var TopThread = React.createClass({
+	mixins: [IntlMixin],
+	render: function() {
+		var data = this.props.post;
+		return <a href={"/" + data.Board + "/" + data.LocalId}
+				className="list-group-item">
+			<h5 className="list-group-item-heading">#{data.LocalId} {data.Topic ? ("- " + data.Topic) : null}</h5>
+			<p className="list-group-item-text">{data.Contents}</p>
+		</a>
 	}
 })
 

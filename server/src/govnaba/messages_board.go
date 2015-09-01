@@ -3,6 +3,7 @@ package govnaba
 import (
 	"encoding/json"
 	_ "errors"
+	"fmt"
 	"github.com/jmoiron/sqlx"
 	"log"
 )
@@ -131,5 +132,64 @@ func (msg *BoardThreadListMessage) ToClient() []byte {
 }
 
 func (msg *BoardThreadListMessage) GetDestination() Destination {
+	return Destination{DestinationType: ResponseDestination}
+}
+
+type TopThreadsMessage struct {
+	MessageBase
+	Count               int
+	NewThreads          []Post
+	MostAnsweredThreads []Post
+}
+
+func (msg *TopThreadsMessage) FromClient(cl *Client, msgBytes []byte) error {
+	err := json.Unmarshal(msgBytes, msg)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (msg *TopThreadsMessage) Process(db *sqlx.DB) []OutMessage {
+	const query = `
+		SELECT board_local_id as localid, board_local_id as threadid, boards.name as board,
+			topic, contents, attrs, created_date as date, user_id as userid
+		FROM posts INNER JOIN threads ON threads.id = thread_id
+			INNER JOIN boards ON boards.id = board_id
+		WHERE is_op = TRUE
+		ORDER BY %s DESC LIMIT $1;
+		`
+	// limit the count reasonably
+	if msg.Count > 20 {
+		msg.Count = 20
+	} else if msg.Count < 0 {
+		msg.Count = 0
+	}
+	newThreadsQuery := fmt.Sprintf(query, "last_bump_date")
+	mostAnsweredQuery := fmt.Sprintf(query, "posts_count")
+	err := db.Select(&msg.NewThreads, newThreadsQuery, msg.Count)
+	if err != nil {
+		goto errrec
+	}
+	err = db.Select(&msg.MostAnsweredThreads, mostAnsweredQuery, msg.Count)
+	if err != nil {
+		goto errrec
+	}
+	return []OutMessage{msg}
+
+errrec:
+	log.Printf("TopThreads error: %s from %s", err, msg.Client.conn.RemoteAddr())
+	return []OutMessage{&InternalServerErrorMessage{MessageBase{InternalServerErrorMessageType, msg.Client}}}
+}
+
+func (msg *TopThreadsMessage) ToClient() []byte {
+	bytes, err := json.Marshal(msg)
+	if err != nil {
+		log.Println(err)
+	}
+	return bytes
+}
+
+func (msg *TopThreadsMessage) GetDestination() Destination {
 	return Destination{DestinationType: ResponseDestination}
 }

@@ -11,6 +11,10 @@ var intlData = {
 				main: "Main",
 				thread: "Thread No.{thread}"
 			},
+			mainpage: {
+				newthreads: "Recent threads",
+				mostansweredthreads: "Popular threads",
+			},
 			pager: {
 				back: "Back", forward: "Forward"
 			},
@@ -50,6 +54,10 @@ var intlData = {
 			navbreadcrumbs: {
 				main: "Главная",
 				thread: "Тред №{thread}"
+			},
+			mainpage: {
+				newthreads: "Новые треды",
+				mostansweredthreads: "Популярные треды",
 			},
 			pager: {
 				back: "Назад", forward: "Вперед"

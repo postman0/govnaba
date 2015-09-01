@@ -31,6 +31,7 @@ const (
 	DeletePostMessageType
 	PinThreadMessageType
 	LockThreadMessageType
+	TopThreadsMessageType
 )
 
 // This type is used in reconstructing messages sent by clients.
@@ -73,6 +74,9 @@ var MessageConstructors = map[byte]MessageConstructor{
 	},
 	LockThreadMessageType: func(cl *Client) InMessage {
 		return &LockThreadMessage{MessageBase: MessageBase{LockThreadMessageType, cl}}
+	},
+	TopThreadsMessageType: func(cl *Client) InMessage {
+		return &TopThreadsMessage{MessageBase: MessageBase{TopThreadsMessageType, cl}}
 	},
 }
 

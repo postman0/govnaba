@@ -148,6 +148,17 @@ func (msg *CreateThreadMessage) Process(db *sqlx.DB) []OutMessage {
 		VALUES ($1, $2, nextval($3 || '_board_id_seq'), $4, $5, $6, TRUE)
 		RETURNING board_local_id AS localid, created_date AS date;`,
 		msg.Client.Id, thread_id, msg.Board, msg.Topic, msg.Contents, msg.Attrs)
+	if err != nil {
+		tx.Rollback()
+		log.Printf("CreateThread error: %s from %s", err, msg.Client.conn.RemoteAddr())
+		return []OutMessage{&InternalServerErrorMessage{MessageBase{InternalServerErrorMessageType, msg.Client}}}
+	}
+	_, err = db.Exec(`UPDATE threads SET posts_count = posts_count + 1 WHERE id = $1;`, thread_id)
+	if err != nil {
+		tx.Rollback()
+		log.Printf("CreateThread error: %s from %s", err, msg.Client.conn.RemoteAddr())
+		return []OutMessage{&InternalServerErrorMessage{MessageBase{InternalServerErrorMessageType, msg.Client}}}
+	}
 	tx.Commit()
 	if err != nil {
 		log.Printf("%#v", err)
@@ -233,6 +244,14 @@ func (msg *AddPostMessage) Process(db *sqlx.DB) []OutMessage {
 			InvalidArguments,
 			"Thread doesn't exist or has been locked.",
 		}}
+	}
+	_, err = db.Exec(`UPDATE threads SET posts_count = posts_count + 1
+		WHERE id IN (SELECT thread_id FROM posts WHERE board_local_id = $1)
+			AND board_id = (SELECT id FROM boards WHERE name = $2);`, msg.ThreadId, msg.Board)
+	if err != nil {
+		tx.Rollback()
+		log.Printf("CreateThread error: %s from %s", err, msg.Client.conn.RemoteAddr())
+		return []OutMessage{&InternalServerErrorMessage{MessageBase{InternalServerErrorMessageType, msg.Client}}}
 	}
 	tx.Commit()
 	msg.LocalId = answerId

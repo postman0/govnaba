@@ -74,6 +74,11 @@ var GovnabaMessager = function(gvnb) {
             }
             case 21: {
                 gvnb.onConfigMessage(msg);
+                break;
+            }
+            case 25: {
+                gvnb.onTopThreadsMessage(msg);
+                break;
             }
         }
     }
@@ -100,6 +105,13 @@ var GovnabaMessager = function(gvnb) {
             Board: board,
             LocalId: thread
         }))
+    }
+
+    this.getTopThreads = function(count) {
+        this.socket.send(JSON.stringify({
+            MessageType: 25,
+            Count: count
+        }));
     }
 
     this.createThread = function(board, topic, contents, attrs) {
@@ -225,6 +237,7 @@ Govnaba = function() {
 
     this.navMainPage = function(ctx) {
         this.msgr.getBoards();
+        this.msgr.getTopThreads(10);
         this.msgr.changeLocation("mainPage", "");
         this.state = {};
     }
@@ -332,6 +345,10 @@ Govnaba = function() {
     this.onBoardListMessage = function(msg) {
         this.baseCont.displayMainPage(msg.Boards.filter(function (name) { return name.length > 0 }));
         this.baseCont.displayUserCount(null);
+    }
+
+    this.onTopThreadsMessage = function(msg) {
+        this.baseCont.displayTopThreads(msg);
     }
 
     this.onThreadMessage = function(msg) {
