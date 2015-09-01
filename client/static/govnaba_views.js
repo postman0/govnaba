@@ -163,6 +163,7 @@ var TopThread = React.createClass({displayName: "TopThread",
 		var data = this.props.post;
 		return React.createElement("a", {href: "/" + data.Board + "/" + data.LocalId, 
 				className: "list-group-item"}, 
+			React.createElement("h5", {className: "list-group-item-heading pull-right"}, "/", data.Board, "/"), 
 			React.createElement("h5", {className: "list-group-item-heading"}, "#", data.LocalId, " ", data.Topic ? ("- " + data.Topic) : null), 
 			React.createElement("p", {className: "list-group-item-text"}, data.Contents)
 		)

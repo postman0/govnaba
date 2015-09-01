@@ -163,6 +163,7 @@ var TopThread = React.createClass({
 		var data = this.props.post;
 		return <a href={"/" + data.Board + "/" + data.LocalId}
 				className="list-group-item">
+			<h5 className="list-group-item-heading pull-right">/{data.Board}/</h5>
 			<h5 className="list-group-item-heading">#{data.LocalId} {data.Topic ? ("- " + data.Topic) : null}</h5>
 			<p className="list-group-item-text">{data.Contents}</p>
 		</a>
