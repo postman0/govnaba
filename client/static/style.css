@@ -31,7 +31,7 @@
 }
 
 .thread-container {
-	margin-bottom: 3em;
+	margin-bottom: 4em;
 }
 
 .thread-skipped {
@@ -43,7 +43,6 @@
 	margin: 0 auto;
 	font-size: 0.8em;
 	font-style: italic;
-	color: gray;
 }
 
 .post-ip-ident-elem {
@@ -95,6 +94,7 @@
 }
 
 .post-image {
+	vertical-align: top;
 	margin-right: 10px;
 	margin-bottom: 10px;
 }

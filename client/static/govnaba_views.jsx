@@ -275,10 +275,10 @@ var Thread = React.createClass({
 			<div className="thread-container">
 				<Post postData={posts[0]} opPostId={opId} key={opId} />
 				<div className="thread-skipped">
-					<span className="thread-skipped-count">
+					<a href={gvnb.getThreadLink(opId, opId)} className="thread-skipped-count">
 						<FormattedMessage message={this.getIntlMessage("thread.skippedcount")} 
 							count={posts[1].PostNum - 2} />
-					</span>
+					</a>
 				</div>
 				{this.props.posts.slice(1).map(function(val) {
 					return (
@@ -500,7 +500,7 @@ var Post = React.createClass({
 		var answers = null;
 		if (attrs && attrs.answers) {
 			answers = <div className="post-answers">
-			{this.getIntlMessage("post.answers")}
+			{this.getIntlMessage("post.answers") + " "}
 			{
 				Object.keys(attrs.answers).map(function(answ){
 					return (

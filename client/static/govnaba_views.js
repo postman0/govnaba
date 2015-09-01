@@ -275,7 +275,7 @@ var Thread = React.createClass({displayName: "Thread",
 			React.createElement("div", {className: "thread-container"}, 
 				React.createElement(Post, {postData: posts[0], opPostId: opId, key: opId}), 
 				React.createElement("div", {className: "thread-skipped"}, 
-					React.createElement("span", {className: "thread-skipped-count"}, 
+					React.createElement("a", {href: gvnb.getThreadLink(opId, opId), className: "thread-skipped-count"}, 
 						React.createElement(FormattedMessage, {message: this.getIntlMessage("thread.skippedcount"), 
 							count: posts[1].PostNum - 2})
 					)
@@ -500,7 +500,7 @@ var Post = React.createClass({displayName: "Post",
 		var answers = null;
 		if (attrs && attrs.answers) {
 			answers = React.createElement("div", {className: "post-answers"}, 
-			this.getIntlMessage("post.answers"), 
+			this.getIntlMessage("post.answers") + " ", 
 			
 				Object.keys(attrs.answers).map(function(answ){
 					return (
