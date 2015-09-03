@@ -543,6 +543,14 @@ var Post = React.createClass({displayName: "Post",
 			)
 		};
 
+		var replyClickHandler = function(evt) {
+			var node = $('#input_contents')[0];
+			var startPos = node.selectionStart || 0;
+			var endPos = node.selectionEnd || startPos;
+			node.value = node.value.substring(0, startPos) + '>>' + argId +
+				node.value.substring(endPos, node.value.length);
+			evt.preventDefault();
+		};
 		return (
 			React.createElement("div", {id: "post-" + this.props.postData.LocalId, 
 				className: "panel panel-default post-container " + 
@@ -551,6 +559,10 @@ var Post = React.createClass({displayName: "Post",
 				React.createElement("a", {
 					href: gvnb.getThreadLink(this.props.opPostId, this.props.postData.LocalId), 
 					className: "post-header-id"}, "#", this.props.postData.LocalId), 
+				React.createElement("a", {className: "post-header-reply", href: "#", onClick: replyClickHandler, 
+					title: this.getIntlMessage("post.reply")}, 
+					React.createElement("span", {className: "glyphicon glyphicon-pencil"})
+				), 
 				pinned, 
 				locked, 
 				topic, 

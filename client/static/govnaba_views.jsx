@@ -543,6 +543,14 @@ var Post = React.createClass({
 			</div>
 		};
 
+		var replyClickHandler = function(evt) {
+			var node = $('#input_contents')[0];
+			var startPos = node.selectionStart || 0;
+			var endPos = node.selectionEnd || startPos;
+			node.value = node.value.substring(0, startPos) + '>>' + argId +
+				node.value.substring(endPos, node.value.length);
+			evt.preventDefault();
+		};
 		return (
 			<div id={"post-" + this.props.postData.LocalId}
 				className={"panel panel-default post-container " + 
@@ -551,6 +559,10 @@ var Post = React.createClass({
 				<a 
 					href={gvnb.getThreadLink(this.props.opPostId, this.props.postData.LocalId)} 
 					className="post-header-id">#{this.props.postData.LocalId}</a>
+				<a className="post-header-reply" href="#" onClick={replyClickHandler}
+					title={this.getIntlMessage("post.reply")}>
+					<span className="glyphicon glyphicon-pencil"></span>
+				</a>
 				{pinned}
 				{locked}
 				{topic}

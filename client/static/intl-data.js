@@ -27,7 +27,8 @@ var intlData = {
 				pin: "Pin thread",
 				answers: "Answers:",
 				deleted: "This post has been deleted.",
-				deletedmod: "This post has been deleted by a moderator."
+				deletedmod: "This post has been deleted by a moderator.",
+				reply: "Reply to this post"
 			},
 			postingform: {
 				topic: "Topic",
@@ -71,7 +72,8 @@ var intlData = {
 				pin: "Закрепить тред",
 				answers: "Ответы:",
 				deleted: "Пост удален.",
-				deletedmod: "Пост удален модератором."
+				deletedmod: "Пост удален модератором.",
+				reply: "Ответить на пост"
 			},
 			postingform: {
 				topic: "Тема",
