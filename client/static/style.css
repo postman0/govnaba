@@ -191,6 +191,10 @@
 	position: absolute;
 }
 
+.postform-captcha-container {
+	cursor: pointer;
+}
+
 .notifications {
 	position: fixed;
 	right: 0;

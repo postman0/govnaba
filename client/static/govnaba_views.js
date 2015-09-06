@@ -740,8 +740,9 @@ var PostingForm = React.createClass({displayName: "PostingForm",
 					this.props.captcha && gvnb.isBoardFeatureEnabled('captcha') ?
 					React.createElement("div", {className: "form-group"}, 
 						React.createElement("label", {className: "control-label col-sm-2"}, this.getIntlMessage("postingform.captcha")), 
-						React.createElement("div", {className: "col-sm-10"}, 
-							React.createElement("img", {src: "data:image/png;base64," + this.props.captcha})
+						React.createElement("div", {className: "col-sm-10 postform-captcha-container"}, 
+							React.createElement("img", {src: "data:image/png;base64," + this.props.captcha, 
+								onClick: function(evt){gvnb.getNewCaptcha()}})
 						)
 					)
 					: null, 

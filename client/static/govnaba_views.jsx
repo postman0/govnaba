@@ -740,8 +740,9 @@ var PostingForm = React.createClass({
 					this.props.captcha && gvnb.isBoardFeatureEnabled('captcha') ?
 					<div className="form-group">
 						<label className="control-label col-sm-2">{this.getIntlMessage("postingform.captcha")}</label>
-						<div className="col-sm-10">
-							<img src={"data:image/png;base64," + this.props.captcha}></img>
+						<div className="col-sm-10 postform-captcha-container">
+							<img src={"data:image/png;base64," + this.props.captcha} 
+								onClick={function(evt){gvnb.getNewCaptcha()}}></img>
 						</div>
 					</div>
 					: null

@@ -306,6 +306,10 @@ Govnaba = function() {
         }
     }
 
+    this.getNewCaptcha = function() {
+        this.msgr.getNewCaptcha();
+    }
+
     this.isBoardFeatureEnabled = function(feature) {
         return _.contains(gvnb.config.BoardConfigs[gvnb.state.board].EnabledFeatures, feature)
     }
