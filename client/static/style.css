@@ -30,8 +30,14 @@
 	font-style: italic;
 }
 
+.board-thread-delim {
+	text-align: center;
+	margin: 1.5em 0;
+	color: lightgray;
+	font-size: 2em;
+}
+
 .thread-container {
-	margin-bottom: 4em;
 }
 
 .thread-skipped {

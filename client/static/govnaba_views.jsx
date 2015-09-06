@@ -248,7 +248,8 @@ var Board = React.createClass({
 			<div className="board">
 				{this.props.threads.map(function(val) {
 					return (
-						<Thread posts={val} key={val[0].LocalId}/>
+						[<Thread posts={val} key={val[0].LocalId}/>,
+						 <div className="board-thread-delim">&lowast;&lowast;&lowast;</div>]
 					)
 				})}
 				<nav>

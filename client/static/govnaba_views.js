@@ -248,7 +248,8 @@ var Board = React.createClass({displayName: "Board",
 			React.createElement("div", {className: "board"}, 
 				this.props.threads.map(function(val) {
 					return (
-						React.createElement(Thread, {posts: val, key: val[0].LocalId})
+						[React.createElement(Thread, {posts: val, key: val[0].LocalId}),
+						 React.createElement("div", {className: "board-thread-delim"}, "∗∗∗")]
 					)
 				}), 
 				React.createElement("nav", null, 
