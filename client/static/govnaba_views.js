@@ -552,6 +552,18 @@ var Post = React.createClass({displayName: "Post",
 				node.value.substring(endPos, node.value.length);
 			evt.preventDefault();
 		};
+
+		var isOp = (this.props.opPostId == this.props.postData.LocalId);
+		var openLink = null;
+		if (isOp) {
+			openLink = (React.createElement("div", {className: "post-open-link"}, 
+				React.createElement("a", {href: gvnb.getThreadLink(this.props.opPostId, this.props.postData.LocalId)}, 
+					React.createElement("span", {className: "glyphicon glyphicon-new-window"}), " ", 
+					this.getIntlMessage("thread.open")
+				)
+			));
+		}
+
 		return (
 			React.createElement("div", {id: "post-" + this.props.postData.LocalId, 
 				className: "panel panel-default post-container " + 
@@ -580,6 +592,8 @@ var Post = React.createClass({displayName: "Post",
 					files, 
 					bodyContent, 
 					answers, 
+					React.createElement("div", {className: "clearfix"}), 
+					openLink, 
 					React.createElement("span", {className: "post-actions"}, 
 						pinButton, lockButton, deleteButton
 					)

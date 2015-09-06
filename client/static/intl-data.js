@@ -19,7 +19,8 @@ var intlData = {
 				back: "Back", forward: "Forward"
 			},
 			thread: {
-				skippedcount: "{count, plural,\n one {One post has}\n other {# posts have}} been skipped."
+				skippedcount: "{count, plural,\n one {One post has}\n other {# posts have}} been skipped.",
+				open: "Open thread"
 			},
 			post: {
 				"delete": "Delete post",
@@ -64,7 +65,8 @@ var intlData = {
 				back: "Назад", forward: "Вперед"
 			},
 			thread: {
-				skippedcount: "{count, plural,\n one {Пропущен один пост}\n few {Пропущено # поста}\n many {Пропущено # постов}\n other {Пропущено # постов}}."
+				skippedcount: "{count, plural,\n one {Пропущен один пост}\n few {Пропущено # поста}\n many {Пропущено # постов}\n other {Пропущено # постов}}.",
+				open: "Открыть тред"
 			},
 			post: {
 				"delete": "Удалить пост",

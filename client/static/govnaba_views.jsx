@@ -552,6 +552,18 @@ var Post = React.createClass({
 				node.value.substring(endPos, node.value.length);
 			evt.preventDefault();
 		};
+
+		var isOp = (this.props.opPostId == this.props.postData.LocalId);
+		var openLink = null;
+		if (isOp) {
+			openLink = (<div className="post-open-link">
+				<a href={gvnb.getThreadLink(this.props.opPostId, this.props.postData.LocalId)}>
+					<span className="glyphicon glyphicon-new-window"></span>&nbsp;
+					{this.getIntlMessage("thread.open")}
+				</a>
+			</div>);
+		}
+
 		return (
 			<div id={"post-" + this.props.postData.LocalId}
 				className={"panel panel-default post-container " + 
@@ -580,6 +592,8 @@ var Post = React.createClass({
 					{files}
 					{bodyContent}
 					{answers}
+					<div className="clearfix"></div>
+					{openLink}
 					<span className="post-actions">
 						{pinButton}{lockButton}{deleteButton}
 					</span>

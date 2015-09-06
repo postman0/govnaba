@@ -86,6 +86,11 @@
 	margin-top: 1em;
 }
 
+.post-open-link {
+	margin-top: 1em;
+	font-style: italic;
+}
+
 .label-sage {
 	background-color: black;
 	color: white;
