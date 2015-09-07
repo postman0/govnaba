@@ -16,6 +16,13 @@
 	text-align: left;
 }
 
+.main-page-topthread-body {
+	white-space: nowrap;
+	min-height: 1.2em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
 .post-container {
 	margin-top: 0.5em;
 	margin-bottom: 0.5em;
@@ -138,6 +145,7 @@
 .post-body {
 	word-wrap: break-word;
 	min-width: 50%;
+	text-align: justify;
 }
 .post-body-bold {
 	font-weight: bold;

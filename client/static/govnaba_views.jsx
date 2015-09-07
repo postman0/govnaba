@@ -165,7 +165,7 @@ var TopThread = React.createClass({
 				className="list-group-item">
 			<h5 className="list-group-item-heading pull-right">/{data.Board}/</h5>
 			<h5 className="list-group-item-heading">#{data.LocalId} {data.Topic ? ("- " + data.Topic) : null}</h5>
-			<p className="list-group-item-text">{data.Contents}</p>
+			<p className="list-group-item-text main-page-topthread-body">{data.Contents}</p>
 		</a>
 	}
 })
