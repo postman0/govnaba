@@ -375,7 +375,7 @@ var Post = React.createClass({displayName: "Post",
 			newChunk = replaceMarkupTags(newChunk, /\*/g, "post-body-italic");
 			newChunk = replaceMarkupTags(newChunk, /%%/g, "post-body-spoiler");
 			newChunk = replaceMarkupTags(newChunk, /__/g, "post-body-underline");
-			newChunk = '<p class="post-body-paragraph">' + newChunk + '</p>';
+			newChunk = ' <p class="post-body-paragraph">' + newChunk + '</p> ';
 			return newChunk;
 		}).join('');
 
