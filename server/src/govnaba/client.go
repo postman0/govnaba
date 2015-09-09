@@ -4,6 +4,7 @@ import (
 	"cmagic"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/jmoiron/sqlx"
@@ -48,6 +49,8 @@ var validFileTypes map[string]string = map[string]string{
 	"image/gif":  "gif",
 	"video/webm": "webm",
 }
+
+var MaximumImageDimension = 2500
 
 func (cl *Client) IsModeratorOn(board string) bool {
 	var clientKey sql.NullString
@@ -143,6 +146,15 @@ func (cl *Client) writeLoop() {
 }
 
 func generateThumbnail(inputImage *os.File, thumbnailPath string, format string) error {
+	cfg, _, err := image.DecodeConfig(inputImage)
+	if err != nil {
+		return err
+	} else {
+		log.Printf("%#v", cfg)
+		if cfg.Height > MaximumImageDimension || cfg.Width > MaximumImageDimension {
+			return errors.New("The image is too big.")
+		}
+	}
 	img, _, err := image.Decode(inputImage)
 	if err != nil {
 		return err
