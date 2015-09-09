@@ -368,11 +368,16 @@ var Post = React.createClass({
 		text = text.replace(/^&gt;(.*$\n)/mg, function(match, contents){
 			return '<blockquote class="post-body-quote">' + safeTagsReplace(contents) + '</blockquote>';
 		});
-		text = text.replace(/\n/, " <br>");
-		text = replaceMarkupTags(text, /\*\*/g, "post-body-bold");
-		text = replaceMarkupTags(text, /\*/g, "post-body-italic");
-		text = replaceMarkupTags(text, /%%/g, "post-body-spoiler");
-		text = replaceMarkupTags(text, /__/g, "post-body-underline");
+		var chunks = text.split('\n');
+		text = chunks.map(function(chunk) {
+			var newChunk;
+			newChunk = replaceMarkupTags(chunk, /\*\*/g, "post-body-bold");
+			newChunk = replaceMarkupTags(newChunk, /\*/g, "post-body-italic");
+			newChunk = replaceMarkupTags(newChunk, /%%/g, "post-body-spoiler");
+			newChunk = replaceMarkupTags(newChunk, /__/g, "post-body-underline");
+			newChunk = '<p class="post-body-paragraph">' + newChunk + '</p>';
+			return newChunk;
+		}).join('');
 
 		var embedHandlers = {
 			youtube: function(link) {
