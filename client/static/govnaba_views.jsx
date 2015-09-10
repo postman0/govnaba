@@ -176,16 +176,22 @@ var NavBar = React.createClass({
 		return (
 			<nav className="navbar navbar-default navbar-static-top">
 				<div className="navbar-header">
+					<button type="button" className="navbar-toggle collapsed" data-toggle="collapse"
+						data-target="#navbar-login-form">
+						<span className="icon-bar"></span>
+						<span className="icon-bar"></span>
+						<span className="icon-bar"></span>
+					</button>
 					<a className="navbar-brand" href="/">{this.getIntlMessage("config.sitename")}</a>
-				</div>
-				{ this.props.users ? 
+					{ this.props.users ? 
 					<div className="navbar-users navbar-text">
 						<span className="glyphicon glyphicon-user icon-usercount"></span>
 						{this.props.users}
 					</div> 
 					: null
-				}
-				<div className="collapse navbar-collapse">
+					}
+				</div>
+				<div id="navbar-login-form" className="collapse navbar-collapse">
 					<div className="navbar-form navbar-right">
 						<form className="form-inline" action="#" onSubmit={gvnb.sendLoginForm.bind(gvnb)}>
 							<input id="input_login_key" type="text" className="form-control" 

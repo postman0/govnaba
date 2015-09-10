@@ -176,16 +176,22 @@ var NavBar = React.createClass({displayName: "NavBar",
 		return (
 			React.createElement("nav", {className: "navbar navbar-default navbar-static-top"}, 
 				React.createElement("div", {className: "navbar-header"}, 
-					React.createElement("a", {className: "navbar-brand", href: "/"}, this.getIntlMessage("config.sitename"))
-				), 
-				 this.props.users ? 
+					React.createElement("button", {type: "button", className: "navbar-toggle collapsed", "data-toggle": "collapse", 
+						"data-target": "#navbar-login-form"}, 
+						React.createElement("span", {className: "icon-bar"}), 
+						React.createElement("span", {className: "icon-bar"}), 
+						React.createElement("span", {className: "icon-bar"})
+					), 
+					React.createElement("a", {className: "navbar-brand", href: "/"}, this.getIntlMessage("config.sitename")), 
+					 this.props.users ? 
 					React.createElement("div", {className: "navbar-users navbar-text"}, 
 						React.createElement("span", {className: "glyphicon glyphicon-user icon-usercount"}), 
 						this.props.users
 					) 
-					: null, 
-				
-				React.createElement("div", {className: "collapse navbar-collapse"}, 
+					: null
+					
+				), 
+				React.createElement("div", {id: "navbar-login-form", className: "collapse navbar-collapse"}, 
 					React.createElement("div", {className: "navbar-form navbar-right"}, 
 						React.createElement("form", {className: "form-inline", action: "#", onSubmit: gvnb.sendLoginForm.bind(gvnb)}, 
 							React.createElement("input", {id: "input_login_key", type: "text", className: "form-control", 
