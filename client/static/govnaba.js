@@ -4,6 +4,10 @@ var GovnabaMessager = function(gvnb) {
     var self = this;
     this.gvnb = gvnb;
     this.hostname = document.domain + ":8080"
+    if(typeof(WebSocket) != "function") {
+        self.gvnb.showFatalError(FatalErrorTypes.WEBSOCKET);
+    }
+
     this.socket = new WebSocket("ws://" + this.hostname + "/connect");
 
     this.socket.onopen = function() {
@@ -12,7 +16,7 @@ var GovnabaMessager = function(gvnb) {
 
     this.socket.onerror = function(e) {
         console.log(e);
-        //TODO handle
+        self.gvnb.showFatalError(FatalErrorTypes.CONNECTION);
     }
 
     this.socket.onmessage = function(e) {
@@ -223,6 +227,10 @@ Govnaba = function() {
         page('/:board/', this.navBoardPage.bind(this));
         page("/:board/:localid", this.navThreadPage.bind(this));
         page();
+    }
+
+    this.showFatalError = function(errorType) {
+        GovnabaViews.mountErrorContainer(errorType);
     }
 
     this.parseQueryString = function(ctx, next) {

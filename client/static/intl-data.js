@@ -47,6 +47,11 @@ var intlData = {
 				mainpagetitle: "Govnaba",
 				mainpagesubtitle: 'Govnaba is a new imageboard engine focused on preserving traditions while embracing new web technologies.'
 			},
+			fatal: {
+				header: "A fatal error occured",
+				websocket: "Your browser doesn't support Websockets. Please throw it into the nearest trash bin.",
+				connection: "The server could not be reached. Please try again later."
+			},
 		},
 		"ru": {
 			navbar: {
@@ -92,6 +97,11 @@ var intlData = {
 				sitename: "Govnaba",
 				mainpagetitle: "Govnaba",
 				mainpagesubtitle: 'Govnaba - новый движок имиджборд, старающийся сохранить их традиции, в то же время используя новые Web-технологии.'
+			},
+			fatal: {
+				header: "Произошла неисправимая ошибка",
+				websocket: "Ваш браузер не поддерживает технологию Websockets. Выкиньте его на помойку.",
+				connection: "Не удалось установить соединение с сервером. Повторите попытку через несколько минут."
 			},
 		}
 	}

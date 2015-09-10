@@ -806,10 +806,47 @@ var NotificationArea = React.createClass({
 	}
 });
 
+var FatalErrorTypes = {
+	WEBSOCKET: 0,
+	CONNECTION: 1,
+};
+
+
+var FatalError = React.createClass({
+	mixins: [IntlMixin],
+
+	render: function() {
+		var availableMessages = {
+			0: this.getIntlMessage("fatal.websocket"), 
+			1: this.getIntlMessage("fatal.connection"),
+		};
+		return (<div className="fatal-error-root container-fluid">
+			<div className="fatal-error-height row">
+			<div className="fatal-error-height fatal-error-container-column col-md-6 col-md-push-3">
+				<div className="fatal-error-container panel panel-danger">
+				<div className="panel-heading">
+					<h4 className="fatal-error-header">{this.getIntlMessage("fatal.header")}</h4>
+				</div>
+				<div className="panel-body">
+					<img className="error-image pull-left" src="/static/molumen-red-round-error-warning-icon-150px.png"></img>
+					<p className="fatal-error-message">{availableMessages[this.props.errorType]}</p>
+				</div>
+				</div>
+			</div>
+			</div>
+			</div>);
+	}
+});
+
 var GovnabaViews = {
 	mountBaseContainer: function() {
 		var locale = _.contains(intlData.locales, navigator.language) ? navigator.language : "en-US";
 		return React.render(<Base locales={[locale]} messages={intlData.messages[locale]} />, 
+			document.getElementsByTagName("body")[0]);
+	},
+	mountErrorContainer: function(errorType) {
+		var locale = _.contains(intlData.locales, navigator.language) ? navigator.language : "en-US";
+		return React.render(<FatalError errorType={errorType} locales={[locale]} messages={intlData.messages[locale]} />, 
 			document.getElementsByTagName("body")[0]);
 	}
 };

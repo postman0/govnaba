@@ -229,3 +229,28 @@
 	opacity: 0.01;
 	transition: opacity 0.5s ease-in;
 }
+
+.fatal-error-root {
+	height: 100vh;
+}
+
+.fatal-error-height {
+	height: 100%;
+}
+
+.fatal-error-container-column {
+	display: flex;
+	justify-content: center;
+	flex-direction: column;
+}
+
+.error-image {
+	margin: 1em;
+	height: 150px;
+	width: 150px;
+}
+
+.fatal-error-container-column .panel {
+	height: auto;
+}
+

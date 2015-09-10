@@ -806,10 +806,47 @@ var NotificationArea = React.createClass({displayName: "NotificationArea",
 	}
 });
 
+var FatalErrorTypes = {
+	WEBSOCKET: 0,
+	CONNECTION: 1,
+};
+
+
+var FatalError = React.createClass({displayName: "FatalError",
+	mixins: [IntlMixin],
+
+	render: function() {
+		var availableMessages = {
+			0: this.getIntlMessage("fatal.websocket"), 
+			1: this.getIntlMessage("fatal.connection"),
+		};
+		return (React.createElement("div", {className: "fatal-error-root container-fluid"}, 
+			React.createElement("div", {className: "fatal-error-height row"}, 
+			React.createElement("div", {className: "fatal-error-height fatal-error-container-column col-md-6 col-md-push-3"}, 
+				React.createElement("div", {className: "fatal-error-container panel panel-danger"}, 
+				React.createElement("div", {className: "panel-heading"}, 
+					React.createElement("h4", {className: "fatal-error-header"}, this.getIntlMessage("fatal.header"))
+				), 
+				React.createElement("div", {className: "panel-body"}, 
+					React.createElement("img", {className: "error-image pull-left", src: "/static/molumen-red-round-error-warning-icon-150px.png"}), 
+					React.createElement("p", {className: "fatal-error-message"}, availableMessages[this.props.errorType])
+				)
+				)
+			)
+			)
+			));
+	}
+});
+
 var GovnabaViews = {
 	mountBaseContainer: function() {
 		var locale = _.contains(intlData.locales, navigator.language) ? navigator.language : "en-US";
 		return React.render(React.createElement(Base, {locales: [locale], messages: intlData.messages[locale]}), 
+			document.getElementsByTagName("body")[0]);
+	},
+	mountErrorContainer: function(errorType) {
+		var locale = _.contains(intlData.locales, navigator.language) ? navigator.language : "en-US";
+		return React.render(React.createElement(FatalError, {errorType: errorType, locales: [locale], messages: intlData.messages[locale]}), 
 			document.getElementsByTagName("body")[0]);
 	}
 };
