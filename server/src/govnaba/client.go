@@ -155,6 +155,7 @@ func generateThumbnail(inputImage *os.File, thumbnailPath string, format string)
 			return errors.New("The image is too big.")
 		}
 	}
+	inputImage.Seek(0, os.SEEK_SET)
 	img, _, err := image.Decode(inputImage)
 	if err != nil {
 		return err
@@ -217,7 +218,7 @@ func (cl *Client) handleFileUpload(rdr io.Reader) {
 			}
 			if ext != "webm" {
 				// image thumbnail generation
-				f.Seek(0, 0)
+				f.Seek(0, os.SEEK_SET)
 				thumbPath := fmt.Sprintf("%s/thumb%d.%s", FileUploadPath, curTime, ext)
 				err = generateThumbnail(f, thumbPath, ext)
 				if err != nil {
