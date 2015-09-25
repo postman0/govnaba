@@ -566,7 +566,7 @@ var Post = React.createClass({displayName: "Post",
 
 		var isOp = (this.props.opPostId == this.props.postData.LocalId);
 		var openLink = null;
-		if (isOp) {
+		if (isOp && gvnb.baseCont.state.ctx != ViewContext.THREAD) {
 			openLink = (React.createElement("div", {className: "post-open-link"}, 
 				React.createElement("a", {href: gvnb.getThreadLink(this.props.opPostId, this.props.postData.LocalId)}, 
 					React.createElement("span", {className: "glyphicon glyphicon-new-window"}), " ", 
