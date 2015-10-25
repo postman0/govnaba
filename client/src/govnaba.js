@@ -1,3 +1,7 @@
+const Views = require("govnaba_views")
+const page = require("page")
+const qs = require("querystring")
+const _ = require("underscore")
 
 var GovnabaMessager = function(gvnb) {
 
@@ -5,7 +9,7 @@ var GovnabaMessager = function(gvnb) {
     this.gvnb = gvnb;
     this.hostname = document.domain + ":8080"
     if(typeof(WebSocket) != "function") {
-        self.gvnb.showFatalError(FatalErrorTypes.WEBSOCKET);
+        self.gvnb.showFatalError(Views.FatalErrorTypes.WEBSOCKET);
     }
 
     this.socket = new WebSocket("ws://" + this.hostname + "/connect");
@@ -16,11 +20,11 @@ var GovnabaMessager = function(gvnb) {
 
     this.socket.onerror = function(e) {
         console.log(e);
-        self.gvnb.showFatalError(FatalErrorTypes.CONNECTION);
+        self.gvnb.showFatalError(Views.FatalErrorTypes.CONNECTION);
     }
 
     this.socket.onmessage = function(e) {
-        msg = JSON.parse(e.data);
+        var msg = JSON.parse(e.data);
         console.log(msg);
         switch(msg.MessageType) {
             case 6: {
@@ -214,13 +218,13 @@ var GovnabaMessager = function(gvnb) {
 }
 
 
-Govnaba = function() {
+export const Govnaba = function() {
     
     this.msgr = new GovnabaMessager(this)
     
     this.initialize = function() {
         this.state = {};
-        this.baseCont = GovnabaViews.mountBaseContainer();
+        this.baseCont = Views.GovnabaViews.mountBaseContainer();
 
         page('*', this.parseQueryString.bind(this));
         page('/', this.navMainPage.bind(this));
@@ -230,7 +234,7 @@ Govnaba = function() {
     }
 
     this.showFatalError = function(errorType) {
-        GovnabaViews.mountErrorContainer(errorType);
+        Views.GovnabaViews.mountErrorContainer(errorType);
     }
 
     this.parseQueryString = function(ctx, next) {
@@ -484,8 +488,3 @@ Govnaba = function() {
         this.sendPostingForm(filesObj);
     }
 }
-
-
-document.addEventListener("DOMContentLoaded", function () {
-    gvnb = new Govnaba();
-});

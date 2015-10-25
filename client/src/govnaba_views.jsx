@@ -1,5 +1,8 @@
+const React = require("react/addons")
+const ReactIntl = require("react-intl")
+const _ = require("underscore")
 
-ViewContext = {
+const ViewContext = {
 	NONE: 0,
 	MAINPAGE: 1,
 	BOARD: 2,
@@ -437,7 +440,7 @@ var Post = React.createClass({
 			minute: "numeric",
 			second: "numeric"});
 		datestr = datestr.charAt(0).toUpperCase() + datestr.slice(1);
-		attrs = this.props.postData.Attrs;
+		var attrs = this.props.postData.Attrs;
 		var imgs = null;
 		if (attrs && attrs.images) {
 			imgs = attrs.images.map(function(imgName){
@@ -812,7 +815,7 @@ var NotificationArea = React.createClass({
 	}
 });
 
-var FatalErrorTypes = {
+export const FatalErrorTypes = {
 	WEBSOCKET: 0,
 	CONNECTION: 1,
 };
@@ -844,7 +847,7 @@ var FatalError = React.createClass({
 	}
 });
 
-var GovnabaViews = {
+export var GovnabaViews = {
 	mountBaseContainer: function() {
 		var locale = _.contains(intlData.locales, navigator.language) ? navigator.language : "en-US";
 		return React.render(<Base locales={[locale]} messages={intlData.messages[locale]} />, 
