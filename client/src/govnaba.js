@@ -3,6 +3,8 @@ const page = require("page")
 const qs = require("querystring")
 const _ = require("underscore")
 
+const ViewContext = Views.ViewContext;
+
 var GovnabaMessager = function(gvnb) {
 
     var self = this;

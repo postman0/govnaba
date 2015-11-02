@@ -7,12 +7,12 @@ const _ = require("underscore")
 window.ReactIntl = ReactIntl
 const ru = require("react-intl/dist/locale-data/ru.js");
 
-const ViewContext = {
+export const ViewContext = {
 	NONE: 0,
 	MAINPAGE: 1,
 	BOARD: 2,
 	THREAD: 3
-}
+};
 
 var IntlMixin = ReactIntl.IntlMixin;
 var FormattedRelative = ReactIntl.FormattedRelative;
@@ -69,7 +69,7 @@ var Base = React.createClass({
 		}
 	},
 	displayNewThread: function(thread) {
-		threads = this.state.threads;
+		var threads = this.state.threads;
 		threads.unshift(thread);
 		this.setState({threads: threads});
 	},
