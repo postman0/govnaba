@@ -24,3 +24,5 @@ server/pkg
 client/static/.module-cache
 # Uploaded files
 client/static/uploads
+# node modules
+client/node_modules
