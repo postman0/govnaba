@@ -2,6 +2,11 @@ const React = require("react/addons")
 const ReactIntl = require("react-intl")
 const _ = require("underscore")
 
+
+// fml
+window.ReactIntl = ReactIntl
+const ru = require("react-intl/dist/locale-data/ru.js");
+
 const ViewContext = {
 	NONE: 0,
 	MAINPAGE: 1,
@@ -849,6 +854,7 @@ var FatalError = React.createClass({
 
 export var GovnabaViews = {
 	mountBaseContainer: function() {
+		console.log(intlData)
 		var locale = _.contains(intlData.locales, navigator.language) ? navigator.language : "en-US";
 		return React.render(<Base locales={[locale]} messages={intlData.messages[locale]} />, 
 			document.getElementsByTagName("body")[0]);
