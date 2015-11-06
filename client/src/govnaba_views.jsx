@@ -1,5 +1,6 @@
 const React = require("react/addons")
 const ReactIntl = require("react-intl")
+import GovnabaGallery from "./govnaba-gallery";
 const _ = require("underscore")
 
 
@@ -93,8 +94,22 @@ var Base = React.createClass({
 	displayNotification: function(str) {
 		this.refs.notifArea.addNotification(str);
 	},
+	displayGallery: function(enabled, imgName) {
+		if (imgName) {
+
+		} else {
+			this.setState({gallery: enabled});
+		};
+	},
 	setPageTitle: function(title) {
 		document.title = title;
+	},
+	prepareImagesForGallery: function() {
+		return _.reduce(this.state.posts, (acc, post) => { 
+			if (post.Attrs.images)
+				_.each(post.Attrs.images, (imgName) => { acc.push({name: imgName, postId: post.LocalId}) });
+			return acc;
+		}, []);
 	},
 	render: function() {
 		var boardList, threads, posts;
@@ -109,7 +124,7 @@ var Base = React.createClass({
 		}
 		return (
 		<div id="content-main" className="container-fluid">
-			<NavBar users={this.state.users}/>
+			<NavBar users={this.state.users} galleryButton={this.state.curThread ? true : false} />
 			<div className="row">
 				<NavBreadCrumbs thread={this.state.curThread} board={this.state.curBoard} />
 			</div>
@@ -160,6 +175,11 @@ var Base = React.createClass({
         	</div>
         	<PostPreviews ref="previews" />
         	<NotificationArea ref="notifArea" />
+        	{ this.state.gallery ?
+	        	<GovnabaGallery images={this.prepareImagesForGallery()}
+	        		threadUrl={"/" + this.state.curBoard + "/" + this.state.curThread} />
+	          : null
+	        }
         </div>
 		);
 	}
@@ -195,11 +215,18 @@ var NavBar = React.createClass({
 					<div className="navbar-users navbar-text">
 						<span className="glyphicon glyphicon-user icon-usercount"></span>
 						{this.props.users}
-					</div> 
+					</div>
 					: null
 					}
 				</div>
 				<div id="navbar-login-form" className="collapse navbar-collapse">
+					{ this.props.galleryButton ?
+						(<button className="navbar-gallery-button btn btn-default navbar-btn navbar-left"
+							onClick={ () => { window.gvnb.baseCont.displayGallery(true); } } >
+							{ this.getIntlMessage("gallery.gallerymode") }
+						</button>)
+					  : null
+					}
 					<div className="navbar-form navbar-right">
 						<form className="form-inline" action="#" onSubmit={gvnb.sendLoginForm.bind(gvnb)}>
 							<input id="input_login_key" type="text" className="form-control" 

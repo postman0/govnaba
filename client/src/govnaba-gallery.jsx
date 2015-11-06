@@ -39,10 +39,17 @@ var GovnabaGallery = React.createClass({
 				<a onClick={this.prev} className="gallery-controls-prev">
 					<span className="glyphicon glyphicon-menu-left"></span>
 				</a>
+				<a onClick={ () => {window.gvnb.baseCont.displayGallery(false);} }
+					className="gallery-controls-close">
+					<span className="glyphicon glyphicon-remove"></span>
+				</a>
 				<a href={"/static/uploads/" + this.props.images[this.state.imageIndex].name}
 					className="gallery-controls-url" target="_blank">
 					{this.props.images[this.state.imageIndex].name}
 				</a>
+				<span className="gallery-controls-image-count">
+					{this.state.imageIndex + 1}/{this.props.images.length}
+				</span>
 				<a href={this.props.threadUrl + "#" + this.props.images[this.state.imageIndex].postId}
 					className="gallery-controls-post-link">
 					<span className="glyphicon glyphicon-comment"></span>

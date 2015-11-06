@@ -42,6 +42,9 @@ var intlData = {
 					board: "Create thread"
 				}
 			},
+			gallery: {
+				gallerymode: "Gallery mode",
+			},
 			config: {
 				sitename: "Govnaba",
 				mainpagetitle: "Govnaba",
@@ -92,6 +95,9 @@ var intlData = {
 					thread: "Ответить в тред",
 					board: "Создать тред"
 				}
+			},
+			gallery: {
+				gallerymode: "Режим галереи",
 			},
 			config: {
 				sitename: "Govnaba",

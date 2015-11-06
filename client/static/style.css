@@ -3,6 +3,10 @@
 	margin-top: 0;
 }
 
+.navbar-gallery-button {
+	cursor: pointer;
+}
+
 .icon-usercount {
 	margin-right: 0.2em;
 }
@@ -231,7 +235,7 @@
 }
 
 .gallery-container {
-	position: absolute;
+	position: fixed;
 	top: 0;
 	left: 0;
 	width: 100%;
@@ -274,9 +278,20 @@
 	cursor: pointer;
 }
 
+.gallery-controls-close {
+	cursor: pointer;
+	margin-left: 1em;
+	margin-right: 0;
+}
+
 .gallery-controls-next {
 	margin-right: 0;
 	cursor: pointer;
+}
+
+.gallery-controls-image-count {
+	margin-right: 1em;
+	margin-left: 0;
 }
 
 .gallery-controls-post-link {
